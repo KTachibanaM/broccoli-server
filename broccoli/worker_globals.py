@@ -5,11 +5,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 from worker_manager.clients.s3_wrapper import S3Wrapper
 
-if os.path.exists('workers.env'):
-    print("Loading workers.env")
-    load_dotenv(dotenv_path=Path('workers.env'))
+if os.path.exists('worker_globals.env'):
+    print("Loading worker_globals.env")
+    load_dotenv(dotenv_path=Path('worker_globals.env'))
 else:
-    print("workers.env does not exist")
+    print("worker_globals.env does not exist")
 
 logger = logging.getLogger('broccoli.workers')
 logger.setLevel(logging.INFO)

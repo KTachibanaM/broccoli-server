@@ -78,7 +78,7 @@ Environment variables needed to run the workers are
 * `S3_ACCESS_KEY`: S3 access key
 * `S3_SECRET_KEY`: S3 secret key
 
-### Either use `workers.env` file to inject the environment variables
+### Either use `worker_globals.env` file to inject the environment variables
 
 ```bash
 cp workers.sample.env workers.env
@@ -126,3 +126,10 @@ dev/add_example_workers.sh
     ```bash
     dev/reset_minio.sh
     ```
+
+## Worker spec
+
+* Don't do heavy initializing in `__init__`
+    * It should be best done as a client that is passed in as a worker global
+    * If you have to, override the `pre_work` method
+* Have a steady `_id` passed to `BaseWorker`
