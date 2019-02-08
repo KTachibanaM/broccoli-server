@@ -1,6 +1,6 @@
 from typing import Set, Dict
 from apscheduler.schedulers.blocking import BlockingScheduler
-from worker_manager.configs_store import get_all
+from worker_manager.config_store import ConfigStore
 from worker_manager.load_object import load_object
 from worker_manager.logger import logger
 
@@ -8,9 +8,9 @@ from worker_manager.logger import logger
 RECONCILE_JOB_ID = "broccoli.worker_reconcile"
 
 
-def reconcile(scheduler: BlockingScheduler, worker_globals: Dict):
+def reconcile(configs_store: ConfigStore, scheduler: BlockingScheduler, worker_globals: Dict):
     actual_job_ids = set(map(lambda j: j.id, scheduler.get_jobs())) - {RECONCILE_JOB_ID}  # type: Set[str]
-    desired_jobs = get_all()
+    desired_jobs = configs_store.get_all()
     desired_job_ids = desired_jobs.keys()  # type: Set[str]
 
     remove_jobs(actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids, scheduler=scheduler)
@@ -30,7 +30,8 @@ def remove_jobs(actual_job_ids: Set[str], desired_job_ids: Set[str], scheduler: 
         scheduler.remove_job(job_id=removed_job_id)
 
 
-def add_jobs(actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs, worker_globals, scheduler: BlockingScheduler):
+def add_jobs(actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs, worker_globals,
+             scheduler: BlockingScheduler):
     added_job_ids = desired_job_ids - actual_job_ids
     if not added_job_ids:
         logger.debug(f"No job to add")

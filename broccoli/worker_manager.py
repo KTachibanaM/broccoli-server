@@ -10,7 +10,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from worker_globals import worker_globals
 from worker_manager.base_worker import BaseWorker
 from worker_manager.reconcile import reconcile, RECONCILE_JOB_ID
-from worker_manager.configs_store import add, get_all, remove, update_interval_seconds
+from worker_manager.config_store import ConfigStore
 from worker_manager.events_store import EventsStore
 
 if os.path.exists('worker_manager.env'):
@@ -25,6 +25,11 @@ events_store = EventsStore(
     db=os.getenv("EVENTS_MONGODB_DB")
 )
 BaseWorker.events_store = events_store
+config_store = ConfigStore(
+    hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
+    port=int(os.getenv("CONFIG_MONGODB_PORT")),
+    db=os.getenv("CONFIG_MONGODB_DB")
+)
 app = Flask(__name__)
 CORS(app)
 
@@ -62,7 +67,7 @@ def add_worker():
     body = request.json
     try:
         validate(instance=body, schema=ADD_WORKER_BODY_SCHEMA)
-        status, message_or_worker_id = add(
+        status, message_or_worker_id = config_store.add(
             module=body["module"],
             class_name=body["class_name"],
             args=body["args"],
@@ -90,7 +95,7 @@ def add_worker():
 @app.route("/api/worker", methods=["GET"])
 def get_workers():
     workers = []
-    for worker_id, worker in get_all().items():
+    for worker_id, worker in config_store.get_all().items():
         module, class_name, args, global_args, interval_seconds = worker
         workers.append({
             "worker_id": worker_id,
@@ -105,7 +110,7 @@ def get_workers():
 
 @app.route("/api/worker/<string:worker_id>", methods=["DELETE"])
 def remove_worker(worker_id: str):
-    status, message = remove(worker_id)
+    status, message = config_store.remove(worker_id)
     if not status:
         return jsonify({
             "status": "error",
@@ -119,7 +124,7 @@ def remove_worker(worker_id: str):
 
 @app.route("/api/worker/<string:worker_id>/intervalSeconds/<int:interval_seconds>", methods=["PUT"])
 def update_worker_interval_seconds(worker_id: str, interval_seconds: int):
-    status, message = update_interval_seconds(worker_id, interval_seconds)
+    status, message = config_store.update_interval_seconds(worker_id, interval_seconds)
     if not status:
         return jsonify({
             "status": "error",
@@ -137,7 +142,7 @@ def get_worker_events(worker_id: str):
     to_ms_str = request.args.get("to_ms")
     limit_str = request.args.get("limit")
     results = []
-    for event in get_events_by_timestamp_descending(
+    for event in events_store.get_events_by_timestamp_descending(
         worker_id,
         from_milliseconds=None if from_ms_str is None else int(from_ms_str),
         to_milliseconds=None if to_ms_str is None else int(to_ms_str),
@@ -157,7 +162,7 @@ if __name__ == "__main__":
         scheduler = BlockingScheduler()
 
         def reconcile_wrap():
-            reconcile(scheduler, worker_globals)
+            reconcile(config_store, scheduler, worker_globals)
 
         # todo: better way to retry after exception other than work_robust?
         scheduler.add_job(
