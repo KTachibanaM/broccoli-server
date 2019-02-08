@@ -1,22 +1,36 @@
 import requests
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from api.store import Store
+from api.config_store import ConfigStore
 from common.validate_schema_or_not import validate_schema_or_not
+
+if os.path.exists('api.env'):
+    print("Loading api.env")
+    load_dotenv(dotenv_path=Path('api.env'))
+else:
+    print("api.env does not exist")
 
 app = Flask(__name__)
 CORS(app)
-store = Store()
+config_store = ConfigStore(
+    hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
+    port=int(os.getenv("CONFIG_MONGODB_PORT")),
+    db=os.getenv("CONFIG_MONGODB_DB")
+)
+server_hostname = os.getenv("SERVER_HOSTNAME")
 
 
 @app.route("/api", methods=["GET"])
 def api():
-    config = store.get_config()
+    config = config_store.get_config()
     if not config:
         return jsonify([]), 200
     q, fields = config
 
-    rpc_response = requests.post("http://localhost:5000/api", json={
+    rpc_response = requests.post(f"http://{server_hostname}:5000/api", json={
         "verb": "query",
         "metadata": {},
         "payload": q
@@ -58,7 +72,7 @@ def api():
 
 @app.route("/apiConfig", methods=["GET"])
 def get_api_config():
-    config = store.get_config()
+    config = config_store.get_config()
     if not config:
         return jsonify({}), 200
     q, fields = config
@@ -94,7 +108,7 @@ def set_api_config():
             "status": "error",
             "message": message
         })
-    store.set_config(parsed_body["q"], parsed_body["fields"])
+    config_store.set_config(parsed_body["q"], parsed_body["fields"])
     return jsonify({
         "status": "ok"
     }), 200

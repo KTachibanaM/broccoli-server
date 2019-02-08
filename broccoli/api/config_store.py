@@ -3,16 +3,15 @@ import pymongo
 from typing import Dict, List, Tuple, Optional
 
 
-class Store(object):
-    def __init__(self):
+class ConfigStore(object):
+    def __init__(self, hostname: str, port: int, db: str):
         self.config_cached = False
         self.q = {}
         self.fields = []
 
-        # todo: abstract it out
         # todo: properly close all resources
-        self.client = pymongo.MongoClient('localhost', 27017)
-        self.db = self.client['broccoli']
+        self.client = pymongo.MongoClient(hostname, port)
+        self.db = self.client[db]
         self.collection = self.db['broccoli.api']
 
     def get_config(self) -> Optional[Tuple[Dict, List[str]]]:
