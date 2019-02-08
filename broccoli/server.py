@@ -1,13 +1,26 @@
 import os
+from pathlib import Path
 from threading import Thread
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from common.rpc import RPC_REQUEST_QUEUE
+from dotenv import load_dotenv
 from server.logger import logger
+from server.content_store import ContentStore
 from server.amqp_rpc_server import AmqpRpcServer
 from server.rpc_core import RpcCore
 
-rpc_core = RpcCore(logger)
+if os.path.exists('server.env'):
+    print("Loading server.env")
+    load_dotenv(dotenv_path=Path('server.env'))
+else:
+    print("server.env does not exist")
+
+content_store = ContentStore(
+    hostname=os.getenv("CONTENT_MONGODB_HOSTNAME"),
+    port=int(os.getenv("CONTENT_MONGODB_PORT")),
+    db=os.getenv("CONTENT_MONGODB_DB")
+)
+rpc_core = RpcCore(content_store, logger)
 app = Flask(__name__)
 CORS(app)
 
@@ -34,9 +47,13 @@ def api():
 
 if __name__ == '__main__':
     def start_rpc_server():
-        # todo: make it in a config file
-        rpc_server = AmqpRpcServer(host='localhost', port=5672, rpc_request_queue_name=RPC_REQUEST_QUEUE, rpc_core=rpc_core,
-                                   logger=logger)
+        rpc_server = AmqpRpcServer(
+            host=os.getenv("RPC_AMQP_HOSTNAME"),
+            port=int(os.getenv("RPC_AMQP_PORT")),
+            rpc_request_queue_name=os.getenv("RPC_AMQP_REQUEST_QUEUE_NAME"),
+            rpc_core=rpc_core,
+            logger=logger
+        )
         # todo: ctrl+c to stop this
         rpc_server.start_block_consuming()
 

@@ -1,4 +1,3 @@
-import sys
 import logging
 
 DefaultHandler = logging.StreamHandler()

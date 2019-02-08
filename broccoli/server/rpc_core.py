@@ -1,12 +1,13 @@
 import logging
 from typing import Dict, Tuple, Union, List
-from server.content_store import append, query, update_one, schema, update_one_binary_string, query_nearest_hamming_neighbors
+from server.content_store import ContentStore
 from server.rpc_schemas import SCHEMAS
 from common.validate_schema_or_not import validate_schema_or_not
 
 
 class RpcCore(object):
-    def __init__(self, logger: logging.Logger):
+    def __init__(self, content_store: ContentStore, logger: logging.Logger):
+        self.content_store = content_store
         self.logger = logger
 
     def call(self, parsed_body: Dict) -> Tuple[bool, Union[str, Dict, List]]:
@@ -43,13 +44,13 @@ class RpcCore(object):
         idempotency_key = metadata['idempotency_key']  # type: str
         self.logger.debug(f"Calling append metadata={metadata}, payload={payload}")
         # todo: failure
-        append(payload, idempotency_key)
+        self.content_store.append(payload, idempotency_key)
         return True, ''
 
     def query(self, metadata: Dict, payload: Dict) -> Tuple[bool, List[Dict]]:
         self.logger.debug(f"Calling query metadata={metadata}, payload={payload}")
         # todo: failure
-        return True, query(payload)
+        return True, self.content_store.query(payload)
 
     def update_one(self, metadata: Dict, payload: Dict) -> Tuple[bool, str]:
         self.logger.debug(f"Calling update_one metadata={metadata}, payload={payload}")
@@ -65,13 +66,13 @@ class RpcCore(object):
             return False, "update_doc in payload is not a dict"
 
         # todo: failure
-        update_one(filter_q=payload["filter_q"], update_doc=payload["update_doc"])
+        self.content_store.update_one(filter_q=payload["filter_q"], update_doc=payload["update_doc"])
         return True, ''
 
     def schema(self, metadata: Dict, payload: Dict) -> Tuple[bool, List[str]]:
         self.logger.debug(f"Calling schema metadata={metadata}, payload={payload}")
         # todo: failure
-        return True, schema()
+        return True, self.content_store.schema()
 
     def update_one_binary_string(self, metadata: Dict, payload: Dict) -> Tuple[bool, str]:
         self.logger.debug(f"Calling update_one_binary_string metadata={metadata}, payload={payload}")
@@ -81,7 +82,7 @@ class RpcCore(object):
             return False, message
 
         # todo: failure
-        update_one_binary_string(payload["filter_q"], payload["key"], payload["binary_string"])
+        self.content_store.update_one_binary_string(payload["filter_q"], payload["key"], payload["binary_string"])
         return True, ''
 
     def query_nearest_hamming_neighbors(self, metadata: Dict, payload: Dict) -> Tuple[bool, List[Dict]]:
@@ -92,7 +93,7 @@ class RpcCore(object):
             self.logger.info(f"Fails to validate query_nearest_hamming_neighbors payload={payload}, message {message}")
             return False, []
 
-        return True, query_nearest_hamming_neighbors(
+        return True, self.content_store.query_nearest_hamming_neighbors(
             q=payload["q"],
             binary_string_key=payload["binary_string_key"],
             from_binary_string=payload["from_binary_string"],
