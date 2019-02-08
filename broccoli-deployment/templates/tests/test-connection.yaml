@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "broccoli-deploy.fullname" . }}-test-connection"
+  labels:
+    app.kubernetes.io/name: {{ include "broccoli-deploy.name" . }}
+    helm.sh/chart: {{ include "broccoli-deploy.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args:  ['{{ include "broccoli-deploy.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never

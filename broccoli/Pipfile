@@ -1,0 +1,27 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+flask = "*"
+pika = "*"
+apscheduler = "*"
+feedparser = "*"
+beautifulsoup4 = "*"
+pymongo = "*"
+boto3 = "*"
+python-dotenv = "*"
+imagehash = "*"
+pybktree = "*"
+requests = "*"
+jsonschema = "*"
+flask-cors = "*"
+pymongo-schema = {file = "https://github.com/pajachiet/pymongo-schema/archive/0dd312c23f5d38fb7c1a1f3bbe977e79a814a119.zip"}
+pytz = "*"
+python-twitter = "*"
+
+[requires]
+python_version = "3.7"
