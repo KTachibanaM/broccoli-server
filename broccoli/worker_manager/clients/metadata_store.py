@@ -2,10 +2,10 @@ import pymongo
 
 
 class MetadataStore(object):
-    def __init__(self, hostname: str, port: int, collection_name: str):
+    def __init__(self, hostname: str, port: int, db: str, collection_name: str):
         # todo: properly close all resources
         self.client = pymongo.MongoClient(hostname, port)
-        self.db = self.client['broccoli']
+        self.db = self.client[db]
         self.collection = self.db[collection_name]
 
     def exists(self, key: str) -> bool:

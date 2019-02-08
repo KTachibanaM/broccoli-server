@@ -1,15 +1,30 @@
 import os
 import sys
+from dotenv import load_dotenv
+from pathlib import Path
 from threading import Thread
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from jsonschema import validate, ValidationError
 from apscheduler.schedulers.blocking import BlockingScheduler
 from worker_globals import worker_globals
+from worker_manager.base_worker import BaseWorker
 from worker_manager.reconcile import reconcile, RECONCILE_JOB_ID
 from worker_manager.configs_store import add, get_all, remove, update_interval_seconds
-from worker_manager.events_store import get_events_by_timestamp_descending
+from worker_manager.events_store import EventsStore
 
+if os.path.exists('worker_manager.env'):
+    print("Loading worker_manager.env")
+    load_dotenv(dotenv_path=Path('worker_manager.env'))
+else:
+    print("worker_manager.env does not exist")
+
+events_store = EventsStore(
+    hostname=os.getenv("EVENTS_MONGODB_HOSTNAME"),
+    port=int(os.getenv("EVENTS_MONGODB_PORT")),
+    db=os.getenv("EVENTS_MONGODB_DB")
+)
+BaseWorker.events_store = events_store
 app = Flask(__name__)
 CORS(app)
 
