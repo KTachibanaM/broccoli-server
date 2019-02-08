@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from threading import Thread
 from flask import Flask, jsonify, request
@@ -54,8 +55,13 @@ if __name__ == '__main__':
             rpc_core=rpc_core,
             logger=logger
         )
-        # todo: ctrl+c to stop this
-        rpc_server.start_block_consuming()
+        try:
+            rpc_server.start_block_consuming()
+        except (KeyboardInterrupt, SystemExit):
+            print('RPC server exits')
+            rpc_server.channel.stop_consuming()
+            sys.exit(0)
+
 
     if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         t = Thread(target=start_rpc_server)
