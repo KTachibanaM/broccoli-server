@@ -4,17 +4,18 @@ import logging
 import time
 import pika
 from typing import Union, Dict, List, Tuple, Optional
-from common.rpc import RPC_REQUEST_QUEUE
 
 
 # todo: thread-safe??
 class AmqpRpcClient(object):
-    def __init__(self, host: str, port: int, logger: logging.Logger, callback_queue_name: str):
+    def __init__(self, host: str, port: int, rpc_request_queue_name: str, logger: logging.Logger,
+                 callback_queue_name: str):
         # todo: properly close connection and channel
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(
             host=host,
             port=port
         ))  # type: pika.BlockingConnection
+        self.rpc_request_queue_name = rpc_request_queue_name
         self.logger = logger
         self.callback_queue_name = callback_queue_name
 
@@ -46,7 +47,7 @@ class AmqpRpcClient(object):
         # todo: timeout?
         self.channel.basic_publish(
             exchange='',
-            routing_key=RPC_REQUEST_QUEUE,
+            routing_key=self.rpc_request_queue_name,
             body=json.dumps({
                 'verb': verb,
                 'metadata': metadata,

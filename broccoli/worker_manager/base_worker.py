@@ -1,3 +1,4 @@
+import os
 import logging
 import time
 from abc import ABCMeta, abstractmethod
@@ -22,9 +23,19 @@ class BaseWorker(metaclass=ABCMeta):
         # self.logger.setLevel(logging.INFO)
         # self.logger.addHandler(DefaultHandler)
 
-        # todo: pass parameters in
-        self.rpc_client = AmqpRpcClient(host='localhost', port=5672, logger=self.logger, callback_queue_name=self._id)
-        self.metadata_store = MetadataStore(hostname='localhost', port=27017, db='broccoli', collection_name=self._id)
+        self.rpc_client = AmqpRpcClient(
+            host=os.getenv("RPC_AMQP_HOSTNAME"),
+            port=int(os.getenv("RPC_AMQP_PORT")),
+            rpc_request_queue_name=os.getenv("RPC_AMQP_REQUEST_QUEUE_NAME"),
+            logger=self.logger,
+            callback_queue_name=self._id
+        )
+        self.metadata_store = MetadataStore(
+            hostname=os.getenv("METADATA_MONGODB_HOSTNAME"),
+            port=int(os.getenv("METADATA_MONGODB_PORT")),
+            db=os.getenv("METADATA_MONGODB_DB"),
+            collection_name=self._id
+        )
 
         self.pre_work()
 
@@ -48,7 +59,9 @@ class BaseWorker(metaclass=ABCMeta):
             self.work()
 
             finished_time = time.time_ns()
-            BaseWorker.events_store.add_event(self._id, "FINISHED", {"run_time_nanoseconds": finished_time - started_time})
+            BaseWorker.events_store.add_event(self._id, "FINISHED", {
+                "run_time_nanoseconds": finished_time - started_time
+            })
         except Exception as e:
             exception_as_string = getattr(e, 'message', repr(e))
             self.logger.error(f"Caught exception while doing work, message {exception_as_string}")
