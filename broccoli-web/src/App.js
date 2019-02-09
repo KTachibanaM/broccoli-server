@@ -19,13 +19,19 @@ import applyRouting from "./hoc/applyRouting"
 export default class App extends Component {
   constructor(props) {
     super(props);
-    // todo: make it config
-    this.workerManagerClient = new WorkerManagerClient("localhost", 5002);
-    // todo: make it config
-    this.contentClient = new ContentClient("localhost", 5000);
+    this.contentClient = new ContentClient(
+      process.env.REACT_APP_SERVER_HOSTNAME,
+      parseInt(process.env.REACT_APP_SERVER_PORT)
+    );
+    this.apiClient = new ApiClient(
+      process.env.REACT_APP_API_HOSTNAME,
+      parseInt(process.env.REACT_APP_API_PORT)
+    );
+    this.workerManagerClient = new WorkerManagerClient(
+      process.env.REACT_APP_WORKER_MANAGER_HOSTNAME,
+      parseInt(process.env.REACT_APP_WORKER_MANAGER_PORT),
+    );
     this.boardsConfigStore = new BoardsConfigStore();
-    // todo: make it config
-    this.apiClient = new ApiClient("localhost", 5001)
   }
 
   render() {
