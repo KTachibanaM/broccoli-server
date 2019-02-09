@@ -36,4 +36,12 @@ export default class WorkerManagerClient {
       }
     })
   }
+
+  async getWorkerMetadata(workerId) {
+    return axios.get(`${this.apiEndpoint}/worker/${workerId}/metadata`)
+  }
+
+  async setWorkerMetadata(workerId, metadata) {
+    return axios.post(`${this.apiEndpoint}/worker/${workerId}/metadata`, metadata)
+  }
 }

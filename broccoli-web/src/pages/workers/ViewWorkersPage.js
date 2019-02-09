@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { Link } from "react-router-dom"
 
 export default class ViewWorkersPage extends Component {
   constructor(props) {
@@ -146,7 +147,9 @@ export default class ViewWorkersPage extends Component {
             } = worker;
             return (
               <tr key={workerId}>
-                <td>{workerId}</td>
+                <td>
+                  <Link to={`/worker/${workerId}`}>{workerId}</Link>
+                </td>
                 <td>{module}</td>
                 <td>{className}</td>
                 <td>{JSON.stringify(args)}</td>

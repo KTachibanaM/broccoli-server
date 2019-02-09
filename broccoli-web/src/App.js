@@ -12,6 +12,7 @@ import ViewBoardsPage from "./pages/content/ViewBoardsPage"
 import UpsertBoardPage from "./pages/content/UpsertBoardPage"
 import Board from "./pages/content/Board"
 import ApiPage from "./pages/ApiPage"
+import Worker from "./pages/workers/Worker"
 
 import applyMessage from "./hoc/applyMessage"
 import applyRouting from "./hoc/applyRouting"
@@ -107,6 +108,14 @@ export default class App extends Component {
               component={() => {
                 const EnhancedPage = applyHoc(CreateWorkerPage, applyMessage, applyRouting);
                 return (<EnhancedPage workerManagerClient={this.workerManagerClient} />)
+              }}
+            />
+            <Route
+              exact
+              path="/worker/:workerId"
+              component={() => {
+                const EnhancedPage = applyHoc(Worker, applyMessage);
+                return (<EnhancedPage workerManagerClient={this.workerManagerClient}/>)
               }}
             />
           </Switch>

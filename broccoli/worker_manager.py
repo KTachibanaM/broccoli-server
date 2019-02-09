@@ -12,6 +12,7 @@ from worker_manager.base_worker import BaseWorker
 from worker_manager.reconcile import reconcile, RECONCILE_JOB_ID
 from worker_manager.config_store import ConfigStore
 from worker_manager.events_store import EventsStore
+from worker_manager.global_metadata_store import GlobalMetadataStore
 
 if os.path.exists('worker_manager.env'):
     print("Loading worker_manager.env")
@@ -29,6 +30,11 @@ config_store = ConfigStore(
     hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
     port=int(os.getenv("CONFIG_MONGODB_PORT")),
     db=os.getenv("CONFIG_MONGODB_DB")
+)
+global_metadata_store = GlobalMetadataStore(
+    hostname=os.getenv("METADATA_MONGODB_HOSTNAME"),
+    port=int(os.getenv("METADATA_MONGODB_PORT")),
+    db=os.getenv("METADATA_MONGODB_DB"),
 )
 app = Flask(__name__)
 CORS(app)
@@ -155,6 +161,20 @@ def get_worker_events(worker_id: str):
             "metadata": metadata
         })
     return jsonify(results), 200
+
+
+@app.route("/api/worker/<string:worker_id>/metadata", methods=["GET"])
+def get_worker_metadata(worker_id: str):
+    return jsonify(global_metadata_store.get_all(worker_id)), 200
+
+
+@app.route("/api/worker/<string:worker_id>/metadata", methods=["POST"])
+def set_worker_metadata(worker_id: str):
+    parsed_body = request.json
+    global_metadata_store.set_all(worker_id, parsed_body)
+    return jsonify({
+        "status": "ok"
+    }), 200
 
 
 if __name__ == "__main__":
