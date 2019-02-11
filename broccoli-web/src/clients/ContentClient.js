@@ -23,8 +23,8 @@ export default class ContentClient {
     return response.data["payload"]
   }
 
-  async query(q) {
-    return this.call("query", {}, q)
+  async query(q, limit) {
+    return this.call("query", {}, {q, limit})
   }
 
   async schema() {

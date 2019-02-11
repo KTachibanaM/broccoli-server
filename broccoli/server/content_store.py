@@ -1,6 +1,6 @@
 import pymongo
 from pymongo_schema.extract import extract_collection_schema
-from typing import Dict, List
+from typing import Dict, List, Optional
 from server.logger import logger
 
 
@@ -25,11 +25,13 @@ class ContentStore(object):
         # todo: insert fails?
         self.collection.insert(doc)
 
-    def query(self, q: Dict) -> List[Dict]:
+    def query(self, q: Dict, limit: Optional[int]) -> List[Dict]:
         res = []
         # todo: find fails?
-        for document in self.collection.find(q):
-            # todo: generation_time from ObjectId
+        cursor = self.collection.find(q)
+        if limit:
+            cursor = cursor.limit(limit)
+        for document in cursor:
             document["_id"] = str(document["_id"])
             res.append(document)
         return res

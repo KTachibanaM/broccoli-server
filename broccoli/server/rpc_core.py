@@ -49,8 +49,15 @@ class RpcCore(object):
 
     def query(self, metadata: Dict, payload: Dict) -> Tuple[bool, List[Dict]]:
         self.logger.debug(f"Calling query metadata={metadata}, payload={payload}")
+
+        status, message = validate_schema_or_not(payload, SCHEMAS["query"]["payload"])
+        if not status:
+            self.logger.info(f"Fails to validate query payload={payload}, message {message}")
+            return False, []
+
         # todo: failure
-        return True, self.content_store.query(payload)
+        limit = payload["limit"] if "limit" in payload else None
+        return True, self.content_store.query(payload["q"], limit)
 
     def update_one(self, metadata: Dict, payload: Dict) -> Tuple[bool, str]:
         self.logger.debug(f"Calling update_one metadata={metadata}, payload={payload}")

@@ -35,6 +35,20 @@ SCHEMAS = {
             },
             "required": ["q", "binary_string_key", "from_binary_string", "max_distance"]
         }
+    },
+    "query": {
+        "payload": {
+            "type": "object",
+            "properties": {
+                "q": {
+                    "type": "object",
+                },
+                "limit": {
+                    "type": "number",
+                }
+            },
+            "required": ["q"]
+        }
     }
 }
 
