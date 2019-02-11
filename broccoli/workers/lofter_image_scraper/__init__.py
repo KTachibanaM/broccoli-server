@@ -1,4 +1,3 @@
-import datetime
 import feedparser
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
@@ -55,8 +54,7 @@ class LofterImageScraper(BaseWorker):
                 sanitized_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
                 new_documents.append({
                     'image_url': sanitized_url,
-                    'source': source,
-                    'created_at': datetime.datetime.utcnow()
+                    'source': source
                 })
 
         for new_document in new_documents:

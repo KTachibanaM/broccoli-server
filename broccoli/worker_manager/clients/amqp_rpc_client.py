@@ -97,14 +97,16 @@ class AmqpRpcClient(object):
             self.logger.debug(f"Rpc ok correlation_id={self.current_correlation_id} payload={payload}")
             return True, payload
 
-    def blocking_query(self, q: Dict, limit: Optional[int]) -> List[Dict]:
+    def blocking_query(self, q: Dict, limit: Optional[int] = None) -> List[Dict]:
+        payload = {
+            "q": q
+        }
+        if limit:
+            payload["limit"] = limit
         status, message_or_payload = self.blocking_call(
             verb='query',
             metadata={},
-            payload={
-                "q": q,
-                "limit": limit
-            }
+            payload=payload
         )
         if not status:
             self.raise_error(f"Error making query={q}, message {message_or_payload}")

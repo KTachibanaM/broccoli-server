@@ -1,7 +1,9 @@
 import pymongo
+import datetime
 from pymongo_schema.extract import extract_collection_schema
 from typing import Dict, List, Optional
 from server.logger import logger
+from common.datetime_utils import datetime_to_milliseconds
 
 
 class ContentStore(object):
@@ -23,6 +25,7 @@ class ContentStore(object):
             return
 
         # todo: insert fails?
+        doc["created_at"] = datetime.datetime.utcnow()
         self.collection.insert(doc)
 
     def query(self, q: Dict, limit: Optional[int]) -> List[Dict]:
@@ -33,6 +36,7 @@ class ContentStore(object):
             cursor = cursor.limit(limit)
         for document in cursor:
             document["_id"] = str(document["_id"])
+            document["created_at"] = datetime_to_milliseconds(document["created_at"])
             res.append(document)
         return res
 
@@ -75,7 +79,7 @@ class ContentStore(object):
             logger.info(f"from_binary_string {from_binary_string} is not a 01 string")
             return []
         results = []
-        for q_result in self.query(q):
+        for q_result in self.query(q, limit=None):
             if binary_string_key not in q_result:
                 logger.info(f"Document {q_result} does not have field {binary_string_key}")
                 continue
