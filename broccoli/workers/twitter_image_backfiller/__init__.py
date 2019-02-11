@@ -1,5 +1,6 @@
 import os
 import twitter
+import datetime
 from worker_manager.base_worker import BaseWorker
 from workers.twitter import get_media_urls, get_tweet_url
 
@@ -64,7 +65,8 @@ class TwitterImageBackfiller(BaseWorker):
             for image_url in get_media_urls(tweet, "photo", self.logger):
                 new_documents.append({
                     "image_url": image_url,
-                    "source": get_tweet_url(tweet)
+                    "source": get_tweet_url(tweet),
+                    'created_at': datetime.datetime.utcnow()
                 })
         for new_document in new_documents:
             self.rpc_client.blocking_append(idempotency_key="image_url", doc=new_document)
