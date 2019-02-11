@@ -45,7 +45,12 @@ class BoardsStore(object):
             )
         return existing_boards
 
+    def get(self, board_id: str) -> Tuple[str, Dict]:
+        doc = self.collection.find_one({"board_id": board_id})
+        return doc["board_id"], json.loads(doc["q"])
+
     def swap(self, board_id: str, another_board_id: str):
+        # todo: find one dups with get()
         board_position = self.collection.find_one({"board_id": board_id})["position"]
         another_board_position = self.collection.find_one({"board_id": another_board_id})["position"]
         self.collection.update_one(
@@ -58,4 +63,5 @@ class BoardsStore(object):
         )
 
     def remove(self, board_id: str):
+        # todo: shred positions afterwards
         self.collection.delete_one({"board_id": board_id})
