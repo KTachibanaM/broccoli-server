@@ -11,6 +11,7 @@ class BoardsStore(object):
 
     def upsert(self, board_id: str, q: Dict):
         existing_boards = []
+        # todo: dup with get_all
         for d in self.collection.find():
             del d["_id"]
             existing_boards.append(d)
@@ -45,7 +46,16 @@ class BoardsStore(object):
         return existing_boards
 
     def swap(self, board_id: str, another_board_id: str):
-        pass
+        board_position = self.collection.find_one({"board_id": board_id})["position"]
+        another_board_position = self.collection.find_one({"board_id": another_board_id})["position"]
+        self.collection.update_one(
+            filter={"board_id": board_id},
+            update={"$set": {"position": another_board_position}}
+        )
+        self.collection.update_one(
+            filter={"board_id": another_board_id},
+            update={"$set": {"position": board_position}}
+        )
 
     def remove(self, board_id: str):
-        pass
+        self.collection.delete_one({"board_id": board_id})

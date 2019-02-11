@@ -140,5 +140,21 @@ def get_boards():
     return jsonify(boards), 200
 
 
+@app.route("/boards/swap/<string:board_id>/<string:another_board_id>")
+def swap_boards(board_id: str, another_board_id: str):
+    boards_store.swap(board_id, another_board_id)
+    return jsonify({
+        "status": "ok"
+    }), 200
+
+
+@app.route("/board/<string:board_id>", methods=["DELETE"])
+def remove_board(board_id: str):
+    boards_store.remove(board_id)
+    return jsonify({
+        "status": "ok"
+    }), 200
+
+
 if __name__ == '__main__':
     app.run(port=5001)
