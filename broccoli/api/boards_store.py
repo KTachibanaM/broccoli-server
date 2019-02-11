@@ -37,7 +37,12 @@ class BoardsStore(object):
         })
 
     def get_all(self) -> List[Tuple[str, Dict]]:
-        pass
+        existing_boards = []
+        for d in self.collection.find().sort("position", pymongo.ASCENDING):
+            existing_boards.append(
+                (d["board_id"], json.loads(d["q"]))
+            )
+        return existing_boards
 
     def swap(self, board_id: str, another_board_id: str):
         pass

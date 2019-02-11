@@ -129,5 +129,16 @@ def upsert_board(board_id: str):
     }), 200
 
 
+@app.route("/boards", methods=["GET"])
+def get_boards():
+    boards = []
+    for (board_id, q) in boards_store.get_all():
+        boards.append({
+            "board_id": board_id,
+            "q": q
+        })
+    return jsonify(boards), 200
+
+
 if __name__ == '__main__':
     app.run(port=5001)
