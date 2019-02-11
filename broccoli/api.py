@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from api.config_store import ConfigStore
+from api.boards_store import BoardsStore
 from common.validate_schema_or_not import validate_schema_or_not
 
 if os.path.exists('api.env'):
@@ -16,6 +17,11 @@ else:
 app = Flask(__name__)
 CORS(app)
 config_store = ConfigStore(
+    hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
+    port=int(os.getenv("CONFIG_MONGODB_PORT")),
+    db=os.getenv("CONFIG_MONGODB_DB")
+)
+boards_store = BoardsStore(
     hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
     port=int(os.getenv("CONFIG_MONGODB_PORT")),
     db=os.getenv("CONFIG_MONGODB_DB")
@@ -109,6 +115,15 @@ def set_api_config():
             "message": message
         })
     config_store.set_config(parsed_body["q"], parsed_body["fields"])
+    return jsonify({
+        "status": "ok"
+    }), 200
+
+
+@app.route("/board/<string:board_id>", methods=["POST"])
+def upsert_board(board_id: str):
+    parsed_body = request.json
+    boards_store.upsert(board_id, parsed_body)
     return jsonify({
         "status": "ok"
     }), 200
