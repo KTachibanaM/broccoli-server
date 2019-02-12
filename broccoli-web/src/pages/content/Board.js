@@ -64,15 +64,7 @@ class Board extends Component {
         for (let i = 0; i < loadedModules.length; ++i) {
           const loadedModule = loadedModules[i];
           const config = this.board.columns[i];
-          let LoadedComponent;
-          if (config["type"] === "component") {
-            LoadedComponent = loadedModule.default
-          } else if (config["type"] === "factory") {
-            LoadedComponent = loadedModule.default(...config["args"])
-          } else {
-            throw new Error(`Unknown column config type ${config["type"]}`)
-          }
-          this.board.columns[i]["LoadedComponent"] = LoadedComponent
+          this.board.columns[i]["LoadedComponent"] = loadedModule.default(...config["args"])
         }
         this.setState({
           "loading": false,

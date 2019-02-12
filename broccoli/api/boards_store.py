@@ -1,6 +1,6 @@
 import pymongo
-import json
-from typing import List, Dict, Tuple
+from api.board_query import BoardQuery
+from typing import List, Tuple
 
 
 class BoardsStore(object):
@@ -9,7 +9,7 @@ class BoardsStore(object):
         self.db = self.client[db]
         self.collection = self.db["broccoli.api.boards"]
 
-    def upsert(self, board_id: str, q: Dict):
+    def upsert(self, board_id: str, board_query: BoardQuery):
         existing_boards = []
         # todo: dup with get_all
         for d in self.collection.find():
@@ -23,7 +23,7 @@ class BoardsStore(object):
                     },
                     update={
                         "$set": {
-                            "q": json.dumps(q)
+                            "board_query": board_query.to_dict()
                         }
                     }
                 )
@@ -34,20 +34,20 @@ class BoardsStore(object):
         self.collection.insert_one({
             "position": new_position,
             "board_id": board_id,
-            "q": json.dumps(q)
+            "board_query": board_query.to_dict()
         })
 
-    def get_all(self) -> List[Tuple[str, Dict]]:
+    def get_all(self) -> List[Tuple[str, BoardQuery]]:
         existing_boards = []
         for d in self.collection.find().sort("position", pymongo.ASCENDING):
             existing_boards.append(
-                (d["board_id"], json.loads(d["q"]))
+                (d["board_id"], BoardQuery(d["board_query"]))
             )
         return existing_boards
 
-    def get(self, board_id: str) -> Tuple[str, Dict]:
+    def get(self, board_id: str) -> BoardQuery:
         doc = self.collection.find_one({"board_id": board_id})
-        return doc["board_id"], json.loads(doc["q"])
+        return BoardQuery(doc["board_query"])
 
     def swap(self, board_id: str, another_board_id: str):
         # todo: find one dups with get()

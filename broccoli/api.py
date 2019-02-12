@@ -1,11 +1,13 @@
 import requests
 import os
+import json
 from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from api.config_store import ConfigStore
 from api.boards_store import BoardsStore
+from api.board_query import BoardQuery
 from common.validate_schema_or_not import validate_schema_or_not
 
 if os.path.exists('api.env'):
@@ -120,22 +122,64 @@ def set_api_config():
     }), 200
 
 
+BOARD_QUERY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "q": {
+            "type": "object",
+        },
+        "limit": {
+            "type": "number",
+        },
+        "projections": {
+            "type": "array",
+            "contains": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                    },
+                    "js_filename": {
+                        "type": "string",
+                    },
+                    'args': {
+                        "type": "array",
+                    }
+                },
+                "required": ["name", "js_filename", "args"]
+            }
+        }
+    },
+    "required": ["q", "projections"]
+}
+
+
 @app.route("/board/<string:board_id>", methods=["POST"])
 def upsert_board(board_id: str):
     parsed_body = request.json
-    boards_store.upsert(board_id, parsed_body)
+    parsed_body["q"] = json.dumps(parsed_body["q"])
+    boards_store.upsert(board_id, BoardQuery(parsed_body))
     return jsonify({
         "status": "ok"
     }), 200
 
 
+@app.route("/board/<string:board_id>", methods=["GET"])
+def get_board(board_id: str):
+    board_query = boards_store.get(board_id).to_dict()
+    board_query["q"] = json.loads(board_query["q"])
+    return jsonify(board_query), 200
+
+
 @app.route("/boards", methods=["GET"])
 def get_boards():
     boards = []
-    for (board_id, q) in boards_store.get_all():
+    for (board_id, board_query) in boards_store.get_all():
+        board_query = board_query.to_dict()
+        board_query["q"] = json.loads(board_query["q"])
         boards.append({
             "board_id": board_id,
-            "q": q
+            "q": board_query
         })
     return jsonify(boards), 200
 
@@ -153,15 +197,6 @@ def remove_board(board_id: str):
     boards_store.remove(board_id)
     return jsonify({
         "status": "ok"
-    }), 200
-
-
-@app.route("/board/<string:board_id>", methods=["GET"])
-def get_board(board_id: str):
-    board_id, q = boards_store.get(board_id)
-    return jsonify({
-        "board_id": board_id,
-        "q": q
     }), 200
 
 
