@@ -179,7 +179,7 @@ def get_boards():
         board_query["q"] = json.loads(board_query["q"])
         boards.append({
             "board_id": board_id,
-            "q": board_query
+            "board_query": board_query
         })
     return jsonify(boards), 200
 

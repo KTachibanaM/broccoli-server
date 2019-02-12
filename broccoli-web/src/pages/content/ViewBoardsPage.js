@@ -5,11 +5,36 @@ export default class ViewBoardsPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      "boards": this.props.boardsConfigStore.getBoards()
+      "boards": []
     };
 
     this.onMoveUp = this.onMoveUp.bind(this);
-    this.onMoveDown = this.onMoveDown.bind(this)
+    this.onMoveDown = this.onMoveDown.bind(this);
+  }
+
+  componentDidMount() {
+    this.props.apiClient.getBoards()
+      .then(boards => {
+        this.setState({
+          "boards": boards.map(board => {
+            return {
+              "boardId": board["board_id"],
+              "boardQuery": {
+                "q": board["board_query"]["q"],
+                "limit": board["board_query"]["limit"],
+                "projections": board["board_query"]["projections"].map(p => {
+                  return {
+                    "name": p["name"]
+                  }
+                }),
+              }
+            }
+          })
+        })
+      })
+      .catch(error => {
+        this.props.showErrorMessage(`Fail to get boards, message ${error.toString()}`)
+      })
   }
 
   onMoveUp(e, index) {
@@ -18,8 +43,15 @@ export default class ViewBoardsPage extends Component {
   }
 
   moveUp(index) {
-    this.props.boardsConfigStore.moveBoard(index, index - 1);
-    this.refreshBoards()
+    const boardId = this.state.boards[index]["boardId"];
+    const anotherBoardId = this.state.boards[index - 1]["boardId"];
+    this.props.apiClient.swapBoards(boardId, anotherBoardId)
+      .then(() => {
+        this.props.showOkMessage(`Moved up board ${boardId}`)
+      })
+      .catch(error => {
+        this.props.showErrorMessage(`Fail to move up board, message ${error.toString()}`)
+      })
   }
 
   onMoveDown(e ,index) {
@@ -28,8 +60,15 @@ export default class ViewBoardsPage extends Component {
   }
 
   moveDown(index) {
-    this.props.boardsConfigStore.moveBoard(index, index + 1);
-    this.refreshBoards()
+    const boardId = this.state.boards[index]["boardId"];
+    const anotherBoardId = this.state.boards[index + 1]["boardId"];
+    this.props.apiClient.swapBoards(boardId, anotherBoardId)
+      .then(() => {
+        this.props.showOkMessage(`Moved down board ${boardId}`)
+      })
+      .catch(error => {
+        this.props.showErrorMessage(`Fail to move down board, message ${error.toString()}`)
+      })
   }
 
   onRemove(e, index) {
@@ -38,16 +77,16 @@ export default class ViewBoardsPage extends Component {
   }
 
   remove(index) {
-    if (window.confirm(`Are you sure you want to remove board "${this.state.boards[index]["name"]}?"`)){
-      this.props.boardsConfigStore.removeBoard(index);
-      this.refreshBoards()
+    const boardId = this.state.boards[index]["boardId"];
+    if (window.confirm(`Are you sure you want to remove board "${boardId}?"`)){
+      this.props.apiClient.removeBoard(boardId)
+        .then(() => {
+          this.props.showOkMessage(`Removed board ${boardId}`)
+        })
+        .catch(error => {
+          this.props.showErrorMessage(`Fail to remove board, message ${error.toString()}`)
+        })
     }
-  }
-
-  refreshBoards() {
-    this.setState({
-      "boards": this.props.boardsConfigStore.getBoards()
-    })
   }
 
   render() {
@@ -59,23 +98,25 @@ export default class ViewBoardsPage extends Component {
           <tr>
             <th>Name</th>
             <th>Query</th>
+            <th>Limit</th>
+            <th>Projections</th>
             <th>Operations</th>
           </tr>
           </thead>
           <tbody>
           {this.state.boards.map((board, index) => {
-            const {name, q} = board;
+            const {boardId, boardQuery: { q, limit, projections }} = board;
             return (
-              <tr key={name}>
+              <tr key={boardId}>
                 <td>
-                  <Link to={`/board/${encodeURIComponent(name)}`}>{name}</Link>
+                  <Link to={`/board/${encodeURIComponent(boardId)}`}>{boardId}</Link>
                 </td>
-                <td>
-                  {JSON.stringify(q)}
-                </td>
+                <td>{JSON.stringify(q)}</td>
+                <td>{limit ? limit : "N/A"}</td>
+                <td>{projections.map(p => p["name"]).join(", ")}</td>
                 <td>
                   <button
-                    onClick={() => this.props.redirectTo(`/boards/upsert?name=${name}`)}
+                    onClick={() => this.props.redirectTo(`/boards/upsert?name=${boardId}`)}
                   >Edit</button>
                   {index !== 0 ? <button onClick={e => {this.onMoveUp(e, index)}}>↑</button> : null}
                   {index !== this.state.boards.length - 1 ? <button onClick={e => {this.onMoveDown(e, index)}}>↓</button> : null}

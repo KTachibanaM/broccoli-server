@@ -14,12 +14,20 @@ export default class ApiClient {
     return axios.post(this.apiConfigEndpoint, {q, fields})
   }
 
-  upsertBoard(boardId, q) {
-    return axios.post(`${this.endpoint}/board/${boardId}`, q)
+  upsertBoard(boardId, q, limit, projections) {
+    const data = {q, projections};
+    if (limit) {
+      data["limit"] = limit
+    }
+    return axios.post(`${this.endpoint}/board/${boardId}`, data)
   }
 
   getBoards() {
-    return axios.get(`${this.endpoint}/boards`)
+    return axios.get(`${this.endpoint}/boards`).then(response => response.data)
+  }
+
+  getBoard(boardId) {
+    return axios.get(`${this.endpoint}/board/${boardId}`).then(response => response.data)
   }
 
   swapBoards(boardId, anotherBoardId) {
@@ -28,9 +36,5 @@ export default class ApiClient {
 
   removeBoard(boardId) {
     return axios.delete(`${this.endpoint}/board/${boardId}`)
-  }
-
-  getBoard(boardId) {
-    return axios.get(`${this.endpoint}/board/${boardId}`)
   }
 }

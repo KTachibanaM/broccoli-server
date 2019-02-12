@@ -5,33 +5,44 @@ import qs from "query-string";
 class UpsertBoardPage extends Component {
   constructor(props) {
     super(props);
-    let initName= "";
-    let initQ = "{}";
-    let initColumns = [];
-
-    const query = qs.parse(this.props.location.search);
-    if (query["name"]) {
-      const {name, q, columns} = this.props.boardsConfigStore.getBoard(query["name"]);
-      initName = name;
-      initQ = JSON.stringify(q);
-      initColumns = columns
-    }
 
     this.state = {
-      "name": initName,
-      "q": initQ,
-      "columns": initColumns,
-      "newColumnName": "",
-      "newColumnType": "component",
-      "newColumnFileName": "",
-      "newColumnArgs": "[]"
+      "name": "",
+      "q": "{}",
+      "projections": [],
+      "newProjectionName": "",
+      "newProjectionJsFilename": "",
+      "newProjectionArgs": "[]"
     };
 
     this.onSubmit = this.onSubmit.bind(this);
-    this.onAddColumn = this.onAddColumn.bind(this);
-    this.onRemoveColumn = this.onRemoveColumn.bind(this);
-    this.onMoveUpColumn = this.onMoveUpColumn.bind(this);
-    this.onMoveDownColumn = this.onMoveDownColumn.bind(this)
+    this.onAddProjection = this.onAddProjection.bind(this);
+    this.onRemoveProjection = this.onRemoveProjection.bind(this);
+    this.onMoveUpProjection = this.onMoveUpProjection.bind(this);
+    this.onMoveDownProjection = this.onMoveDownProjection.bind(this)
+  }
+
+  componentDidMount() {
+    const {"name": boardId} = qs.parse(this.props.location.search);
+    if (boardId) {
+      this.props.apiClient.getBoard(boardId)
+        .then(data => {
+          this.setState({
+            "name": boardId,
+            "q": JSON.stringify(data["q"]),
+            "projections": data["projections"].map(p => {
+              return {
+                "name": p["name"],
+                "jsFilename": p["js_filename"],
+                "args": JSON.stringify(p["args"])
+              }
+            })
+          })
+        })
+        .catch(error => {
+          this.props.showErrorMessage(`Fail to load board query from board id, error ${error.toString()}`)
+        })
+    }
   }
 
   onSubmit(e) {
@@ -40,70 +51,79 @@ class UpsertBoardPage extends Component {
   }
 
   submit() {
-    const {name, q, columns} = this.state;
-    this.props.boardsConfigStore.upsertBoard(name, JSON.parse(q), columns);
-    this.props.redirectTo("/boards/view");
+    const {name, q, projections} = this.state;
+    this.props.apiClient.upsertBoard(name, JSON.parse(q), undefined, projections.map(p => {
+      return {
+        "name": p["name"],
+        "js_filename": p["jsFilename"],
+        "args": JSON.parse(p["args"])
+      }
+    }))
+      .then(() => {
+        this.props.redirectTo("/boards/view");
+      })
+      .catch(error => {
+        this.props.showErrorMessage(`Fail to submit, error ${error.toString()}`)
+      })
   }
 
-  onAddColumn(e) {
-    this.addColumn();
+  onAddProjection(e) {
+    this.addProjection();
     e.preventDefault()
   }
 
-  addColumn() {
+  addProjection() {
     this.setState({
-      "columns": this.state.columns.concat([{
-        "name": this.state.newColumnName,
-        "type": this.state.newColumnType,
-        "fileName": this.state.newColumnFileName,
-        "args": JSON.parse(this.state.newColumnArgs)
+      "projections": this.state.projections.concat([{
+        "name": this.state.newProjectionName,
+        "jsFilename": this.state.newProjectionJsFilename,
+        "args": this.state.newProjectionArgs
       }]),
-      "newColumnName": "",
-      "newColumnType": "component",
-      "newColumnFileName": "",
-      "newColumnArgs": "[]"
+      "newProjectionName": "",
+      "newProjectionJsFilename": "",
+      "newProjectionArgs": "[]"
     })
   }
 
-  onRemoveColumn(e, name) {
-    this.removeColumn(name);
+  onRemoveProjection(e, name) {
+    this.removeProjection(name);
     e.preventDefault()
   }
 
-  removeColumn(name) {
+  removeProjection(name) {
     this.setState({
       ...this.state,
-      "columns": this.state.columns.filter(column => {
-        return column["name"] !== name
+      "projections": this.state.projections.filter(p => {
+        return p["name"] !== name
       })
     })
   }
 
-  onMoveUpColumn(e, index) {
-    this.moveUpColumn(index);
+  onMoveUpProjection(e, index) {
+    this.moveUpProjection(index);
     e.preventDefault()
   }
 
-  moveUpColumn(index) {
-    const columns = this.state.columns;
-    [columns[index - 1], columns[index]] = [columns[index], columns[index - 1]];
+  moveUpProjection(index) {
+    const projections = this.state.projections;
+    [projections[index - 1], projections[index]] = [projections[index], projections[index - 1]];
     this.setState({
       ...this.state,
-      "columns": columns
+      "projections": projections
     })
   }
 
-  onMoveDownColumn(e, index) {
-    this.moveDownColumn(index);
+  onMoveDownProjection(e, index) {
+    this.moveDownProjection(index);
     e.preventDefault()
   }
 
-  moveDownColumn(index) {
-    const columns = this.state.columns;
-    [columns[index], columns[index + 1]] = [columns[index + 1], columns[index]];
+  moveDownProjection(index) {
+    const projections = this.state.projections;
+    [projections[index], projections[index + 1]] = [projections[index + 1], projections[index]];
     this.setState({
       ...this.state,
-      "columns": columns
+      "projections": projections
     })
   }
 
@@ -124,18 +144,13 @@ class UpsertBoardPage extends Component {
             value={this.state.q}
             onChange={e => (this.setState({"q": e.target.value}))}
           /><br/>
-          Columns:<br/>
+          Projections:<br/>
           <table>
             <thead>
             <tr>
               <th>Name</th>
-              <th>Type</th>
-              <th>File name</th>
-              {this.state.newColumnType === "factory" ?
-                <th>Args</th>
-              :
-                null
-              }
+              <th>Filename</th>
+              <th>Args</th>
               <th/>
             </tr>
             </thead>
@@ -144,53 +159,39 @@ class UpsertBoardPage extends Component {
               <td>
                 <input
                   type="text"
-                  value={this.state.newColumnName}
-                  onChange={e => (this.setState({"newColumnName": e.target.value}))}
+                  value={this.state.newProjectionName}
+                  onChange={e => (this.setState({"newProjectionName": e.target.value}))}
                 />
-              </td>
-              <td>
-                <select
-                  value={this.state.newColumnType}
-                  onChange={e => (this.setState({"newColumnType": e.target.value}))}
-                >
-                  <option value="component">Component</option>
-                  <option value="factory">Factory</option>
-                </select>
               </td>
               <td>
                 <input
                   type="text"
-                  value={this.state.newColumnFileName}
-                  onChange={e => (this.setState({"newColumnFileName": e.target.value}))}
+                  value={this.state.newProjectionJsFilename}
+                  onChange={e => (this.setState({"newProjectionJsFilename": e.target.value}))}
                 />
               </td>
               <td>
-                {this.state.newColumnType === "factory" ?
-                  <input
-                    type="text"
-                    value={this.state.newColumnArgs}
-                    onChange={e => (this.setState({"newColumnArgs": e.target.value}))}
-                  />
-                :
-                  null
-                }
+                <input
+                  type="text"
+                  value={this.state.newProjectionArgs}
+                  onChange={e => (this.setState({"newProjectionArgs": e.target.value}))}
+                />
               </td>
               <td>
-                <button onClick={e => this.onAddColumn(e)}>+</button>
+                <button onClick={e => this.onAddProjection(e)}>+</button>
               </td>
             </tr>
-            {this.state.columns.map((column, index) => {
-              const {name, type, fileName, args} = column;
+            {this.state.projections.map((projection, index) => {
+              const {name, jsFilename, args} = projection;
               return (
                 <tr key={name}>
                   <td>{name}</td>
-                  <td>{type}</td>
-                  <td>{fileName}</td>
-                  <td>{JSON.stringify(args)}</td>
+                  <td>{jsFilename}</td>
+                  <td>{args}</td>
                   <td>
-                    {index !== 0 ? <button onClick={e => {this.onMoveUpColumn(e, index)}}>↑</button> : null}
-                    {index !== this.state.columns.length - 1 ? <button onClick={e => {this.onMoveDownColumn(e, index)}}>↓</button> : null}
-                    <button onClick={e => this.onRemoveColumn(e, name)}>-</button>
+                    {index !== 0 ? <button onClick={e => {this.onMoveUpProjection(e, index)}}>↑</button> : null}
+                    {index !== this.state.projections.length - 1 ? <button onClick={e => {this.onMoveDownProjection(e, index)}}>↓</button> : null}
+                    <button onClick={e => this.onRemoveProjection(e, name)}>-</button>
                   </td>
                 </tr>
               )

@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Link, Switch, Redirect } from "react-ro
 import Icon from "./icon.png"
 import WorkerManagerClient from "./clients/WorkerManagerClient"
 import ContentClient from "./clients/ContentClient"
-import BoardsClient from "./clients/BoardsClient"
 import ApiClient from "./clients/ApiClient"
 
 import ViewWorkersPage from "./pages/workers/ViewWorkersPage"
@@ -32,7 +31,6 @@ export default class App extends Component {
       process.env.REACT_APP_WORKER_MANAGER_HOSTNAME,
       parseInt(process.env.REACT_APP_WORKER_MANAGER_PORT),
     );
-    this.boardsConfigStore = new BoardsClient();
   }
 
   render() {
@@ -63,8 +61,8 @@ export default class App extends Component {
               exact
               path="/boards/view"
               component={() => {
-                const EnhancedPage = applyHoc(ViewBoardsPage, applyRouting);
-                return (<EnhancedPage boardsConfigStore={this.boardsConfigStore}/>)
+                const EnhancedPage = applyHoc(ViewBoardsPage, applyMessage, applyRouting);
+                return (<EnhancedPage apiClient={this.apiClient}/>)
               }}
             />
             <Route
@@ -72,7 +70,7 @@ export default class App extends Component {
               path="/boards/upsert"
               component={() => {
                 const EnhancedPage = applyHoc(UpsertBoardPage, applyMessage, applyRouting);
-                return (<EnhancedPage boardsConfigStore={this.boardsConfigStore}/>)
+                return (<EnhancedPage apiClient={this.apiClient}/>)
               }}
             />
             <Route
@@ -82,7 +80,7 @@ export default class App extends Component {
                 const EnhancedPage = applyHoc(Board, applyMessage);
                 return (<EnhancedPage
                   contentClient={this.contentClient}
-                  boardsConfigStore={this.boardsConfigStore}
+                  apiClient={this.apiClient}
                 />)
               }}
             />

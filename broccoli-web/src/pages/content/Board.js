@@ -4,45 +4,87 @@ import { withRouter } from "react-router-dom";
 class Board extends Component {
   constructor(props) {
     super(props);
-    this.boardName = decodeURIComponent(this.props.match.params.name);
-    this.board = this.props.boardsConfigStore.getBoard(this.boardName);
+    this.boardId = decodeURIComponent(this.props.match.params.name);
     this.state = {
       "loading": true,
-      "queryPayload": []
+      "boardQuery": {},
+      "loadedComponents": [],
+      "payload": []
     };
 
     this.reload = this.reload.bind(this)
   }
 
   componentDidMount() {
-    this.reload()
+    this.props.apiClient.getBoard(this.boardId)
+      .then(data => {
+        this.setState({
+          "boardQuery": {
+            "q": data["q"],
+            "limit": data["limit"],
+            "projections": data["projections"].map(p => {
+              return {
+                "name": p["name"],
+                "jsFilename": p["js_filename"],
+                "args": p["args"]
+              }
+            }),
+          },
+        });
+        return Promise.all(
+          this.state.boardQuery.projections.map(p => import(`../../boardProjections/${p["jsFilename"]}`))
+        )
+      })
+      .then(loadedModules => {
+        const loadedComponents = [];
+        for (let i = 0; i < loadedModules.length; ++i) {
+          const loadedModule = loadedModules[i];
+          const { args } = this.state.boardQuery.projections[i];
+          loadedComponents.push(loadedModule.default(...args))
+        }
+        this.setState({
+          "loadedComponents": loadedComponents
+        });
+        this.reload()
+      })
+      .catch(error => {
+        this.props.showErrorMessage(`Fail to load board or component, error ${error.toString()}`)
+      })
+      .finally(() => {
+        this.setState({
+          "loading": false
+        })
+      })
   }
 
   renderQuery() {
-    if (this.state.queryPayload.length === 0) {
+    if (this.state.payload.length === 0) {
       return (<div>No document</div>)
     }
     return (
       <table>
         <thead>
         <tr>
-          {this.board.columns.map(({name}) =>
+          {this.state.boardQuery.projections.map(({name}) =>
             (<th key={name}>{name}</th>)
           )}
         </tr>
         </thead>
         <tbody>
-        {this.state.queryPayload.map(document =>
+        {this.state.payload.map(document =>
           (
             <tr key={document["_id"]}>
-              {this.board.columns.map(({name, LoadedComponent}) =>
-                (<td key={name}>
-                  <LoadedComponent
-                    document={document}
-                    contentClient={this.props.contentClient}
-                    reload={this.reload}
-                  />
-                </td>)
+              {this.state.boardQuery.projections.map(({name}, index) => {
+                const LoadedComponent = this.state.loadedComponents[index];
+                return (
+                  <td key={name}>
+                    <LoadedComponent
+                      document={document}
+                      contentClient={this.props.contentClient}
+                      reload={this.reload}
+                    />
+                  </td>
+                )}
               )}
             </tr>
           )
@@ -56,33 +98,25 @@ class Board extends Component {
     this.setState({
       "loading": true
     });
-    Promise.all([
-      this.props.contentClient.query(this.board.q),
-      ...this.board.columns.map(column => import(`../../columns/${column["fileName"]}`))
-    ])
-      .then(([queryPayload, ...loadedModules]) => {
-        for (let i = 0; i < loadedModules.length; ++i) {
-          const loadedModule = loadedModules[i];
-          const config = this.board.columns[i];
-          this.board.columns[i]["LoadedComponent"] = loadedModule.default(...config["args"])
-        }
+    this.props.contentClient.query(this.state.boardQuery.q)
+      .then(payload => {
         this.setState({
           "loading": false,
-          "queryPayload": queryPayload
+          "payload": payload
         })
       })
       .catch(error => {
-        this.props.showErrorMessage(`Fail to load the query or column components, ${error.toString()}`)
+        this.props.showErrorMessage(`Fail to load the query, ${error.toString()}`)
       })
   }
 
   render() {
     return (
       <div>
-        <b>Board "{this.boardName}"</b>
+        <b>Board "{this.boardId}"</b>
         <button onClick={() => {this.reload()}}>Reload</button>
-        <div>Query: {JSON.stringify(this.board.q)}</div>
-        {this.state.loading ? <div>Loading the query and column components...</div> : this.renderQuery()}
+        <div>Query: {JSON.stringify(this.state.boardQuery.q)}</div>
+        {this.state.loading ? <div>Loading components and the query...</div> : this.renderQuery()}
       </div>
     )
   }
