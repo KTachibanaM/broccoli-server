@@ -51,8 +51,8 @@ class S3Wrapper(object):
             None
         )
 
-    def get_object(self, object_name):
-        self.minio_client.get_object(
+    def get_object(self, object_name) -> bytes:
+        return self.minio_client.get_object(
             self.bucket_name,
             object_name
         ).read()
