@@ -50,3 +50,89 @@ curl --request POST \
 	"global_args": [],
     "interval_seconds": 30
 }'
+
+curl --request POST \
+  --url http://localhost:5001/board/dedup \
+  --header 'content-type: application/json' \
+  --data '{
+	"q": {
+		"pending_removal": {
+			"$exists": false
+		},
+		"image_dhash": {
+			"$exists": true
+		},
+		"unique": {
+			"$exists": false
+		}
+	},
+	"projections": [
+		{
+			"args": [],
+			"js_filename": "image",
+			"name": "Image"
+		},
+		{
+			"args": [],
+			"js_filename": "dupImages",
+			"name": "Dups"
+		}
+	]
+}'
+
+curl --request POST \
+  --url http://localhost:5001/board/mod \
+  --header 'content-type: application/json' \
+  --data '{
+	"q": {
+		"pending_removal": {
+			"$exists": false
+		},
+		"mod": {
+			"$exists": false
+		},
+		"unique": true
+	},
+	"projections": [
+		{
+			"args": [],
+			"js_filename": "image",
+			"name": "Image"
+		}
+	]
+}'
+
+curl --request POST \
+  --url http://localhost:5001/board/public \
+  --header 'content-type: application/json' \
+  --data '{
+	"q": {
+		"pending_removal": {
+			"$exists": false
+		},
+		"mod": true
+	},
+	"projections": [
+		{
+			"args": [],
+			"js_filename": "image",
+			"name": "Image"
+		}
+	]
+}'
+
+curl --request POST \
+  --url http://localhost:5001/board/pending_removal \
+  --header 'content-type: application/json' \
+  --data '{
+	"q": {
+		"pending_removal": true
+	},
+	"projections": [
+		{
+			"args": [],
+			"js_filename": "image",
+			"name": "Image"
+		}
+	]
+}'
