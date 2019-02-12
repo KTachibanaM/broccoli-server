@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import Image from "./image"
+import image from "./image"
 
 export default function () {
   return class extends Component {
@@ -15,18 +15,14 @@ export default function () {
     componentDidMount() {
       const {document, contentClient} = this.props;
       contentClient.queryNearestHammingNeighbors(
-        {
-          "pending_removal": {
-            "$exists": false
-          },
-          "unique": true
-        },
+        {"mod": true},
         "image_dhash",
         document["image_dhash"],
         8 // todo: customize max distance
       )
         .then(payload => {
-          const dupImages = payload.filter(i => i["s3_image_id"] !== document["s3_image_id"])
+          const dupImages = payload.filter(i => i["s3_image_id"] !== document["s3_image_id"]);
+          console.log(dupImages);
           this.setState({
             "loading": false,
             "dupImages": dupImages
@@ -44,7 +40,8 @@ export default function () {
       return (
         <div>
           {this.state.dupImages.map(dupImage => {
-            return (<Image document={{"s3_image_id": dupImage["s3_image_id"]}} />)
+            const Image = image();
+            return (<Image key={dupImage["_id"]} document={{"s3_image_id": dupImage["s3_image_id"]}} />)
           })}
         </div>
       )
