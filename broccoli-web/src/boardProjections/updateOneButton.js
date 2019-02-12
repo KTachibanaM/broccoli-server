@@ -1,6 +1,6 @@
 import React, { Component } from "react"
 
-export default function (title, filter_q_key, update_doc) {
+export default function (title, filter_q_key, update_set_doc) {
   return class extends Component {
     constructor(props) {
       super(props);
@@ -20,7 +20,11 @@ export default function (title, filter_q_key, update_doc) {
             {
               [filter_q_key]: this.props.document[filter_q_key]
             },
-            update_doc
+            {
+              "$set": {
+                ...update_set_doc
+              }
+            }
           )
             .then(() => {
               this.props.reload()

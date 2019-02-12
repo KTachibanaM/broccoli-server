@@ -52,52 +52,47 @@ curl --request POST \
 }'
 
 curl --request POST \
-  --url http://localhost:5001/board/dedup \
-  --header 'content-type: application/json' \
-  --data '{
-	"q": {
-		"pending_removal": {
-			"$exists": false
-		},
-		"image_dhash": {
-			"$exists": true
-		},
-		"unique": {
-			"$exists": false
-		}
-	},
-	"projections": [
-		{
-			"args": [],
-			"js_filename": "image",
-			"name": "Image"
-		},
-		{
-			"args": [],
-			"js_filename": "dupImages",
-			"name": "Dups"
-		}
-	]
-}'
-
-curl --request POST \
   --url http://localhost:5001/board/mod \
   --header 'content-type: application/json' \
   --data '{
 	"q": {
-		"pending_removal": {
-			"$exists": false
+		"image_dhash": {
+			"$exists": true
 		},
 		"mod": {
 			"$exists": false
-		},
-		"unique": true
+		}
 	},
 	"projections": [
+	    {
+            "name": "s3_image_id",
+            "js_filename": "echo",
+			"args": ["s3_image_id"]
+		},
 		{
-			"args": [],
-			"js_filename": "image",
-			"name": "Image"
+            "name": "Image",
+            "js_filename": "image",
+			"args": []
+		},
+		{
+            "name": "Duplicate images",
+            "js_filename": "dupImages",
+			"args": []
+		},
+		{
+            "name": "Approve",
+            "js_filename": "updateOneButton",
+			"args": ["Approve", "s3_image_id", {"mod": true}]
+		},
+		{
+            "name": "Disapprove",
+            "js_filename": "updateOneButton",
+			"args": ["Disapprove", "s3_image_id", {"mod": false, "mod_false_reason": "disapprove"}]
+		},
+		{
+            "name": "Is duplicate",
+            "js_filename": "updateOneButton",
+			"args": ["Is duplicate", "s3_image_id", {"mod": false, "mod_false_reason": "duplicate"}]
 		}
 	]
 }'
@@ -107,32 +102,34 @@ curl --request POST \
   --header 'content-type: application/json' \
   --data '{
 	"q": {
-		"pending_removal": {
-			"$exists": false
-		},
 		"mod": true
 	},
 	"projections": [
 		{
-			"args": [],
-			"js_filename": "image",
-			"name": "Image"
+            "name": "Image",
+            "js_filename": "image",
+			"args": []
 		}
 	]
 }'
 
 curl --request POST \
-  --url http://localhost:5001/board/pending_removal \
+  --url http://localhost:5001/board/mod_false \
   --header 'content-type: application/json' \
   --data '{
 	"q": {
-		"pending_removal": true
+		"mod": false
 	},
 	"projections": [
 		{
-			"args": [],
-			"js_filename": "image",
-			"name": "Image"
+            "name": "Image",
+            "js_filename": "image",
+			"args": []
+		},
+		{
+            "name": "mod_false_reason",
+            "js_filename": "echo",
+			"args": ["mod_false_reason"]
 		}
 	]
 }'
