@@ -22,6 +22,7 @@ worker_globals = {
         secret_key=os.getenv("S3_SECRET_KEY"),
         region=os.getenv("S3_REGION"),
         bucket_name='broccoli',
+        use_ssl=True if os.getenv("S3_USE_SSL", "false") == "true" else False,
         logger=logger
     )
 }

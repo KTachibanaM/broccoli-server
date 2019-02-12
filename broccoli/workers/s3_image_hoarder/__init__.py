@@ -45,7 +45,7 @@ class S3ImageHoarder(BaseWorker):
         self.logger.debug(f"Uploading image at url {image_url} to S3 {self.image_s3}/{s3_image_id}")
         # todo: s3 upload failure?
         # todo: reaper to remove keys without actual image in metadata
-        self.image_s3.s3.put_object(Bucket=self.image_s3.bucket_name, Key=s3_image_id, Body=image_bytes)
+        self.image_s3.put_object(s3_image_id, image_bytes)
 
         self.rpc_client.blocking_update_one(
             filter_q={

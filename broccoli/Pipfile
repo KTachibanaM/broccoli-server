@@ -12,7 +12,6 @@ apscheduler = "*"
 feedparser = "*"
 beautifulsoup4 = "*"
 pymongo = "*"
-boto3 = "*"
 python-dotenv = "*"
 imagehash = "*"
 pybktree = "*"
@@ -22,6 +21,7 @@ flask-cors = "*"
 pymongo-schema = {file = "https://github.com/pajachiet/pymongo-schema/archive/0dd312c23f5d38fb7c1a1f3bbe977e79a814a119.zip"}
 pytz = "*"
 python-twitter = "*"
+minio = "*"
 
 [requires]
 python_version = "3.7"

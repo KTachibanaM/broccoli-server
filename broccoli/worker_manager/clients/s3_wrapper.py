@@ -1,41 +1,58 @@
 import logging
+import minio
+import io
 import json
-import boto3
-from botocore.client import Config
+from minio.error import BucketAlreadyExists, BucketAlreadyOwnedByYou
 
 
 class S3Wrapper(object):
     def __init__(self, endpoint_url: str, access_key: str, secret_key: str, region: str, bucket_name: str,
-                 logger: logging.Logger):
-        self.s3 = boto3.client(
-            's3',
-            endpoint_url=endpoint_url,
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-            config=Config(signature_version='s3v4'),
-            region_name=region
+                 use_ssl: bool, logger: logging.Logger):
+        self.minio_client = minio.Minio(
+            endpoint_url,
+            access_key=access_key,
+            secret_key=secret_key,
+            secure=use_ssl
         )
-        self.endpoint_url = endpoint_url
-        self.region = region
         self.bucket_name = bucket_name
-        bucket_names = map(lambda b: b['Name'], self.s3.list_buckets()['Buckets'])
-        if self.bucket_name not in bucket_names:
-            logger.info(f"Creating bucket {self.bucket_name}")
+        try:
+            logger.info(f"Creating bucket {bucket_name} in region {region if region else 'null'}")
             # todo: failures?
-            self.s3.create_bucket(Bucket=self.bucket_name)
-            self.s3.put_bucket_policy(Bucket=self.bucket_name, Policy=json.dumps({
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Principal": "*",
-                        "Action": ["s3:GetObject"],
-                        "Resource":[f"arn:aws:s3:::{self.bucket_name}/*"]
-                    }
-                ]
-            }))
-        else:
-            logger.info(f"Bucket with name {bucket_name} already exists in region {region}")
+            self.minio_client.make_bucket(bucket_name, location=region)
+        except BucketAlreadyExists:
+            logger.info(f"Bucket with name {bucket_name} already exists in region {region if region else 'null'}")
+        except BucketAlreadyOwnedByYou as e:
+            logger.info(f"Bucket with name {bucket_name} already owned by you "
+                        f"in region {region if region else 'null'}, error {e.message}")
+        self.minio_client.set_bucket_policy(
+            bucket_name,
+            json.dumps(
+                {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Action": ["s3:GetObject"],
+                            "Resource": [f"arn:aws:s3:::{bucket_name}/*"]
+                        }
+                    ]
+                }
+            )
+        )
 
-    def __str__(self):
-        return f"{self.region}.{self.endpoint_url}/{self.bucket_name}"
+    def put_object(self, object_name, raw_bytes):
+        self.minio_client.put_object(
+            self.bucket_name,
+            object_name,
+            io.BytesIO(raw_bytes),
+            len(raw_bytes),
+            "application/octet-stream",
+            None
+        )
+
+    def get_object(self, object_name):
+        self.minio_client.get_object(
+            self.bucket_name,
+            object_name
+        ).read()

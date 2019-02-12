@@ -33,7 +33,7 @@ class ImageHashTagger(BaseWorker):
             s3_image_id = document['s3_image_id']  # type: str
 
             self.logger.debug(f"Getting image from S3 {self.image_s3}/{s3_image_id}")
-            image_bytes = self.image_s3.s3.get_object(Bucket=self.image_s3.bucket_name, Key=s3_image_id)['Body'].read()
+            image_bytes = self.image_s3.get_object(s3_image_id)
 
             self.logger.debug(f"Computing and updating image hash for {s3_image_id}")
             pil_image = Image.open(io.BytesIO(image_bytes))
