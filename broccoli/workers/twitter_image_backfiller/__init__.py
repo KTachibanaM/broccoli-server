@@ -69,6 +69,7 @@ class TwitterImageBackfiller(BaseWorker):
                     "image_url": image_url,
                     "source": get_tweet_url(tweet)
                 })
+        self.logger.info(f"Going to append {len(new_documents)} new documents")
         for new_document in new_documents:
             self.rpc_client.blocking_append(idempotency_key="image_url", doc=new_document)
 
