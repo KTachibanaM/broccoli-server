@@ -37,6 +37,7 @@ class TwitterImageScraper(BaseWorker):
         if not tweets:
             self.logger.info(f"No tweet to process")
             return
+        self.logger.info(f"Going to process {len(tweets)} tweets")
 
         new_documents = []
         for tweet in tweets:
