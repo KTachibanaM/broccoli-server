@@ -1,0 +1,44 @@
+#!/usr/bin/python
+import sys
+import os
+
+
+def read_env_file_keys(file_content):
+    keys = []
+    for line in file_content.split("\n"):
+        line = line.strip()
+        if line and not line.startswith("#"):
+            key = line.split("=")[0]
+            keys.append(key)
+    return keys
+
+
+print("Checking whether .env and .sample.env files match")
+all_env_apps = list(
+    map(
+        lambda filename: filename[: -len(".env")],
+        filter(lambda filename: filename.endswith(".env") and not filename.endswith(".sample.env"), os.listdir('.'))
+    )
+)
+all_sample_env_apps = list(
+    map(
+        lambda filename: filename[: -len(".sample.env")],
+        filter(lambda filename: filename.endswith(".sample.env"), os.listdir('.'))
+    )
+)
+if set(all_env_apps) != set(all_sample_env_apps):
+    print(".env and .sample.env files do not match")
+    sys.exit(1)
+
+print("Checking whether .env and .sample.env file contents match")
+for app in all_env_apps:
+    with open(app + ".env") as f:
+        env_file_keys = read_env_file_keys(f.read())
+    with open(app + ".sample.env") as f:
+        sample_env_keys = read_env_file_keys(f.read())
+    if set(env_file_keys) != set(sample_env_keys):
+        print(app + ".env and " + app + ".sample.env have different key set")
+        sys.exit(1)
+
+print("All pre-flight checks pass")
+sys.exit(0)
