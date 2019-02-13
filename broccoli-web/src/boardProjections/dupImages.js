@@ -22,7 +22,6 @@ export default function () {
       )
         .then(payload => {
           const dupImages = payload.filter(i => i["s3_image_id"] !== document["s3_image_id"]);
-          console.log(dupImages);
           this.setState({
             "loading": false,
             "dupImages": dupImages

@@ -6,9 +6,12 @@ class UpsertBoardPage extends Component {
   constructor(props) {
     super(props);
 
+    this.boardId = qs.parse(this.props.location.search)["name"];
     this.state = {
+      "loading": this.boardId,
       "name": "",
       "q": "{}",
+      "limit": 0,
       "projections": [],
       "newProjectionName": "",
       "newProjectionJsFilename": "",
@@ -23,13 +26,14 @@ class UpsertBoardPage extends Component {
   }
 
   componentDidMount() {
-    const {"name": boardId} = qs.parse(this.props.location.search);
-    if (boardId) {
-      this.props.apiClient.getBoard(boardId)
+    if (this.boardId) {
+      this.props.apiClient.getBoard(this.boardId)
         .then(data => {
           this.setState({
-            "name": boardId,
+            "loading": false,
+            "name": this.boardId,
             "q": JSON.stringify(data["q"]),
+            "limit": data["limit"] ? data["limit"] : 0,
             "projections": data["projections"].map(p => {
               return {
                 "name": p["name"],
@@ -51,8 +55,8 @@ class UpsertBoardPage extends Component {
   }
 
   submit() {
-    const {name, q, projections} = this.state;
-    this.props.apiClient.upsertBoard(name, JSON.parse(q), undefined, projections.map(p => {
+    const {name, q, limit, projections} = this.state;
+    this.props.apiClient.upsertBoard(name, JSON.parse(q), limit !== 0 ? limit : undefined, projections.map(p => {
       return {
         "name": p["name"],
         "js_filename": p["jsFilename"],
@@ -128,6 +132,9 @@ class UpsertBoardPage extends Component {
   }
 
   render() {
+    if (this.state.loading) {
+      return (<div>Loading...</div>)
+    }
     return (
       <div>
         <b>Create new board</b>
@@ -143,6 +150,12 @@ class UpsertBoardPage extends Component {
             cols="30" rows="5" style={{"resize": "none"}}
             value={this.state.q}
             onChange={e => (this.setState({"q": e.target.value}))}
+          /><br/>
+          Limit (0 to unset):<br/>
+          <input
+            type="number"
+            value={this.state.limit}
+            onChange={e => (this.setState({"limit": parseInt(e.target.value)}))}
           /><br/>
           Projections:<br/>
           <table>

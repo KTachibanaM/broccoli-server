@@ -95,7 +95,7 @@ class Board extends Component {
     this.setState({
       "loading": true
     });
-    this.props.contentClient.query(this.state.boardQuery.q)
+    this.props.contentClient.query(this.state.boardQuery.q, this.state.boardQuery.limit)
       .then(payload => {
         this.setState({
           "loading": false,
@@ -116,6 +116,7 @@ class Board extends Component {
         <b>Board "{this.boardId}"</b>
         <button onClick={() => {this.reload()}}>Reload</button>
         <div>Query: {JSON.stringify(this.state.boardQuery.q)}</div>
+        <div>Limit: {this.state.boardQuery.limit ? this.state.boardQuery.limit : 'N/A'}</div>
         <div>Document count: {this.state.payload.length}</div>
         {this.renderQuery()}
       </div>
