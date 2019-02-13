@@ -5,7 +5,8 @@ export default class ViewBoardsPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      "boards": []
+      "boards": [],
+      "loading": true
     };
 
     this.onMoveUp = this.onMoveUp.bind(this);
@@ -34,6 +35,11 @@ export default class ViewBoardsPage extends Component {
       })
       .catch(error => {
         this.props.showErrorMessage(`Fail to get boards, message ${error.toString()}`)
+      })
+      .finally(() => {
+        this.setState({
+          "loading": false
+        })
       })
   }
 
@@ -90,6 +96,12 @@ export default class ViewBoardsPage extends Component {
   }
 
   render() {
+    if (this.state.loading) {
+      return (<div>Loading...</div>)
+    }
+    if (this.state.boards.length === 0) {
+      return (<div>No boards</div>)
+    }
     return (
       <div>
         <b>View boards</b>

@@ -58,9 +58,6 @@ class Board extends Component {
   }
 
   renderQuery() {
-    if (this.state.payload.length === 0) {
-      return (<div>No document</div>)
-    }
     return (
       <table>
         <thead>
@@ -111,12 +108,16 @@ class Board extends Component {
   }
 
   render() {
+    if (this.state.loading) {
+      return (<div>Loading components and the query...</div>)
+    }
     return (
       <div>
         <b>Board "{this.boardId}"</b>
         <button onClick={() => {this.reload()}}>Reload</button>
         <div>Query: {JSON.stringify(this.state.boardQuery.q)}</div>
-        {this.state.loading ? <div>Loading components and the query...</div> : this.renderQuery()}
+        <div>Document count: {this.state.payload.length}</div>
+        {this.renderQuery()}
       </div>
     )
   }
