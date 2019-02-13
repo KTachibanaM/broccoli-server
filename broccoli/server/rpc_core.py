@@ -55,9 +55,10 @@ class RpcCore(object):
             self.logger.info(f"Fails to validate query payload={payload}, message {message}")
             return False, []
 
-        # todo: failure
         limit = payload["limit"] if "limit" in payload else None
-        return True, self.content_store.query(payload["q"], limit)
+        projection = payload["projection"] if "projection" in payload else None
+        # todo: query failure
+        return True, self.content_store.query(payload["q"], limit=limit, projection=projection)
 
     def update_one(self, metadata: Dict, payload: Dict) -> Tuple[bool, str]:
         self.logger.debug(f"Calling update_one metadata={metadata}, payload={payload}")

@@ -10,8 +10,8 @@ export default class ApiClient {
     return axios.get(this.apiConfigEndpoint)
   }
 
-  setApiConfig(q, fields) {
-    return axios.post(this.apiConfigEndpoint, {q, fields})
+  setApiConfig(q, projection) {
+    return axios.post(this.apiConfigEndpoint, {q, projection})
   }
 
   upsertBoard(boardId, q, limit, projections) {

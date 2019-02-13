@@ -45,6 +45,12 @@ SCHEMAS = {
                 },
                 "limit": {
                     "type": "number",
+                },
+                "projection": {
+                    "type": "array",
+                    "contains": {
+                        "type": "string"
+                    }
                 }
             },
             "required": ["q"]

@@ -28,12 +28,15 @@ class ContentStore(object):
         doc["created_at"] = datetime.datetime.utcnow()
         self.collection.insert(doc)
 
-    def query(self, q: Dict, limit: Optional[int]) -> List[Dict]:
-        res = []
+    def query(self, q: Dict, limit: Optional[int], projection: Optional[List[str]] = None) -> List[Dict]:
         # todo: find fails?
-        cursor = self.collection.find(q)
+        if projection:
+            projection += ["_id", "created_at"]
+        cursor = self.collection.find(q, projection=projection)
         if limit:
             cursor = cursor.limit(limit)
+
+        res = []
         for document in cursor:
             document["_id"] = str(document["_id"])
             document["created_at"] = datetime_to_milliseconds(document["created_at"])

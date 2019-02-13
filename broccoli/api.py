@@ -36,12 +36,15 @@ def api():
     config = config_store.get_config()
     if not config:
         return jsonify([]), 200
-    q, fields = config
+    q, projection = config
 
     rpc_response = requests.post(f"http://{server_hostname}:5000/api", json={
         "verb": "query",
         "metadata": {},
-        "payload": q
+        "payload": {
+            "q": q,
+            "projection": projection
+        }
     })
     response = rpc_response.json()
     if "status" not in response:
@@ -64,17 +67,9 @@ def api():
             "payload": response["payload"]
         }), 400
 
-    # todo: use projection here
-    def shred_document(document):
-        result = {}
-        for field in fields:
-            if field in document:
-                result[field] = document[field]
-        return result
-
     return jsonify({
         "status": "ok",
-        "payload": list(map(shred_document, response["payload"]))
+        "payload": response["payload"]
     }), 200
 
 
@@ -83,10 +78,10 @@ def get_api_config():
     config = config_store.get_config()
     if not config:
         return jsonify({}), 200
-    q, fields = config
+    q, projection = config
     return jsonify({
         "q": q,
-        "fields": fields
+        "projection": projection
     }), 200
 
 
@@ -96,14 +91,14 @@ SET_API_CONFIG_SCHEMA = {
         "q": {
             "type": "object",
         },
-        "fields": {
+        "projection": {
             "type": "array",
             "contains": {
                 "type": "string"
             }
         }
     },
-    "required": ["q", "fields"]
+    "required": ["q", "projection"]
 }
 
 
@@ -116,7 +111,7 @@ def set_api_config():
             "status": "error",
             "message": message
         })
-    config_store.set_config(parsed_body["q"], parsed_body["fields"])
+    config_store.set_config(parsed_body["q"], parsed_body["projection"])
     return jsonify({
         "status": "ok"
     }), 200

@@ -145,3 +145,13 @@ curl --request POST \
 		}
 	]
 }'
+
+curl --request POST \
+  --url http://localhost:5001/apiConfig \
+  --header 'content-type: application/json' \
+  --data '{
+	"q": {
+		"mod": true
+	},
+	"projection": ["s3_image_id", "source"]
+}'

@@ -7,7 +7,7 @@ class ConfigStore(object):
     def __init__(self, hostname: str, port: int, db: str):
         self.config_cached = False
         self.q = {}
-        self.fields = []
+        self.projection = []
 
         # todo: properly close all resources
         self.client = pymongo.MongoClient(hostname, port)
@@ -16,7 +16,7 @@ class ConfigStore(object):
 
     def get_config(self) -> Optional[Tuple[Dict, List[str]]]:
         if self.config_cached:
-            return self.q, self.fields
+            return self.q, self.projection
         document = self.collection.find_one(
             {
                 "endpoint": "default"
@@ -24,11 +24,11 @@ class ConfigStore(object):
         )
         if not document:
             return None
-        q, fields = json.loads(document["q"]), document["fields"]
-        self.q, self.fields, self.config_cached = q, fields, True
-        return q, fields
+        q, projection = json.loads(document["q"]), document["projection"]
+        self.q, self.projection, self.config_cached = q, projection, True
+        return q, projection
 
-    def set_config(self, q: Dict, fields: List[str]):
+    def set_config(self, q: Dict, projection: List[str]):
         self.collection.update_one(
             {
                 "endpoint": "default"
@@ -37,9 +37,9 @@ class ConfigStore(object):
                 "$set": {
                     "endpoint": "default",
                     "q": json.dumps(q),
-                    "fields": fields
+                    "projection": projection
                 }
             },
             upsert=True
         )
-        self.q, self.fields, self.config_cached = q, fields, True
+        self.q, self.projection, self.config_cached = q, projection, True

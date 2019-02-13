@@ -7,17 +7,17 @@ export default class ApiPage extends Component {
     this.state = {
       "loading": true,
       "qStr": "{}",
-      "fieldsStr": "[]"
+      "projectionStr": "[]"
     }
   }
 
   componentDidMount() {
     this.props.apiClient.getApiConfig()
       .then(response => {
-        const {q, fields} = response.data;
+        const {q, projection} = response.data;
         this.setState({
           "qStr": JSON.stringify(q),
-          "fieldsStr": JSON.stringify(fields)
+          "projectionStr": JSON.stringify(projection)
         })
       })
       .catch(error => {
@@ -42,17 +42,17 @@ export default class ApiPage extends Component {
           value={this.state.qStr}
           onChange={e => {this.setState({"qStr": e.target.value})}}
         /><br/>
-        Fields:<br/>
+        Projection:<br/>
         <input
           type="text"
-          value={this.state.fieldsStr}
-          onChange={e => {this.setState({"fieldsStr": e.target.value})}}
+          value={this.state.projectionStr}
+          onChange={e => {this.setState({"projectionStr": e.target.value})}}
         /><br/>
         <button
           onClick={() => {
             this.props.apiClient.setApiConfig(
               JSON.parse(this.state.qStr),
-              JSON.parse(this.state.fieldsStr)
+              JSON.parse(this.state.projectionStr)
             )
               .then(() => {
                 this.props.showOkMessage("Set API config")
