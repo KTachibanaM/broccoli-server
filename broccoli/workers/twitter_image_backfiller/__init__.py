@@ -25,9 +25,12 @@ class TwitterImageBackfiller(BaseWorker):
             access_token_key=os.getenv("TWITTER_ACCESS_TOKEN_KEY"),
             access_token_secret=os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
         )
-        self.metadata_store.set(MAX_ID_KEY, self.init_tweet_id)
-        self.metadata_store.set(CURRENT_ROUND_KEY, 0)
-        self.metadata_store.set(PAUSED_KEY, True)
+        if not self.metadata_store.exists(MAX_ID_KEY):
+            self.metadata_store.set(MAX_ID_KEY, self.init_tweet_id)
+            self.metadata_store.set(CURRENT_ROUND_KEY, 0)
+            self.metadata_store.set(PAUSED_KEY, True)
+        else:
+            self.logger.info(f"Skip setting metadata because they are already set")
 
     def work(self):
         max_tweet_id = self.metadata_store.get(MAX_ID_KEY)

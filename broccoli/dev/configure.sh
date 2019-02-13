@@ -52,6 +52,20 @@ curl --request POST \
 }'
 
 curl --request POST \
+  --url http://localhost:5002/api/worker \
+  --header 'content-type: application/json' \
+  --data '{
+	"module": "workers.twitter_image_scraper",
+	"class_name": "TwitterImageScraper",
+	"args": {
+	     "screen_name": "Wzettairyouiki",
+	     "init_tweet_id": 1094105684180897792
+	},
+	"global_args": [],
+    "interval_seconds": 60
+}'
+
+curl --request POST \
   --url http://localhost:5001/board/mod \
   --header 'content-type: application/json' \
   --data '{
