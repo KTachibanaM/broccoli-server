@@ -23,10 +23,12 @@ class TwitterImageScraper(BaseWorker):
             access_token_key=os.getenv("TWITTER_ACCESS_TOKEN_KEY"),
             access_token_secret=os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
         )
-
-    def work(self):
         if not self.metadata_store.exists(SINCE_ID_KEY):
             self.metadata_store.set(SINCE_ID_KEY, self.init_tweet_id)
+        else:
+            self.logger.info(f"Skip setting metadata because they are already set")
+
+    def work(self):
         since_tweet_id = self.metadata_store.get(SINCE_ID_KEY)
 
         tweets = self.twitter_api.GetUserTimeline(
