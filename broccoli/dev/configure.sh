@@ -43,9 +43,8 @@ curl --request POST \
 	"class_name": "TwitterImageBackfiller",
 	"args": {
 	     "screen_name": "Wzettairyouiki",
-	     "init_tweet_id": 1094105684180897792,
-	     "round_count": 10,
-	     "pause_after_round": 1
+	     "round_count": 5,
+	     "pause_after_round": 2
 	},
 	"global_args": [],
     "interval_seconds": 30
@@ -58,8 +57,7 @@ curl --request POST \
 	"module": "workers.twitter_image_scraper",
 	"class_name": "TwitterImageScraper",
 	"args": {
-	     "screen_name": "Wzettairyouiki",
-	     "init_tweet_id": 1094105684180897792
+	     "screen_name": "Wzettairyouiki"
 	},
 	"global_args": [],
     "interval_seconds": 60

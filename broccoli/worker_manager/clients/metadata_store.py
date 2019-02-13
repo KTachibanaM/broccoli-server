@@ -18,3 +18,13 @@ class MetadataStore(object):
 
     def set(self, key: str, value):
         self.collection.update_one({'key': key}, {'$set': {'value': value}}, upsert=True)
+
+    def get_from_another_worker(self, worker_id: str, key: str):
+        collection = self.db[worker_id]
+        doc = collection.find_one({'key': key})
+        return doc['value']
+
+    def exists_in_another_worker(self, worker_id: str, key: str):
+        collection = self.db[worker_id]
+        count = collection.count_documents({'key': key})
+        return count != 0
