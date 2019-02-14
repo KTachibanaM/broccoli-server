@@ -34,7 +34,6 @@ class ContentStore(object):
             q["created_at"] = {
                 "$lte": milliseconds_to_datetime(earlier_than)
             }
-        print(q)
         if projection:
             projection += ["_id", "created_at"]
         # todo: find fails?

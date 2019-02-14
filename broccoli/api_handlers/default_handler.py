@@ -4,7 +4,7 @@ from api.base_handler import BaseHandler
 
 class DefaultHandler(BaseHandler):
     def handle_request(self, query_params: Dict):
-        from_timestamp = query_params.get("from", None)
+        from_timestamp = int(query_params["from"]) if "from" in query_params else None
         return self.http_rpc_client.query(
             q={
                 "mod": True

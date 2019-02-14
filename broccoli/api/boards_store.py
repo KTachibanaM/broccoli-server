@@ -1,5 +1,5 @@
 import pymongo
-from api.board_query import BoardQuery
+from api.objects.board_query import BoardQuery
 from typing import List, Tuple
 
 
