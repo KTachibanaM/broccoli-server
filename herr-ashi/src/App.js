@@ -1,6 +1,6 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import 'semantic-ui-css/semantic.min.css';
-import { Container, Loader, Message, Grid, Image, Header, Menu, Button, Icon } from 'semantic-ui-react'
+import {Container, Loader, Message, Grid, Image, Header, Menu, Button, Icon} from 'semantic-ui-react'
 import ApiClient from './ApiClient'
 
 class App extends Component {
@@ -26,6 +26,10 @@ class App extends Component {
   }
 
   loadNextPage() {
+    window.scrollTo(0, 0);
+    this.setState({
+      "loading": true
+    });
     this.apiClient.nextPage()
       .then(data => {
         this.setState({
@@ -99,16 +103,17 @@ class App extends Component {
     return (
       <Container>
         {this.renderImageGrid()}
-        <Button.Group fluid>
-          <Button icon>
-            <Icon name='arrow left' />
-          </Button>
-          <Button icon onClick={() => {
-            this.loadNextPage()
-          }}>
-            <Icon name='arrow right' />
-          </Button>
-        </Button.Group>
+        <Menu inverted>
+          <Button.Group fluid>
+            <Button icon inverted>
+              <Icon name='arrow left'/>
+            </Button>
+            <Button.Or text='o' />
+            <Button icon inverted onClick={() => {this.loadNextPage()}}>
+              <Icon name='arrow right'/>
+            </Button>
+          </Button.Group>
+        </Menu>
       </Container>
     )
   }
@@ -118,7 +123,7 @@ class App extends Component {
       <Container>
         <Menu inverted>
           <Menu.Item header>Herr あし</Menu.Item>
-          <Menu.Item name='Stream' active />
+          <Menu.Item name='Stream' active/>
         </Menu>
         {this.renderStream()}
       </Container>
