@@ -48,6 +48,9 @@ BOARD_QUERY_SCHEMA = {
         "limit": {
             "type": "number",
         },
+        "sort": {
+            "type": "object"
+        },
         "projections": {
             "type": "array",
             "contains": {

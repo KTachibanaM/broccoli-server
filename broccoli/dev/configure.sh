@@ -75,12 +75,10 @@ curl --request POST \
 			"$exists": false
 		}
 	},
+	"sort": {
+	    "created_at": 1
+	},
 	"projections": [
-	    {
-            "name": "s3_image_id",
-            "js_filename": "echo",
-			"args": ["s3_image_id"]
-		},
 		{
             "name": "Image",
             "js_filename": "image",
@@ -144,14 +142,4 @@ curl --request POST \
 			"args": ["mod_false_reason"]
 		}
 	]
-}'
-
-curl --request POST \
-  --url http://localhost:5001/apiConfig \
-  --header 'content-type: application/json' \
-  --data '{
-	"q": {
-		"mod": true
-	},
-	"projection": ["s3_image_id", "source"]
 }'

@@ -14,10 +14,13 @@ export default class ApiClient {
     return axios.post(this.apiConfigEndpoint, {q, projection})
   }
 
-  upsertBoard(boardId, q, limit, projections) {
+  upsertBoard(boardId, q, limit, sort, projections) {
     const data = {q, projections};
     if (limit) {
       data["limit"] = limit
+    }
+    if (sort) {
+      data["sort"] = sort
     }
     return axios.post(`${this.endpoint}/board/${boardId}`, data)
   }

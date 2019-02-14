@@ -12,6 +12,7 @@ class UpsertBoardPage extends Component {
       "name": "",
       "q": "{}",
       "limit": 0,
+      "sort": "{}",
       "projections": [],
       "newProjectionName": "",
       "newProjectionJsFilename": "",
@@ -34,6 +35,7 @@ class UpsertBoardPage extends Component {
             "name": this.boardId,
             "q": JSON.stringify(data["q"]),
             "limit": data["limit"] ? data["limit"] : 0,
+            "sort": data["sort"] ? JSON.stringify(data["sort"]) : "{}",
             "projections": data["projections"].map(p => {
               return {
                 "name": p["name"],
@@ -55,20 +57,25 @@ class UpsertBoardPage extends Component {
   }
 
   submit() {
-    const {name, q, limit, projections} = this.state;
-    this.props.apiClient.upsertBoard(name, JSON.parse(q), limit !== 0 ? limit : undefined, projections.map(p => {
-      return {
-        "name": p["name"],
-        "js_filename": p["jsFilename"],
-        "args": JSON.parse(p["args"])
-      }
-    }))
-      .then(() => {
-        this.props.redirectTo("/boards/view");
-      })
-      .catch(error => {
-        this.props.showErrorMessage(`Fail to submit, error ${error.toString()}`)
-      })
+    const {name, q, limit, sort, projections} = this.state;
+    this.props.apiClient.upsertBoard(
+      name,
+      JSON.parse(q),
+      limit !== 0 ? limit : undefined,
+      sort !== "{}" ? JSON.parse(sort) : undefined,
+      projections.map(p => {
+        return {
+          "name": p["name"],
+          "js_filename": p["jsFilename"],
+          "args": JSON.parse(p["args"])
+        }
+      }))
+        .then(() => {
+          this.props.redirectTo("/boards/view");
+        })
+        .catch(error => {
+          this.props.showErrorMessage(`Fail to submit, error ${error.toString()}`)
+        })
   }
 
   onAddProjection(e) {
@@ -156,6 +163,12 @@ class UpsertBoardPage extends Component {
             type="number"
             value={this.state.limit}
             onChange={e => (this.setState({"limit": parseInt(e.target.value)}))}
+          /><br/>
+          Sort:<br/>
+          <textarea
+            cols="30" rows="5" style={{"resize": "none"}}
+            value={this.state.sort}
+            onChange={e => {this.setState({"sort": e.target.value})}}
           /><br/>
           Projections:<br/>
           <table>

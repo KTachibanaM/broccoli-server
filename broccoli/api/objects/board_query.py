@@ -23,6 +23,10 @@ class BoardQuery(object):
             self.limit = d["limit"]
         else:
             self.limit = None
+        if "sort" in d:
+            self.sort = d["sort"]
+        else:
+            self.sort = None
         self.projections = list(map(lambda pd: BoardProjection(pd), d["projections"]))
 
     def to_dict(self):
@@ -32,4 +36,6 @@ class BoardQuery(object):
         }
         if self.limit:
             d["limit"] = self.limit
+        if self.sort:
+            d["sort"] = self.sort
         return d

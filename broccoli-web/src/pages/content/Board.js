@@ -22,6 +22,7 @@ class Board extends Component {
           "boardQuery": {
             "q": data["q"],
             "limit": data["limit"],
+            "sort": data["sort"],
             "projections": data["projections"].map(p => {
               return {
                 "name": p["name"],
@@ -117,6 +118,7 @@ class Board extends Component {
         <button onClick={() => {this.reload()}}>Reload</button>
         <div>Query: {JSON.stringify(this.state.boardQuery.q)}</div>
         <div>Limit: {this.state.boardQuery.limit ? this.state.boardQuery.limit : 'N/A'}</div>
+        <div>Sort: {this.state.boardQuery.sort ? JSON.stringify(this.state.boardQuery.sort) : 'N/A'}</div>
         <div>Document count: {this.state.payload.length}</div>
         {this.renderQuery()}
       </div>

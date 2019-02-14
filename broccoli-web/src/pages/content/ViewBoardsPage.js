@@ -23,6 +23,7 @@ export default class ViewBoardsPage extends Component {
               "boardQuery": {
                 "q": board["board_query"]["q"],
                 "limit": board["board_query"]["limit"],
+                "sort": board["board_query"]["sort"],
                 "projections": board["board_query"]["projections"].map(p => {
                   return {
                     "name": p["name"]
@@ -111,13 +112,14 @@ export default class ViewBoardsPage extends Component {
             <th>Name</th>
             <th>Query</th>
             <th>Limit</th>
+            <th>Sort</th>
             <th>Projections</th>
             <th>Operations</th>
           </tr>
           </thead>
           <tbody>
           {this.state.boards.map((board, index) => {
-            const {boardId, boardQuery: { q, limit, projections }} = board;
+            const {boardId, boardQuery: { q, limit, sort, projections }} = board;
             return (
               <tr key={boardId}>
                 <td>
@@ -125,6 +127,7 @@ export default class ViewBoardsPage extends Component {
                 </td>
                 <td>{JSON.stringify(q)}</td>
                 <td>{limit ? limit : "N/A"}</td>
+                <td>{sort ? JSON.stringify(sort) : "N/A"}</td>
                 <td>{projections.map(p => p["name"]).join(", ")}</td>
                 <td>
                   <button
