@@ -51,6 +51,12 @@ SCHEMAS = {
                     "contains": {
                         "type": "string"
                     }
+                },
+                "sort": {
+                    "type": "object",
+                    "contains": {
+                        "type": "number"
+                    }
                 }
             },
             "required": ["q"]

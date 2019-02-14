@@ -57,8 +57,9 @@ class RpcCore(object):
 
         limit = payload["limit"] if "limit" in payload else None
         projection = payload["projection"] if "projection" in payload else None
+        sort = payload["sort"] if "sort" in payload else None
         # todo: query failure
-        return True, self.content_store.query(payload["q"], limit=limit, projection=projection)
+        return True, self.content_store.query(payload["q"], limit=limit, projection=projection, sort=sort)
 
     def update_one(self, metadata: Dict, payload: Dict) -> Tuple[bool, str]:
         self.logger.debug(f"Calling update_one metadata={metadata}, payload={payload}")
