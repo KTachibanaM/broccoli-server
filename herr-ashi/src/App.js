@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import 'semantic-ui-css/semantic.min.css';
-import { Container, Loader, Message, Grid, Image, Header } from 'semantic-ui-react'
+import { Container, Loader, Message, Grid, Image, Header, Menu, Button, Icon } from 'semantic-ui-react'
 import ApiClient from './ApiClient'
 
 class App extends Component {
@@ -22,6 +22,10 @@ class App extends Component {
   }
 
   componentDidMount() {
+    this.loadNextPage()
+  }
+
+  loadNextPage() {
     this.apiClient.nextPage()
       .then(data => {
         this.setState({
@@ -46,7 +50,7 @@ class App extends Component {
     for (let columnI = 0; columnI < items.length; ++columnI) {
       columnComponents.push((
         <Grid.Column key={columnI}>
-          <Image src={items[columnI]["s3_image_link"]} />
+          <Image src={items[columnI]["s3_image_link"]} size='medium'/>
         </Grid.Column>
       ))
     }
@@ -80,7 +84,7 @@ class App extends Component {
     return rowComponents
   }
 
-  renderPage() {
+  renderStream() {
     if (this.state.loading) {
       return (<Loader inverted>Loading</Loader>)
     }
@@ -92,13 +96,31 @@ class App extends Component {
         </Message>
       )
     }
-    return <div>{this.renderImageGrid()}</div>
+    return (
+      <Container>
+        {this.renderImageGrid()}
+        <Button.Group fluid>
+          <Button icon>
+            <Icon name='arrow left' />
+          </Button>
+          <Button icon onClick={() => {
+            this.loadNextPage()
+          }}>
+            <Icon name='arrow right' />
+          </Button>
+        </Button.Group>
+      </Container>
+    )
   }
 
   render() {
     return (
       <Container>
-        {this.renderPage()}
+        <Menu inverted>
+          <Menu.Item header>Herr あし</Menu.Item>
+          <Menu.Item name='Stream' active />
+        </Menu>
+        {this.renderStream()}
       </Container>
     );
   }

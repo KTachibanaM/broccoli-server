@@ -15,6 +15,9 @@ export default class ApiClient {
     return axios.get(url)
       .then(response => {
         const data = response.data;
+        if (data.length === 0) {
+          return []
+        }
         const lastItem = data[data.length - 1];
         this.fromTimestamp = lastItem["created_at"] - 1;
         return data.map(item => {
