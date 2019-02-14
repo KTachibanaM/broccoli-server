@@ -96,7 +96,11 @@ class Board extends Component {
     this.setState({
       "loading": true
     });
-    this.props.contentClient.query(this.state.boardQuery.q, this.state.boardQuery.limit)
+    this.props.contentClient.query(
+      this.state.boardQuery.q,
+      this.state.boardQuery.limit,
+      this.state.boardQuery.sort
+    )
       .then(payload => {
         this.setState({
           "loading": false,

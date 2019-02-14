@@ -23,8 +23,15 @@ export default class ContentClient {
     return response.data["payload"]
   }
 
-  async query(q, limit) {
-    return this.call("query", {}, {q, limit})
+  async query(q, limit, sort) {
+    const payload = {q};
+    if (limit) {
+      payload["limit"] = limit
+    }
+    if (sort) {
+      payload["sort"] = sort
+    }
+    return this.call("query", {}, payload)
   }
 
   async schema() {
