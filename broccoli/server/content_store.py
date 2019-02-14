@@ -3,7 +3,7 @@ import datetime
 from pymongo_schema.extract import extract_collection_schema
 from typing import Dict, List, Optional
 from server.logger import logger
-from common.datetime_utils import datetime_to_milliseconds
+from common.datetime_utils import datetime_to_milliseconds, milliseconds_to_datetime
 
 
 class ContentStore(object):
@@ -29,10 +29,15 @@ class ContentStore(object):
         self.collection.insert(doc)
 
     def query(self, q: Dict, limit: Optional[int], projection: Optional[List[str]] = None,
-              sort: Optional[Dict[str, int]] = None) -> List[Dict]:
-        # todo: find fails?
+              sort: Optional[Dict[str, int]] = None, earlier_than: Optional[int] = None) -> List[Dict]:
+        if earlier_than:
+            q["created_at"] = {
+                "$lte": milliseconds_to_datetime(earlier_than)
+            }
+        print(q)
         if projection:
             projection += ["_id", "created_at"]
+        # todo: find fails?
         cursor = self.collection.find(q, projection=projection)
         if limit:
             cursor = cursor.limit(limit)
