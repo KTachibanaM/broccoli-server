@@ -12,5 +12,5 @@ class BaseHandler(metaclass=abc.ABCMeta):
         )
 
     @abc.abstractmethod
-    def handle_request(self, query_params: Dict):
+    def handle_request(self, path: str, query_params: Dict):
         pass

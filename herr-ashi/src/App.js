@@ -30,7 +30,36 @@ class App extends Component {
     this.setState({
       "loading": true
     });
-    this.apiClient.nextPage()
+    const fromTimestamp = this.state.data.length !== 0
+      ? this.state.data[this.state.data.length - 1]["created_at"] - 1
+      : undefined;
+    this.apiClient.nextPage(fromTimestamp)
+      .then(data => {
+        this.setState({
+          "data": data
+        })
+      })
+      .catch(error => {
+        this.setState({
+          "error": error.toString()
+        })
+      })
+      .finally(() => {
+        this.setState({
+          "loading": false
+        })
+      })
+  }
+
+  loadPrevPage() {
+    window.scrollTo(0, 0);
+    this.setState({
+      "loading": true
+    });
+    const toTimestamp = this.state.data.length !== 0
+      ? this.state.data[0]["created_at"] + 1
+      : undefined;
+    this.apiClient.prevPage(toTimestamp)
       .then(data => {
         this.setState({
           "data": data
@@ -105,7 +134,7 @@ class App extends Component {
         {this.renderImageGrid()}
         <Menu inverted>
           <Button.Group fluid>
-            <Button icon inverted>
+            <Button icon inverted onClick={() => {this.loadPrevPage()}}>
               <Icon name='arrow left'/>
             </Button>
             <Button.Or text='o' />

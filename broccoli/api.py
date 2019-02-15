@@ -32,11 +32,10 @@ server_hostname = os.getenv("SERVER_HOSTNAME")
 default_handler = DefaultHandler()
 
 
-@app.route("/api", methods=["GET"])
-def api():
-    return jsonify(
-        default_handler.handle_request(request.args.to_dict())
-    ), 200
+@app.route("/api", defaults={'path': ''}, methods=["GET"])
+@app.route("/api/<path:path>")
+def api(path):
+    return jsonify(default_handler.handle_request(path, request.args.to_dict())), 200
 
 
 BOARD_QUERY_SCHEMA = {
