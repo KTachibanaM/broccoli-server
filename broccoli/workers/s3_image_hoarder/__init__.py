@@ -20,7 +20,7 @@ class S3ImageHoarder(BaseWorker):
             "s3_image_id": {
                 "$exists": False
             }
-        })
+        }, limit=50)
         if not documents:
             self.logger.info("No image to hoard")
             return

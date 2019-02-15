@@ -21,7 +21,7 @@ class ImageHashTagger(BaseWorker):
             "image_dhash": {
                 "$exists": False
             }
-        })
+        }, limit=50)
         if not documents:
             self.logger.info("No image to tag hash")
             return

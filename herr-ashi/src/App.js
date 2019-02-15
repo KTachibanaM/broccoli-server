@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import 'semantic-ui-css/semantic.min.css';
-import {Container, Loader, Message, Grid, Image, Header, Menu, Button, Icon, Card} from 'semantic-ui-react'
+import {Container, Loader, Message, Grid, Image, Header, Menu, Button, Icon} from 'semantic-ui-react'
 import ApiClient from './ApiClient'
 
 class App extends Component {
@@ -127,6 +127,22 @@ class App extends Component {
     return rowComponents
   }
 
+  renderNavigationButtons() {
+    return (
+      <Menu inverted>
+        <Button.Group fluid>
+          <Button icon inverted onClick={() => {this.loadPrevPage()}}>
+            <Icon name='arrow left'/>
+          </Button>
+          <Button.Or text='o' />
+          <Button icon inverted onClick={() => {this.loadNextPage()}}>
+            <Icon name='arrow right'/>
+          </Button>
+        </Button.Group>
+      </Menu>
+    )
+  }
+
   renderStream() {
     if (this.state.loading) {
       return (<Loader inverted>Loading</Loader>)
@@ -141,18 +157,9 @@ class App extends Component {
     }
     return (
       <Container>
+        {this.renderNavigationButtons()}
         {this.renderImageGrid()}
-        <Menu inverted>
-          <Button.Group fluid>
-            <Button icon inverted onClick={() => {this.loadPrevPage()}}>
-              <Icon name='arrow left'/>
-            </Button>
-            <Button.Or text='o' />
-            <Button icon inverted onClick={() => {this.loadNextPage()}}>
-              <Icon name='arrow right'/>
-            </Button>
-          </Button.Group>
-        </Menu>
+        {this.renderNavigationButtons()}
       </Container>
     )
   }
@@ -162,7 +169,8 @@ class App extends Component {
       <Container>
         <Menu inverted>
           <Menu.Item header>Herr あし</Menu.Item>
-          <Menu.Item name='Stream' active/>
+          <Menu.Item name='Stream'/>
+          <Menu.Item name='Random'/>
         </Menu>
         {this.renderStream()}
       </Container>
