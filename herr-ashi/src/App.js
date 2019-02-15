@@ -35,9 +35,11 @@ class App extends Component {
       : undefined;
     this.apiClient.nextPage(fromTimestamp)
       .then(data => {
-        this.setState({
-          "data": data
-        })
+        if (data !== null) {
+          this.setState({
+            "data": data
+          })
+        }
       })
       .catch(error => {
         this.setState({
@@ -61,9 +63,11 @@ class App extends Component {
       : undefined;
     this.apiClient.prevPage(toTimestamp)
       .then(data => {
-        this.setState({
-          "data": data
-        })
+        if (data !== null) {
+          this.setState({
+            "data": data
+          })
+        }
       })
       .catch(error => {
         this.setState({

@@ -15,7 +15,7 @@ export default class ApiClient {
       .then(response => {
         const data = response.data;
         if (data.length === 0) {
-          return []
+          return null
         }
         return data.map(item => {
           return {
@@ -35,7 +35,7 @@ export default class ApiClient {
       .then(response => {
         const data = response.data;
         if (data.length === 0) {
-          return []
+          return null
         }
         return data.map(item => {
           return {
