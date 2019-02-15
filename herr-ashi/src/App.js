@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import 'semantic-ui-css/semantic.min.css';
-import {Container, Loader, Message, Grid, Image, Header, Menu, Button, Icon} from 'semantic-ui-react'
+import {Container, Loader, Message, Grid, Image, Header, Menu, Button, Icon, Card} from 'semantic-ui-react'
 import ApiClient from './ApiClient'
 
 class App extends Component {
@@ -87,7 +87,13 @@ class App extends Component {
     for (let columnI = 0; columnI < items.length; ++columnI) {
       columnComponents.push((
         <Grid.Column key={columnI}>
-          <Image src={items[columnI]["s3_image_link"]} size='medium'/>
+          <Image
+            src={items[columnI]["s3_image_link"]}
+            size='medium'
+            as='a'
+            href={items[columnI]["source"]}
+            target='_blank'
+          />
         </Grid.Column>
       ))
     }
