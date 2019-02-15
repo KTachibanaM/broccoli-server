@@ -29,17 +29,25 @@ class ContentStore(object):
         self.collection.insert(doc)
 
     def query(self, q: Dict, limit: Optional[int], projection: Optional[List[str]] = None,
-              sort: Optional[Dict[str, int]] = None, earlier_than: Optional[int] = None) -> List[Dict]:
-        if earlier_than:
-            q["created_at"] = {
-                "$lte": milliseconds_to_datetime(earlier_than)
-            }
+              sort: Optional[Dict[str, int]] = None, datetime_q: Optional[List[Dict]] = None) -> List[Dict]:
+        # Append datetime query
+        if datetime_q:
+            for qd in datetime_q:
+                q[qd["key"]] = {
+                    "$" + qd["op"]: milliseconds_to_datetime(qd["value"])
+                }
+
+        # Append default projections
         if projection:
             projection += ["_id", "created_at"]
         # todo: find fails?
         cursor = self.collection.find(q, projection=projection)
+
+        # Append limit
         if limit:
             cursor = cursor.limit(limit)
+
+        # Append sort
         if sort:
             for sort_key, sort_order in sort.items():
                 cursor = cursor.sort(sort_key, sort_order)

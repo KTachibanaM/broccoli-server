@@ -58,10 +58,10 @@ class RpcCore(object):
         limit = payload["limit"] if "limit" in payload else None
         projection = payload["projection"] if "projection" in payload else None
         sort = payload["sort"] if "sort" in payload else None
-        earlier_than = payload["earlier_than"] if "earlier_than" in payload else None
+        datetime_q = payload["datetime_q"] if "datetime_q" in payload else None
         # todo: query failure
         return True, self.content_store.query(payload["q"], limit=limit, projection=projection, sort=sort,
-                                              earlier_than=earlier_than)
+                                              datetime_q=datetime_q)
 
     def update_one(self, metadata: Dict, payload: Dict) -> Tuple[bool, str]:
         self.logger.debug(f"Calling update_one metadata={metadata}, payload={payload}")

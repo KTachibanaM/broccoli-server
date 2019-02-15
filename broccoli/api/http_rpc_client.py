@@ -6,7 +6,7 @@ class HttpRpcClient(object):
     def __init__(self, hostname: str, port: int):
         self.apiEndpoint = f"http://{hostname}:{port}/api"
 
-    def query(self, q: Dict, limit: int, projection: List[str], sort: Dict[str, int], earlier_than: int):
+    def query(self, q: Dict, limit: int, projection: List[str], sort: Dict[str, int], datetime_q: List[Dict]):
         return self.call(
             verb="query",
             metadata={},
@@ -15,7 +15,7 @@ class HttpRpcClient(object):
                 "limit": limit,
                 "projection": projection,
                 "sort": sort,
-                "earlier_than": earlier_than
+                "datetime_q": datetime_q
             }
         )
 
