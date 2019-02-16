@@ -35,6 +35,8 @@ class RpcCore(object):
             return self.update_one_binary_string(metadata, payload)
         if verb == 'query_nearest_hamming_neighbors':
             return self.query_nearest_hamming_neighbors(metadata, payload)
+        if verb == 'random_one':
+            return self.random_one(metadata, payload)
         return False, 'Unknown verb'
 
     def append(self, metadata: Dict, payload: Dict) -> Tuple[bool, str]:
@@ -104,9 +106,23 @@ class RpcCore(object):
             self.logger.info(f"Fails to validate query_nearest_hamming_neighbors payload={payload}, message {message}")
             return False, []
 
+        # todo: failure
         return True, self.content_store.query_nearest_hamming_neighbors(
             q=payload["q"],
             binary_string_key=payload["binary_string_key"],
             from_binary_string=payload["from_binary_string"],
             max_distance=payload["max_distance"]
+        )
+
+    def random_one(self, metadata: Dict, payload: Dict) -> Tuple[bool, Union[Dict, str]]:
+        self.logger.debug(f"Calling random_one metadata={metadata}, payload={payload}")
+
+        status, message = validate_schema_or_not(payload, SCHEMAS["random_one"]["payload"])
+        if not status:
+            return False, message
+
+        # todo: failure
+        return True, self.content_store.random_one(
+            q=payload["q"],
+            projection=payload["projection"]
         )

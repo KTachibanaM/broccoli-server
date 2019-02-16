@@ -64,4 +64,13 @@ class DefaultHandler(BaseHandler):
             )
 
     def handle_random(self, query_param: Dict):
-        return []
+        return self.http_rpc_client.call(
+            verb="random_one",
+            metadata={},
+            payload={
+                "q": {
+                    "mod": True
+                },
+                "projection": ["s3_image_id", "source"],
+            }
+        )

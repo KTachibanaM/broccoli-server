@@ -1,5 +1,6 @@
 import pymongo
 import datetime
+import random
 from pymongo_schema.extract import extract_collection_schema
 from typing import Dict, List, Optional
 from server.logger import logger
@@ -28,7 +29,7 @@ class ContentStore(object):
         doc["created_at"] = datetime.datetime.utcnow()
         self.collection.insert(doc)
 
-    def query(self, q: Dict, limit: Optional[int], projection: Optional[List[str]] = None,
+    def query(self, q: Dict, limit: Optional[int] = None, projection: Optional[List[str]] = None,
               sort: Optional[Dict[str, int]] = None, datetime_q: Optional[List[Dict]] = None) -> List[Dict]:
         # Append datetime query
         if datetime_q:
@@ -117,3 +118,8 @@ class ContentStore(object):
             if q_distance <= max_distance:
                 results.append(q_result)
         return results
+
+    def random_one(self, q: Dict, projection: List[str]) -> Dict:
+        documents = self.query(q, projection=projection)
+        random_index = random.randint(0, len(documents) - 1)
+        return documents[random_index]

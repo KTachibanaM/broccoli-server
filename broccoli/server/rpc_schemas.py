@@ -61,6 +61,23 @@ SCHEMAS = {
             },
             "required": ["q"]
         }
+    },
+    "random_one": {
+        "payload": {
+            "type": "object",
+            "properties": {
+                "q": {
+                    "type": "object",
+                },
+                "projection": {
+                    "type": "array",
+                    "contains": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": ["q", "projection"]
+        }
     }
 }
 
