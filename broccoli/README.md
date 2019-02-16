@@ -1,4 +1,4 @@
-# Broccoli
+# broccoli
 
 🥦, a web content crawling and sorting system
 
@@ -7,129 +7,137 @@
 * `pipenv`
 * `jq`
 * `RabbitMQ`
-    * Follow [this guide](https://www.rabbitmq.com/install-debian.html) to have an unauthenticated RabbitMQ running at `localhost:5672`
-    * If you are not on Ubuntu, ensure to have an unauthenticated RabbitMQ running at `localhost:5672`
-    * Create a admin user and enable web interface at `localhost:15672`
-
+    * Have an unauthenticated RabbitMQ running at `localhost:5672`
+        * macOS
+        ```bash
+        brew install rabbitmq
+        brew services start rabbitmq
+        ```
+        * Debian and Ubuntu: Follow [this guide](https://www.rabbitmq.com/install-debian.html)
+    * To verify, run the following command and you should see strings like `Listing queues for vhost / ...`
+    ```bash
+    rabbitmqctl report
+    ```
+    * Create a admin user and enable web interface at `localhost:15672` using the following script
     ```bash
     dev/reset_rabbit_mq.sh
     ```
-
 * `MongoDB`
-    * Follow [this guide](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/) to have an unauthenticated MongoDB running at `localhost:27017`
-    * If you are not on Ubuntu, ensure to have an unauthenticated MongoDB running at `localhost:27017`
-
-* `Minio`
-    * Follow [this guide](https://www.digitalocean.com/community/tutorials/how-to-set-up-an-object-storage-server-using-minio-on-ubuntu-16-04) to have a Minio server running at `localhost:9000`
-        * You only need to complete Steps 1, 2 and 3
-        * The access key can be obtained by running
-
+    * Have an unauthenticated MongoDB running at `localhost:27017`
+        * macOS
         ```bash
-        cat /usr/local/share/minio/.minio.sys/config/config.json | jq ".credential.accessKey"
+        brew install mongodb
+        brew services start mongodb
         ```
-
-        * The secret key can be obtained by running
-
+        * Debian and Ubuntu: Follow [this guide](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
+    * To verify, run the `mongo` in your terminal and you should be dropped to a MongoDB interactive shell
+* `Minio`, for `herr-ashi`
+    * Have a Minio server running at `localhost:9000`
+        * macOS
         ```bash
-        cat /usr/local/share/minio/.minio.sys/config/config.json | jq ".credential.secretKey"
+        brew install minio
+        brew services start minio
         ```
-    * If you are on macOS
-        * The access key can be obtained by running
+        * Debian and Ubuntu: Follow [this guide](https://www.digitalocean.com/community/tutorials/how-to-set-up-an-object-storage-server-using-minio-on-ubuntu-16-04). You only need to complete Steps 1, 2 and 3
+    * Obtain the pre-generated access key and secret key
+        * macOS:
+            * The access key can be obtained by running
+            ```bash
+            cat /usr/local/var/minio/.minio.sys/config/config.json | jq ".credential.accessKey"
+            ```
+            * The secret key can be obtained by running
 
-        ```bash
-        cat /usr/local/var/minio/.minio.sys/config/config.json | jq ".credential.accessKey"
-        ```
+            ```bash
+            cat /usr/local/var/minio/.minio.sys/config/config.json | jq ".credential.secretKey"
+            ```
+        * Debian and Ubuntu
+            * The access key can be obtained by running
 
-        * The secret key can be obtained by running
+            ```bash
+            cat /usr/local/share/minio/.minio.sys/config/config.json | jq ".credential.accessKey"
+            ```
+            * The secret key can be obtained by running
 
-        ```bash
-        cat /usr/local/var/minio/.minio.sys/config/config.json | jq ".credential.secretKey"
-        ```
-    * If you are not on Ubuntu, ensure to have a Minio server running at `localhost:9000` and you know its access key and secret key
+                ```bash
+                cat /usr/local/share/minio/.minio.sys/config/config.json | jq ".credential.secretKey"
+                ```
     * Make sure you configure and install [`mc`](https://github.com/minio/mc), the CLI for Minio
-        * Modify the `~/.mc/config.json` so that `local` host is filled with `accessKey` and `secretKey`
-
+        * Modify the `~/.mc/config.json` so that `local` host is populated with the pre-generated` access key and secret key. For example:
         ```json
         {
             "version": "9",
             "hosts": {
-                    "local": {
-                            "url": "http://localhost:9000",
-                            "accessKey": "your access key here",
-                            "secretKey": "your secret key here",
-                            "api": "S3v4",
-                            "lookup": "auto"
-                    }
+                "local": {
+                    "url": "http://localhost:9000",
+                    "accessKey": "YOUR ACCESS KEY HERE",
+                    "secretKey": "YOUR SECRET KEY HERE",
+                    "api": "S3v4",
+                    "lookup": "auto"
+                }
             }
         }
         ```
 
-## Install dependencies
+## Install Python dependencies
 ```bash
 pipenv install
 ```
 
-## Configure workers environment
-
-Environment variables needed to run the workers are
-
-* `S3_ENDPOINT_URL`: url to your S3 instance, Amazon, Google, Minio, etc
-* `S3_REGION`: S3 region
-* `S3_ACCESS_KEY`: S3 access key
-* `S3_SECRET_KEY`: S3 secret key
-
-### Either use `worker_globals.env` file to inject the environment variables
-
+## Configure environment for the services
 ```bash
-cp workers.sample.env workers.env
-vi workers.env  # edit this to fill the environment variables
+cp api.sample.env api.env
+cp server.sample.env server.env
+cp worker_manager.sample.env worker_manager.env
 ```
 
-### Or inject the environment variables at runtime
+## Configure environment for `herr-ashi` workers
+```bash
+cp worker_globals.sample.env worker_globals.env
+```
+* Edit `worker_globals.env` so that
+    * `S3_ACCESS_KEY` is populated with the Minio's pre-generated access key
+    * `S3_SECRET_KEY` is populated with the Minio's pre-generated secret key
+* Register a Twitter app [here](https://developer.twitter.com/en/apps/create)
+    * Obtain the Twitter app's consumer key, consumer secret, access token key and access token secret
+    * Populate `worker_globals.env` accordingly
 
-## Run server
+## Run the server
+Notice that Flask auto-reload sometimes doesn't work, so you might better off restart the process itself.
 ```bash
 dev/server.sh
 ```
 
-## Run workers
+## Run the worker manager
+Notice that Flask auto-reload sometimes doesn't work, so you might better off restart the process itself.
 ```bash
-dev/workers.sh
+dev/worker_manager.sh
 ```
 
-## Add some example workers
+## Run the API server
+Notice that Flask auto-reload sometimes doesn't work, so you might better off restart the process itself.
 ```bash
-dev/add_example_workers.sh
+dev/api.sh
+```
+
+## Configure as `herr-ashi`
+```bash
+dev/configure.sh
 ```
 
 ## Development
-* Reset everything
-
+* Reset all stateful components
     ```bash
     dev/reset_state.sh
     ```
-
 * Reset RabbitMQ
-
     ```bash
     dev/reset_rabbit_mq.sh
     ```
-
 * Reset MongoDB
-
     ```bash
     dev/reset_mongo.sh
     ```
-
 * Reset Minio
-
     ```bash
     dev/reset_minio.sh
     ```
-
-## Worker spec
-
-* Don't do heavy initializing in `__init__`
-    * It should be best done as a client that is passed in as a worker global
-    * If you have to, override the `pre_work` method
-* Have a steady `_id` passed to `BaseWorker`

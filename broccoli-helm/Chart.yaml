@@ -1,5 +1,0 @@
-apiVersion: v1
-appVersion: "1.0"
-description: Helm chart for broccoli-platform, a web content crawling and sorting platform
-name: broccoli-platform
-version: 0.1.0
