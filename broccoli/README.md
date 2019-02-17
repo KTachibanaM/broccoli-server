@@ -46,21 +46,18 @@
             cat /usr/local/var/minio/.minio.sys/config/config.json | jq ".credential.accessKey"
             ```
             * The secret key can be obtained by running
-
             ```bash
             cat /usr/local/var/minio/.minio.sys/config/config.json | jq ".credential.secretKey"
             ```
         * Debian and Ubuntu
             * The access key can be obtained by running
-
             ```bash
             cat /usr/local/share/minio/.minio.sys/config/config.json | jq ".credential.accessKey"
             ```
             * The secret key can be obtained by running
-
-                ```bash
-                cat /usr/local/share/minio/.minio.sys/config/config.json | jq ".credential.secretKey"
-                ```
+            ```bash
+            cat /usr/local/share/minio/.minio.sys/config/config.json | jq ".credential.secretKey"
+            ```
     * Make sure you configure and install [`mc`](https://github.com/minio/mc), the CLI for Minio
         * Modify the `~/.mc/config.json` so that `local` host is populated with the pre-generated` access key and secret key. For example:
         ```json
@@ -126,18 +123,18 @@ dev/configure.sh
 
 ## Development
 * Reset all stateful components
-    ```bash
-    dev/reset_state.sh
-    ```
+```bash
+dev/reset_state.sh
+```
 * Reset RabbitMQ
-    ```bash
-    dev/reset_rabbit_mq.sh
-    ```
+```bash
+dev/reset_rabbit_mq.sh
+```
 * Reset MongoDB
-    ```bash
-    dev/reset_mongo.sh
-    ```
+```bash
+dev/reset_mongo.sh
+```
 * Reset Minio
-    ```bash
-    dev/reset_minio.sh
-    ```
+```bash
+dev/reset_minio.sh
+```
