@@ -1,5 +1,4 @@
 # broccoli
-
 🥦, a web content crawling and sorting system
 
 ## Prerequisites

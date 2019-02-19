@@ -1,9 +1,13 @@
 # herr-ashi
-
 Herr あし, 大腿先生, 大腿君
 
 ## Prerequisites
 * `Node.js`
+
+## Install dependencies
+```bash
+npm install
+```
 
 ## Run development server
 ```bash
