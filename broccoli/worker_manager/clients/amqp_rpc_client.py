@@ -143,10 +143,11 @@ class AmqpRpcClient(object):
     def blocking_append(self, idempotency_key: str, doc: Dict):
         status, message = self.blocking_call(
             verb="append",
-            metadata={
-                "idempotency_key": idempotency_key
-            },
-            payload=doc
+            metadata={},
+            payload={
+                "idempotency_key": idempotency_key,
+                "doc": doc
+            }
         )
         if not status:
             self.raise_error(f"Error making append idempotency_key={idempotency_key} doc={doc}, message {message}")

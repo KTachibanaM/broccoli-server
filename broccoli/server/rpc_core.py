@@ -40,13 +40,15 @@ class RpcCore(object):
         return False, 'Unknown verb'
 
     def append(self, metadata: Dict, payload: Dict) -> Tuple[bool, str]:
-        if 'idempotency_key' not in metadata or type(metadata['idempotency_key']) != str:
-            self.logger.error(f"Invalid metadata {metadata}")
-            return False, 'Invalid metadata'
-        idempotency_key = metadata['idempotency_key']  # type: str
         self.logger.debug(f"Calling append metadata={metadata}, payload={payload}")
+
+        status, message = validate_schema_or_not(payload, SCHEMAS["append"]["payload"])
+        if not status:
+            self.logger.info(f"Fails to validate query payload={payload}, message {message}")
+            return False, message
+
         # todo: failure
-        self.content_store.append(payload, idempotency_key)
+        self.content_store.append(payload["doc"], payload["idempotency_key"])
         return True, ''
 
     def query(self, metadata: Dict, payload: Dict) -> Tuple[bool, List[Dict]]:

@@ -78,6 +78,20 @@ SCHEMAS = {
             },
             "required": ["q", "projection"]
         }
+    },
+    "append": {
+        "payload": {
+            "type": "object",
+            "properties": {
+                "idempotency_key": {
+                    "type": "string",
+                },
+                "doc": {
+                    "type": "object"
+                }
+            },
+            "required": ["idempotency_key", "doc"]
+        }
     }
 }
 
