@@ -1,5 +1,5 @@
 import pymongo
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 from worker_manager.logger import logger
 from worker_manager.load_object import load_object
 
@@ -11,13 +11,12 @@ class ConfigStore(object):
         self.db = self.client[db]
         self.collection = self.db['broccoli.workers']
 
-    def add(self, module: str, class_name: str, args: Dict, global_args: List[str], worker_globals: Dict,
-            interval_seconds: int) -> Tuple[bool, str]:
+    def add(self, module: str, class_name: str, args: Dict, interval_seconds: int) -> Tuple[bool, str]:
         # todo: garbage collect this w?
-        status, worker_or_message = load_object(module, class_name, args, global_args, worker_globals)
+        status, worker_or_message = load_object(module, class_name, args)
         if not status:
-            logger.error(f"Fails to add worker module={module} class_name={class_name} args={args} "
-                         f"global_args={global_args}, message {worker_or_message}")
+            logger.error(f"Fails to add worker module={module} class_name={class_name} args={args}, "
+                         f"message {worker_or_message}")
             return False, worker_or_message
         worker_id = worker_or_message._id
         existing_doc_count = self.collection.count_documents({"worker_id": worker_id})
@@ -29,12 +28,11 @@ class ConfigStore(object):
             "module": module,
             "class_name": class_name,
             "args": args,
-            "global_args": global_args,
             "interval_seconds": interval_seconds
         })
         return True, worker_id
 
-    def get_all(self) -> Dict[str, Tuple[str, str, Dict, List[str], int]]:
+    def get_all(self) -> Dict[str, Tuple[str, str, Dict, int]]:
         res = {}
         # todo: find fails?
         for document in self.collection.find():
@@ -42,7 +40,6 @@ class ConfigStore(object):
                 document["module"],
                 document["class_name"],
                 document["args"],
-                document["global_args"],
                 document["interval_seconds"]
             )
         return res

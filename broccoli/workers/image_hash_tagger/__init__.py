@@ -1,17 +1,26 @@
 import io
 import imagehash
+import os
 from PIL import Image
 from worker_manager.base_worker import BaseWorker
-from worker_manager.clients.s3_wrapper import S3Wrapper
+from workers.s3_wrapper import S3Wrapper
 
 
 class ImageHashTagger(BaseWorker):
-    def __init__(self, image_s3: S3Wrapper):
+    def __init__(self):
         super(ImageHashTagger, self).__init__("image_hash_tagger")
-        self.image_s3 = image_s3
+        self.image_s3 = None
 
     def pre_work(self):
-        pass
+        self.image_s3 = S3Wrapper(
+            endpoint_url=os.getenv("S3_ENDPOINT_URL"),
+            access_key=os.getenv("S3_ACCESS_KEY"),
+            secret_key=os.getenv("S3_SECRET_KEY"),
+            region=os.getenv("S3_REGION"),
+            bucket_name='broccoli',
+            use_ssl=True if os.getenv("S3_USE_SSL", "false") == "true" else False,
+            logger=self.logger
+        )
 
     def work(self):
         documents = self.rpc_client.blocking_query({

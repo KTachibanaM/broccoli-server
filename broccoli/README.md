@@ -87,15 +87,12 @@ cp worker_manager.sample.env worker_manager.env
 ```
 
 ## Configure environment for `herr-ashi` workers
-```bash
-cp worker_globals.sample.env worker_globals.env
-```
-* Edit `worker_globals.env` so that
+* Edit `worker_manager.env` so that
     * `S3_ACCESS_KEY` is populated with the Minio's pre-generated access key
     * `S3_SECRET_KEY` is populated with the Minio's pre-generated secret key
 * Register a Twitter app [here](https://developer.twitter.com/en/apps/create)
     * Obtain the Twitter app's consumer key, consumer secret, access token key and access token secret
-    * Populate `worker_globals.env` accordingly
+    * Populate `worker_manager.env` accordingly
 
 ## Run the server
 Notice that Flask auto-reload sometimes doesn't work, so you might better off restart the process itself.

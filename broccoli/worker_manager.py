@@ -7,7 +7,6 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from jsonschema import validate, ValidationError
 from apscheduler.schedulers.blocking import BlockingScheduler
-from worker_globals import worker_globals
 from worker_manager.base_worker import BaseWorker
 from worker_manager.reconcile import reconcile, RECONCILE_JOB_ID
 from worker_manager.config_store import ConfigStore
@@ -54,17 +53,11 @@ ADD_WORKER_BODY_SCHEMA = {
         "args": {
             "type": "object"
         },
-        "global_args": {
-            "type": "array",
-            "contains": {
-                "type": "string"
-            }
-        },
         "interval_seconds": {
             "type": "number"
         }
     },
-    "required": ["module", "class_name", "args", "global_args", "interval_seconds"]
+    "required": ["module", "class_name", "args", "interval_seconds"]
 }
 
 
@@ -77,8 +70,6 @@ def add_worker():
             module=body["module"],
             class_name=body["class_name"],
             args=body["args"],
-            global_args=body["global_args"],
-            worker_globals=worker_globals,
             interval_seconds=body["interval_seconds"]
         )
         if not status:
@@ -102,13 +93,12 @@ def add_worker():
 def get_workers():
     workers = []
     for worker_id, worker in config_store.get_all().items():
-        module, class_name, args, global_args, interval_seconds = worker
+        module, class_name, args, interval_seconds = worker
         workers.append({
             "worker_id": worker_id,
             "module": module,
             "class_name": class_name,
             "args": args,
-            'global_args': global_args,
             "interval_seconds": interval_seconds
         })
     return jsonify(workers), 200
@@ -182,7 +172,7 @@ if __name__ == "__main__":
         scheduler = BlockingScheduler()
 
         def reconcile_wrap():
-            reconcile(config_store, scheduler, worker_globals)
+            reconcile(config_store, scheduler)
 
         # todo: better way to retry after exception other than work_robust?
         scheduler.add_job(

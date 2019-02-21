@@ -9,7 +9,6 @@ curl --request POST \
 	"args": {
 		 "subdomain": "ywazwww"
 	},
-	"global_args": [],
 	"interval_seconds": 60
 }'
 
@@ -20,7 +19,6 @@ curl --request POST \
 	"module": "workers.s3_image_hoarder",
 	"class_name": "S3ImageHoarder",
 	"args": {},
-	"global_args": ["image_s3"],
     "interval_seconds": 30
 }'
 
@@ -31,7 +29,6 @@ curl --request POST \
 	"module": "workers.image_hash_tagger",
 	"class_name": "ImageHashTagger",
 	"args": {},
-	"global_args": ["image_s3"],
     "interval_seconds": 30
 }'
 
@@ -46,7 +43,6 @@ curl --request POST \
 	     "round_count": 5,
 	     "pause_after_round": 2
 	},
-	"global_args": [],
     "interval_seconds": 30
 }'
 
@@ -59,7 +55,6 @@ curl --request POST \
 	"args": {
 	     "screen_name": "Wzettairyouiki"
 	},
-	"global_args": [],
     "interval_seconds": 60
 }'
 

@@ -10,7 +10,6 @@ class CreateWorkerPage extends Component {
       "module": query["module"] || "",
       "className": query["class_name"] || "",
       "argsStr": query["args"] || "{}",
-      "globalArgsStr": query["global_args"] || "[]",
       "intervalSeconds": parseInt(query["interval_seconds"]) || 60
     };
 
@@ -23,7 +22,7 @@ class CreateWorkerPage extends Component {
   }
 
   submit() {
-    const {module, className, argsStr, globalArgsStr, intervalSeconds} = this.state;
+    const {module, className, argsStr, intervalSeconds} = this.state;
     let args;
     try {
       args = JSON.parse(argsStr)
@@ -31,14 +30,7 @@ class CreateWorkerPage extends Component {
       this.props.showErrorMessage("Arg is not valid JSON");
       return
     }
-    let globalArgs;
-    try {
-      globalArgs = JSON.parse(globalArgsStr)
-    } catch (e) {
-      this.props.showErrorMessage("Global arg is not valid JSON");
-      return
-    }
-    this.props.workerManagerClient.addWorker(module, className, args, globalArgs, intervalSeconds)
+    this.props.workerManagerClient.addWorker(module, className, args, intervalSeconds)
       .then(() => {
         this.props.redirectTo("/workers/view");
       })
@@ -70,12 +62,6 @@ class CreateWorkerPage extends Component {
             cols="30" rows="5" style={{"resize": "none"}}
             value={this.state.argsStr}
             onChange={e => {this.setState({"argsStr": e.target.value})}}
-          /><br/>
-          Global args:<br/>
-          <textarea
-            cols="30" rows="1" style={{"resize": "none"}}
-            value={this.state.globalArgsStr}
-            onChange={e => {this.setState({"globalArgsStr": e.target.value})}}
           /><br/>
           Interval seconds:<br/>
           <input

@@ -64,14 +64,14 @@ export default class ViewWorkersPage extends Component {
       })
   }
 
-  onReplicate(e, module, className, args, globalArgs, intervalSeconds) {
-    this.replicate(module, className, args, globalArgs, intervalSeconds);
+  onReplicate(e, module, className, args, intervalSeconds) {
+    this.replicate(module, className, args, intervalSeconds);
     e.preventDefault()
   }
 
-  replicate(module, className, args, globalArgs, intervalSeconds) {
+  replicate(module, className, args, intervalSeconds) {
     this.props.redirectTo(
-      `/workers/create?module=${module}&class_name=${className}&args=${encodeURIComponent(JSON.stringify(args))}&global_args=${encodeURIComponent(JSON.stringify(globalArgs))}&interval_seconds=${intervalSeconds}`
+      `/workers/create?module=${module}&class_name=${className}&args=${encodeURIComponent(JSON.stringify(args))}&interval_seconds=${intervalSeconds}`
     )
   }
 
@@ -123,7 +123,6 @@ export default class ViewWorkersPage extends Component {
           <th>Module</th>
           <th>Class Name</th>
           <th>Args</th>
-          <th>Global Args</th>
           <th>Interval (seconds)</th>
           <th>State</th>
           <th>Last Seen (seconds)</th>
@@ -139,7 +138,6 @@ export default class ViewWorkersPage extends Component {
               module,
               "class_name": className,
               args,
-              "global_args": globalArgs,
               "interval_seconds": intervalSeconds,
               state,
               lastSeen,
@@ -153,7 +151,6 @@ export default class ViewWorkersPage extends Component {
                 <td>{module}</td>
                 <td>{className}</td>
                 <td>{JSON.stringify(args)}</td>
-                <td>{JSON.stringify(globalArgs)}</td>
                 <td>
                   <input type="number" value={intervalSeconds} onChange={e => {
                     this.setState({
@@ -174,7 +171,7 @@ export default class ViewWorkersPage extends Component {
                 <td>{lastSeen}</td>
                 <td>{metadata}</td>
                 <td>
-                  <button onClick={e => this.onReplicate(e, module, className, args, globalArgs, intervalSeconds)}>Create from</button>
+                  <button onClick={e => this.onReplicate(e, module, className, args, intervalSeconds)}>Create from</button>
                   <button onClick={e => this.onRemove(e, workerId)}>x</button>
                 </td>
               </tr>

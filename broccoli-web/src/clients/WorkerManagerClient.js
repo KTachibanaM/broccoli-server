@@ -9,12 +9,11 @@ export default class WorkerManagerClient {
     return axios.get(`${this.apiEndpoint}/worker`)
   }
 
-  async addWorker(module, className, args, globalArgs, intervalSeconds) {
+  async addWorker(module, className, args, intervalSeconds) {
     return axios.post(`${this.apiEndpoint}/worker`, {
       "module": module,
       "class_name": className,
       "args": args,
-      "global_args": globalArgs,
       "interval_seconds": intervalSeconds
     })
   }
