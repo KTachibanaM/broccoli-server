@@ -16,11 +16,6 @@ else:
 
 app = Flask(__name__)
 CORS(app)
-# config_store = ConfigStore(
-#     hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
-#     port=int(os.getenv("CONFIG_MONGODB_PORT")),
-#     db=os.getenv("CONFIG_MONGODB_DB")
-# )
 boards_store = BoardsStore(
     hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
     port=int(os.getenv("CONFIG_MONGODB_PORT")),

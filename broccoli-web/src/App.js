@@ -10,7 +10,6 @@ import CreateWorkerPage from "./pages/workers/CreateWorkerPage"
 import ViewBoardsPage from "./pages/content/ViewBoardsPage"
 import UpsertBoardPage from "./pages/content/UpsertBoardPage"
 import Board from "./pages/content/Board"
-import ApiPage from "./pages/ApiPage"
 import Worker from "./pages/workers/Worker"
 
 import applyMessage from "./hoc/applyMessage"
@@ -44,8 +43,6 @@ export default class App extends Component {
             <Link to="/boards/view">View boards</Link>
             { ' | ' }
             <Link to="/boards/upsert">Create new board</Link>
-            { ' | ' }
-            <Link to="/api">Configure API</Link>
             { ' | ' }
             <Link to="/workers/view">View workers</Link>
             { ' | ' }
@@ -82,14 +79,6 @@ export default class App extends Component {
                   contentClient={this.contentClient}
                   apiClient={this.apiClient}
                 />)
-              }}
-            />
-            <Route
-              exact
-              path="/api"
-              component={() => {
-                const EnhancedPage = applyHoc(ApiPage, applyMessage);
-                return (<EnhancedPage apiClient={this.apiClient} />)
               }}
             />
             <Route
