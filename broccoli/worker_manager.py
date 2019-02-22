@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from jsonschema import validate, ValidationError
 from apscheduler.schedulers.blocking import BlockingScheduler
-from worker_manager.base_worker import BaseWorker
+from broccoli_plugin_base.base_worker import BaseWorker
 from worker_manager.reconcile import reconcile, RECONCILE_JOB_ID
 from worker_manager.config_store import ConfigStore
 from worker_manager.events_store import EventsStore

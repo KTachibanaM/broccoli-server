@@ -1,6 +1,6 @@
 import importlib
 from typing import Dict, Tuple, Union
-from worker_manager.base_worker import BaseWorker
+from broccoli_plugin_base.base_worker import BaseWorker
 
 
 def load_object(module: str, class_name: str, args: Dict) -> Tuple[bool, Union[BaseWorker, str]]:

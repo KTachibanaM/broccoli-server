@@ -1,7 +1,7 @@
 import uuid
 import os
 from urllib.request import urlopen
-from worker_manager.base_worker import BaseWorker
+from broccoli_plugin_base.base_worker import BaseWorker
 from workers.s3_wrapper import S3Wrapper
 
 

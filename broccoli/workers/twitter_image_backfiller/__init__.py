@@ -1,7 +1,7 @@
 import os
 import twitter
 from workers.twitter_image_scraper import TwitterImageScraper
-from worker_manager.base_worker import BaseWorker
+from broccoli_plugin_base.base_worker import BaseWorker
 from workers.twitter import get_media_urls, get_tweet_url
 
 

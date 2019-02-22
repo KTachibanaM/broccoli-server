@@ -22,6 +22,7 @@ pymongo-schema = {file = "https://github.com/pajachiet/pymongo-schema/archive/0d
 pytz = "*"
 python-twitter = "*"
 minio = "*"
+broccoli-plugin-base = {editable = true,path = "./../broccoli-plugin-base"}
 
 [requires]
 python_version = "3.7"

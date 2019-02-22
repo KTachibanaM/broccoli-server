@@ -1,7 +1,7 @@
 import feedparser
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from worker_manager.base_worker import BaseWorker
+from broccoli_plugin_base.base_worker import BaseWorker
 
 
 LAST_CRAWLED_ID_KEY = 'last_crawled_id'

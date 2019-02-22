@@ -2,8 +2,8 @@ import os
 import logging
 import time
 from abc import ABCMeta, abstractmethod
-from worker_manager.clients.amqp_rpc_client import AmqpRpcClient
-from worker_manager.clients.metadata_store import MetadataStore
+from .amqp_rpc_client import AmqpRpcClient
+from .metadata_store import MetadataStore
 
 
 class BaseWorker(metaclass=ABCMeta):

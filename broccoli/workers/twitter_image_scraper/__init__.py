@@ -1,6 +1,6 @@
 import os
 import twitter
-from worker_manager.base_worker import BaseWorker
+from broccoli_plugin_base.base_worker import BaseWorker
 from workers.twitter import get_media_urls, get_tweet_url
 
 
