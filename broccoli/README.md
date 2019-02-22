@@ -86,6 +86,9 @@ cp server.sample.env server.env
 cp worker_manager.sample.env worker_manager.env
 ```
 
+## Configure plugins to install
+Edit `PIP_PLUGINS` so that it contains a comma-separated list of Python packages that worker manager will install using `pip`
+
 ## Configure environment for `herr-ashi` workers
 * Edit `worker_manager.env` so that
     * `S3_ACCESS_KEY` is populated with the Minio's pre-generated access key

@@ -4,7 +4,7 @@ curl --request POST \
   --url http://localhost:5002/api/worker \
   --header 'content-type: application/json' \
   --data '{
-	"module": "workers.lofter_image_scraper",
+	"module": "herr_ashi.workers.lofter_image_scraper",
 	"class_name": "LofterImageScraper",
 	"args": {
 		 "subdomain": "ywazwww"
@@ -16,7 +16,7 @@ curl --request POST \
   --url http://localhost:5002/api/worker \
   --header 'content-type: application/json' \
   --data '{
-	"module": "workers.s3_image_hoarder",
+	"module": "herr_ashi.workers.s3_image_hoarder",
 	"class_name": "S3ImageHoarder",
 	"args": {},
     "interval_seconds": 30
@@ -26,7 +26,7 @@ curl --request POST \
   --url http://localhost:5002/api/worker \
   --header 'content-type: application/json' \
   --data '{
-	"module": "workers.image_hash_tagger",
+	"module": "herr_ashi.workers.image_hash_tagger",
 	"class_name": "ImageHashTagger",
 	"args": {},
     "interval_seconds": 30
@@ -36,7 +36,7 @@ curl --request POST \
   --url http://localhost:5002/api/worker \
   --header 'content-type: application/json' \
   --data '{
-	"module": "workers.twitter_image_backfiller",
+	"module": "herr_ashi.workers.twitter_image_backfiller",
 	"class_name": "TwitterImageBackfiller",
 	"args": {
 	     "screen_name": "Wzettairyouiki",
@@ -50,7 +50,7 @@ curl --request POST \
   --url http://localhost:5002/api/worker \
   --header 'content-type: application/json' \
   --data '{
-	"module": "workers.twitter_image_scraper",
+	"module": "herr_ashi.workers.twitter_image_scraper",
 	"class_name": "TwitterImageScraper",
 	"args": {
 	     "screen_name": "Wzettairyouiki"

@@ -6,9 +6,9 @@ from broccoli_plugin_base.base_worker import BaseWorker
 from workers.s3_wrapper import S3Wrapper
 
 
-class ImageHashTagger(BaseWorker):
+class ImagePropertiesTagger(BaseWorker):
     def __init__(self):
-        super(ImageHashTagger, self).__init__("image_hash_tagger")
+        super(ImagePropertiesTagger, self).__init__("image_hash_tagger")
         self.image_s3 = None
 
     def pre_work(self):
