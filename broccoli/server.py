@@ -1,5 +1,6 @@
 import os
 import sys
+from common.logging import configure_werkzeug_logger
 from pathlib import Path
 from threading import Thread
 from flask import Flask, jsonify, request
@@ -22,7 +23,9 @@ content_store = ContentStore(
     db=os.getenv("CONTENT_MONGODB_DB")
 )
 rpc_core = RpcCore(content_store, logger)
+
 app = Flask(__name__)
+configure_werkzeug_logger()
 CORS(app)
 
 

@@ -7,6 +7,7 @@ from flask_cors import CORS
 from api.boards_store import BoardsStore
 from api.objects.board_query import BoardQuery
 from api_handlers import DefaultHandler
+from common.logging import configure_werkzeug_logger
 
 if os.path.exists('api.env'):
     print("Loading api.env")
@@ -14,8 +15,6 @@ if os.path.exists('api.env'):
 else:
     print("api.env does not exist")
 
-app = Flask(__name__)
-CORS(app)
 boards_store = BoardsStore(
     hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
     port=int(os.getenv("CONFIG_MONGODB_PORT")),
@@ -23,14 +22,17 @@ boards_store = BoardsStore(
 )
 server_hostname = os.getenv("SERVER_HOSTNAME")
 
+app = Flask(__name__)
+configure_werkzeug_logger()
+CORS(app)
 
-default_handler = DefaultHandler()
+api_handler = DefaultHandler()
 
 
 @app.route("/api", defaults={'path': ''}, methods=["GET"])
 @app.route("/api/<path:path>")
 def api(path):
-    return jsonify(default_handler.handle_request(path, request.args.to_dict())), 200
+    return jsonify(api_handler.handle_request(path, request.args.to_dict())), 200
 
 
 BOARD_QUERY_SCHEMA = {

@@ -1,5 +1,6 @@
 import os
 import sys
+from common.logging import configure_werkzeug_logger
 from dotenv import load_dotenv
 from pathlib import Path
 from threading import Thread
@@ -35,7 +36,9 @@ global_metadata_store = GlobalMetadataStore(
     port=int(os.getenv("METADATA_MONGODB_PORT")),
     db=os.getenv("METADATA_MONGODB_DB"),
 )
+
 app = Flask(__name__)
+configure_werkzeug_logger()
 CORS(app)
 
 # todo: authenticate all those endpoints
