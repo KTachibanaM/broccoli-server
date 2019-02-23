@@ -1,13 +1,14 @@
 import uuid
 import os
-from urllib.request import urlopen
+import requests
 from broccoli_plugin_base.base_worker import BaseWorker
 from .s3_wrapper import S3Wrapper
 
 
 class S3ImageHoarder(BaseWorker):
     def __init__(self):
-        super(S3ImageHoarder, self).__init__("s3_image_hoarder")
+        self._id = "s3_image_hoarder"
+        super(S3ImageHoarder, self).__init__(self._id)
         self.image_s3 = None
 
     def pre_work(self):
@@ -28,7 +29,19 @@ class S3ImageHoarder(BaseWorker):
             },
             "s3_image_id": {
                 "$exists": False
-            }
+            },
+            "$or": [
+                {
+                    "error": {
+                        "$exists": False
+                    }
+                },
+                {
+                    "error_worker": {
+                        "$ne": self._id
+                    }
+                }
+            ]
         }, limit=50)
         if not documents:
             self.logger.info("No image to hoard")
@@ -48,8 +61,24 @@ class S3ImageHoarder(BaseWorker):
 
         self.logger.debug(f"Downloading image at url {image_url}")
         # todo: timeout
-        res = urlopen(image_url)
-        image_bytes = res.read()
+        try:
+            res = requests.get(image_url)
+        except requests.exceptions.InvalidSchema as e:
+            self.logger.error(f"Invalid schema for image url {image_url}, marking error and skipping, message {e}")
+            self.rpc_client.blocking_update_one(
+                filter_q={
+                    "image_url": image_url
+                },
+                update_doc={
+                    "$set": {
+                        "error": True,
+                        "error_worker": self._id,
+                        "error_reason": "requests.exceptions.InvalidSchema"
+                    }
+                }
+            )
+            return
+        image_bytes = res.content
 
         self.logger.debug(f"Uploading image at url {image_url} to S3 {self.image_s3}/{s3_image_id}")
         # todo: s3 upload failure?
