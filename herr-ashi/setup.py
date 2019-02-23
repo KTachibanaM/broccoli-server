@@ -8,7 +8,7 @@ setup(
     author='KTachibanaM',
     author_email='whj19931115@gmail.com',
     license='WTFPL',
-    packages=['workers', 'api_handler'],
+    packages=["herr_ashi"],
     dependency_links=[
         './../broccoli-plugin-base',
     ],

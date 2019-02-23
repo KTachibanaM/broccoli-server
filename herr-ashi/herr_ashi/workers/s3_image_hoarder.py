@@ -2,7 +2,7 @@ import uuid
 import os
 from urllib.request import urlopen
 from broccoli_plugin_base.base_worker import BaseWorker
-from workers.s3_wrapper import S3Wrapper
+from .s3_wrapper import S3Wrapper
 
 
 class S3ImageHoarder(BaseWorker):

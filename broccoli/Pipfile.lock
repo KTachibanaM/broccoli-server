@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "24ea55f97d481d95dd6ed1d6b32eafd5f907830f3ef0765fef47a1c79331a347"
+            "sha256": "2742754d910f36f614f8a55a838d9329c647cb41bd779143157f7b2441cbc9e3"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -30,7 +30,6 @@
                 "sha256:945065979fb8529dd2f37dbb58f00b661bdbcbebf954f93b32fdf5263ef35348",
                 "sha256:ba6d5c59906a85ac23dadfe5c88deaf3e179ef565f4898671253e50a78680718"
             ],
-            "index": "pypi",
             "version": "==4.7.1"
         },
         "broccoli-plugin-base": {
@@ -64,7 +63,6 @@
                 "sha256:cd2485472e41471632ed3029d44033ee420ad0b57111db95c240c9160a85831c",
                 "sha256:ce875495c90ebd74b179855449040003a1beb40cd13d5f037a0654251e260b02"
             ],
-            "index": "pypi",
             "version": "==5.2.1"
         },
         "flask": {
@@ -89,6 +87,10 @@
             ],
             "version": "==0.17.1"
         },
+        "herr-ashi": {
+            "editable": true,
+            "path": "./../herr-ashi"
+        },
         "idna": {
             "hashes": [
                 "sha256:c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407",
@@ -101,7 +103,6 @@
                 "sha256:d7d95534e32e7b9c949029cf9f8383f50fbc3f2246d030da9cd277a8a99d23a3",
                 "sha256:f50b2427fc54b87ac7e73d7ba9e7a876a77384645563f225eed1d82e628d07fa"
             ],
-            "index": "pypi",
             "version": "==4.0"
         },
         "itsdangerous": {
@@ -164,7 +165,6 @@
                 "sha256:5b50861d7f129a50b0bcaa9bbc716c2c797eb6b41eb4577c73fd072722009ffd",
                 "sha256:96f6fb2b9ecb40656ae0c8095c4745fa5068f3e51a9a5ca542aea3db8649b456"
             ],
-            "index": "pypi",
             "version": "==4.0.11"
         },
         "numpy": {
@@ -315,7 +315,6 @@
                 "sha256:45855742f1095aa0c8c57b2983eee3b6b7f527462b50a2fa8437a8b398544d90",
                 "sha256:4a420a6cb6ee9d0c8da457c8a8573f709c2ff2e1a7542e2d38807ebbfe8ebd1d"
             ],
-            "index": "pypi",
             "version": "==3.5"
         },
         "pytz": {

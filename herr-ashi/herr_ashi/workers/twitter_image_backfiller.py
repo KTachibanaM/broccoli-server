@@ -2,7 +2,7 @@ import os
 import twitter
 from .twitter_image_scraper import TwitterImageScraper
 from broccoli_plugin_base.base_worker import BaseWorker
-from workers.twitter import get_media_urls, get_tweet_url
+from herr_ashi.workers.twitter import get_media_urls, get_tweet_url
 
 
 MAX_ID_KEY = 'max_id'
