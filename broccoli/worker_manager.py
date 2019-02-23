@@ -2,6 +2,8 @@ import os
 import sys
 from common.logging import configure_werkzeug_logger
 from common.install_plugins import install_plugins
+from common.load_plugins_environment import load_plugins_environment
+from common.is_flask_debug import is_flask_debug
 from dotenv import load_dotenv
 from pathlib import Path
 from threading import Thread
@@ -18,8 +20,6 @@ if os.path.exists('worker_manager.env'):
     load_dotenv(dotenv_path=Path('worker_manager.env'))
 else:
     print("worker_manager.env does not exist")
-
-install_plugins()
 
 config_store = ConfigStore(
     hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
@@ -168,12 +168,11 @@ if __name__ == "__main__":
             sys.exit(0)
 
 
-    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    if not is_flask_debug(app):
+        install_plugins()
+        load_plugins_environment()
+
         t = Thread(target=start_workers)
         t.start()
-    else:
-        # avoid starting workers twice
-        # https://stackoverflow.com/questions/14874782/apscheduler-in-flask-executes-twice
-        print("Didn't start workers because I am in debug mode")
 
     app.run(port=5002)

@@ -279,5 +279,4 @@ $RECYCLE.BIN/
 *.lnk
 
 # Custom
-*.env
-!*.sample.env
+environment.py

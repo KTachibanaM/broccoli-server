@@ -2,6 +2,7 @@ import os
 import json
 import importlib
 from common.install_plugins import install_plugins
+from common.is_flask_debug import is_flask_debug
 from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
@@ -16,8 +17,6 @@ if os.path.exists('api.env'):
 else:
     print("api.env does not exist")
 
-install_plugins()
-
 boards_store = BoardsStore(
     hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
     port=int(os.getenv("CONFIG_MONGODB_PORT")),
@@ -29,11 +28,7 @@ app = Flask(__name__)
 configure_werkzeug_logger()
 CORS(app)
 
-handler_clazz = getattr(
-    importlib.import_module(os.getenv("DEFAULT_API_HANDLER_MODULE")),
-    os.getenv("DEFAULT_API_HANDLER_CLASSNAME")
-)
-api_handler = handler_clazz()
+api_handler = None
 
 
 @app.route("/api", defaults={'path': ''}, methods=["GET"])
@@ -124,4 +119,12 @@ def remove_board(board_id: str):
 
 
 if __name__ == '__main__':
+    if not is_flask_debug(app):
+        install_plugins()
+        handler_clazz = getattr(
+            importlib.import_module(os.getenv("DEFAULT_API_HANDLER_MODULE")),
+            os.getenv("DEFAULT_API_HANDLER_CLASSNAME")
+        )
+        api_handler = handler_clazz()
+
     app.run(port=5001)

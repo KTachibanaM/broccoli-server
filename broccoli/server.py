@@ -1,6 +1,7 @@
 import os
 import sys
 from common.logging import configure_werkzeug_logger
+from common.is_flask_debug import is_flask_debug
 from pathlib import Path
 from threading import Thread
 from flask import Flask, jsonify, request
@@ -65,13 +66,8 @@ if __name__ == '__main__':
             rpc_server.channel.stop_consuming()
             sys.exit(0)
 
-
-    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    if not is_flask_debug(app):
         t = Thread(target=start_rpc_server)
         t.start()
-    else:
-        # avoid starting workers twice
-        # https://stackoverflow.com/questions/14874782/apscheduler-in-flask-executes-twice
-        print("Didn't start rpc server because I am in debug mode")
 
     app.run(port=5000)
