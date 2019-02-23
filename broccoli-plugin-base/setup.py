@@ -11,7 +11,8 @@ setup(
     packages=['broccoli_plugin_base'],
     install_requires=[
         'pika',
-        "pymongo"
+        "pymongo",
+        "requests"
     ],
     zip_safe=False
 )

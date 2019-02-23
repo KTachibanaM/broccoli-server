@@ -1,12 +1,12 @@
 import os
 import json
+import importlib
 from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from api.boards_store import BoardsStore
 from api.objects.board_query import BoardQuery
-from api_handlers import DefaultHandler
 from common.logging import configure_werkzeug_logger
 
 if os.path.exists('api.env'):
@@ -26,7 +26,8 @@ app = Flask(__name__)
 configure_werkzeug_logger()
 CORS(app)
 
-api_handler = DefaultHandler()
+handler_clazz = getattr(importlib.import_module("herr_ashi.api_handlers.default_handler"), "DefaultHandler")
+api_handler = handler_clazz()
 
 
 @app.route("/api", defaults={'path': ''}, methods=["GET"])

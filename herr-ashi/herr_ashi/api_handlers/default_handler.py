@@ -1,8 +1,8 @@
 from typing import Dict
-from api.base_handler import BaseHandler
+from broccoli_plugin_base.base_api_handler import BaseApiHandler
 
 
-class DefaultHandler(BaseHandler):
+class DefaultHandler(BaseApiHandler):
     def handle_request(self, path: str, query_params: Dict):
         if path == "":
             return self.handle_root(query_params)
