@@ -26,8 +26,8 @@ curl --request POST \
   --url http://localhost:5002/api/worker \
   --header 'content-type: application/json' \
   --data '{
-	"module": "herr_ashi.workers.image_hash_tagger",
-	"class_name": "ImageHashTagger",
+	"module": "herr_ashi.workers.image_properties_tagger",
+	"class_name": "ImagePropertiesTagger",
 	"args": {},
     "interval_seconds": 30
 }'

@@ -8,7 +8,7 @@ from .s3_wrapper import S3Wrapper
 
 class ImagePropertiesTagger(BaseWorker):
     def __init__(self):
-        super(ImagePropertiesTagger, self).__init__("image_hash_tagger")
+        super(ImagePropertiesTagger, self).__init__("image_properties_tagger")
         self.image_s3 = None
 
     def pre_work(self):
