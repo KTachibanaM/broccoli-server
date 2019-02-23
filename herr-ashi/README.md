@@ -73,6 +73,17 @@ After you are running both the server, worker manager and api server, run
 ```
 
 ## Development
+* Create a new virtualenv
+    * For example, using `pipenv`
+    ```bash
+    pipenv shell
+    rm Pipfile Pipfile.lock
+    ```
+* Install dependecies under the virtualenv
+    * For example, using `pipenv`
+    ```bash
+    pipenv run setup.py develop
+    ```
 * Reset Minio
 ```bash
 dev/reset_minio.sh

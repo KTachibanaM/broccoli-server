@@ -1,8 +1,6 @@
 # broccoli-platform
 🥦, a web content crawling and sorting platform
 
-View `README.md`s in `broccoli`, `broccoli-web` and `herr-ashi` to get started
-
 ## Problem Statement
 * I want to
     * Crawl content, such as images and texts, from "feeds" on the Internet, such as RSS, Twitter, some random webpage
@@ -23,3 +21,10 @@ This is a set of services and webapps that generalize the crawling, processing, 
 * `worker_manager`: The backend server that schedules and runs workers which query and manipulate the content repository. It exposes a declarative API for end users to schedule workers
 * `api`: The backend server that hosts information about the content management dashboards. It additionally exposes a configurable selected portion of the content repository to the public Internet
 * `broccoli-web`: The frontend webapp that mainly displays the content management dashboards and additionally offers the UI to schedule the workers
+
+## Pluggability
+TBD
+
+## Getting Started
+* Follow `README.md` under `broccoli` to start a broccoli instance without plugins
+* Then follow the `README.md` under the plugin codebase to configure the broccoli instance for the plugin's specific use case
