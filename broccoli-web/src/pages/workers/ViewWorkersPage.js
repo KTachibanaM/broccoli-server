@@ -28,38 +28,6 @@ export default class ViewWorkersPage extends Component {
               "metadata": ""
             }
           })
-        });
-        return Promise.all(workers.map(worker => this.props.workerManagerClient.getWorkerEvents(
-          worker["worker_id"], undefined, undefined, 1
-        )))
-      })
-      .then(allLatestEvents => {
-        this.setState({
-          "workers": this.state.workers.map((worker, index) => {
-            const latestEvents = allLatestEvents[index].data;
-            if (latestEvents.length === 0) {
-              return {
-                ...worker,
-                "state": "N/A",
-                "lastSeen": 0,
-                "metadata": "N/A"
-              }
-            } else {
-              const {state, timestamp, metadata} = latestEvents[0];
-              let metadataStr = "";
-              if (state === "FINISHED") {
-                metadataStr = `Runtime ${metadata["run_time_nanoseconds"] / 1e6} milliseconds`
-              } else if (state === "ERRORED") {
-                metadataStr = `Exception ${metadata["exception"]}`
-              }
-              return {
-                ...worker,
-                "state": state,
-                "lastSeen": (Date.now() - timestamp) / 1000,
-                "metadata": metadataStr
-              }
-            }
-          })
         })
       })
   }
@@ -124,9 +92,6 @@ export default class ViewWorkersPage extends Component {
           <th>Class Name</th>
           <th>Args</th>
           <th>Interval (seconds)</th>
-          <th>State</th>
-          <th>Last Seen (seconds)</th>
-          <th>Metadata</th>
           <th>Operations</th>
         </tr>
         </thead>
@@ -138,10 +103,7 @@ export default class ViewWorkersPage extends Component {
               module,
               "class_name": className,
               args,
-              "interval_seconds": intervalSeconds,
-              state,
-              lastSeen,
-              metadata
+              "interval_seconds": intervalSeconds
             } = worker;
             return (
               <tr key={workerId}>
@@ -167,9 +129,6 @@ export default class ViewWorkersPage extends Component {
                   }}/>
                   <button onClick={e => {this.onUpdateIntervalSeconds(e, workerId, intervalSeconds)}}>Update</button>
                 </td>
-                <td>{state}</td>
-                <td>{lastSeen}</td>
-                <td>{metadata}</td>
                 <td>
                   <button onClick={e => this.onReplicate(e, module, className, args, intervalSeconds)}>Create from</button>
                   <button onClick={e => this.onRemove(e, workerId)}>x</button>

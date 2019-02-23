@@ -10,8 +10,6 @@ DefaultHandler.setFormatter(logging.Formatter("[%(asctime)s][%(name)s][%(levelna
 
 
 class BaseWorker(metaclass=ABCMeta):
-    events_store = None
-
     def __init__(self, _id: str):
         self._id = f"broccoli.workers.{_id}"
         self.logger = None
@@ -48,21 +46,18 @@ class BaseWorker(metaclass=ABCMeta):
         pass
 
     def work_wrap(self):
-        if not self.logger or not self.rpc_client or not self.metadata_store or not BaseWorker.events_store:
+        if not self.logger or not self.rpc_client or not self.metadata_store:
             self.logger.error(f"Some of the clients are not initialized")
             return
         try:
             # todo: reaper to clean events
-            BaseWorker.events_store.add_event(self._id, "STARTED", {})
+            self.logger.info("Worker started")
             started_time = time.time_ns()
 
             self.work()
 
             finished_time = time.time_ns()
-            BaseWorker.events_store.add_event(self._id, "FINISHED", {
-                "run_time_nanoseconds": finished_time - started_time
-            })
+            self.logger.info(f"Worker finished, runtime {(finished_time - started_time) / 1000 / 1000} milliseconds")
         except Exception as e:
             exception_as_string = getattr(e, 'message', repr(e))
             self.logger.error(f"Caught exception while doing work, message {exception_as_string}")
-            BaseWorker.events_store.add_event(self._id, "ERRORED", {"exception": exception_as_string})

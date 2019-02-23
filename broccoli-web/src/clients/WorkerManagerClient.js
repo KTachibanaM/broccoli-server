@@ -26,16 +26,6 @@ export default class WorkerManagerClient {
     return axios.put(`${this.apiEndpoint}/worker/${workerId}/intervalSeconds/${intervalSeconds}`)
   }
 
-  async getWorkerEvents(workerId, fromMilliseconds, toMilliseconds, limit) {
-    return axios.get(`${this.apiEndpoint}/worker/${workerId}/events`, {
-      "params": {
-        "from_ms": fromMilliseconds,
-        "to_ms": toMilliseconds,
-        "limit": limit
-      }
-    })
-  }
-
   async getWorkerMetadata(workerId) {
     return axios.get(`${this.apiEndpoint}/worker/${workerId}/metadata`)
   }

@@ -9,10 +9,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from jsonschema import validate, ValidationError
 from apscheduler.schedulers.blocking import BlockingScheduler
-from broccoli_plugin_base.base_worker import BaseWorker
 from worker_manager.reconcile import reconcile, RECONCILE_JOB_ID
 from worker_manager.config_store import ConfigStore
-from worker_manager.events_store import EventsStore
 from worker_manager.global_metadata_store import GlobalMetadataStore
 
 if os.path.exists('worker_manager.env'):
@@ -24,12 +22,6 @@ else:
 for pip_install in os.getenv("PIP_INSTALLS").split(","):
     print(subprocess.check_output(["pip", "install"] + pip_install.split(" ")))
 
-events_store = EventsStore(
-    hostname=os.getenv("EVENTS_MONGODB_HOSTNAME"),
-    port=int(os.getenv("EVENTS_MONGODB_PORT")),
-    db=os.getenv("EVENTS_MONGODB_DB")
-)
-BaseWorker.events_store = events_store
 config_store = ConfigStore(
     hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
     port=int(os.getenv("CONFIG_MONGODB_PORT")),
@@ -137,27 +129,6 @@ def update_worker_interval_seconds(worker_id: str, interval_seconds: int):
         return jsonify({
             "status": "ok"
         }), 200
-
-
-@app.route("/api/worker/<string:worker_id>/events", methods=["GET"])
-def get_worker_events(worker_id: str):
-    from_ms_str = request.args.get("from_ms")
-    to_ms_str = request.args.get("to_ms")
-    limit_str = request.args.get("limit")
-    results = []
-    for event in events_store.get_events_by_timestamp_descending(
-        worker_id,
-        from_milliseconds=None if from_ms_str is None else int(from_ms_str),
-        to_milliseconds=None if to_ms_str is None else int(to_ms_str),
-        limit=None if limit_str is None else int(limit_str)
-    ):
-        timestamp, state, metadata = event
-        results.append({
-            "timestamp": timestamp,
-            "state": state,
-            "metadata": metadata
-        })
-    return jsonify(results), 200
 
 
 @app.route("/api/worker/<string:worker_id>/metadata", methods=["GET"])
