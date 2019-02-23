@@ -1,5 +1,7 @@
-# herr-ashi
+# herr-ashi-web
 Herr あし, 大腿先生, 大腿君
+
+Web frontend for herr-ashi
 
 ## Prerequisites
 * `Node.js`
