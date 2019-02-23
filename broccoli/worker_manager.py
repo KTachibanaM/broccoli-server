@@ -1,7 +1,7 @@
 import os
 import sys
-import subprocess
 from common.logging import configure_werkzeug_logger
+from common.install_plugins import install_plugins
 from dotenv import load_dotenv
 from pathlib import Path
 from threading import Thread
@@ -19,8 +19,7 @@ if os.path.exists('worker_manager.env'):
 else:
     print("worker_manager.env does not exist")
 
-for pip_install in os.getenv("PIP_INSTALLS").split(","):
-    print(subprocess.check_output(["pip", "install"] + pip_install.split(" ")))
+install_plugins()
 
 config_store = ConfigStore(
     hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),

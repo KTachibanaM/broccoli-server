@@ -1,6 +1,7 @@
 import os
 import json
 import importlib
+from common.install_plugins import install_plugins
 from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
@@ -14,6 +15,8 @@ if os.path.exists('api.env'):
     load_dotenv(dotenv_path=Path('api.env'))
 else:
     print("api.env does not exist")
+
+install_plugins()
 
 boards_store = BoardsStore(
     hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
