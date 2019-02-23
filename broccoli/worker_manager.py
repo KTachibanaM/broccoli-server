@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 from common.logging import configure_werkzeug_logger
 from dotenv import load_dotenv
 from pathlib import Path
@@ -19,6 +20,9 @@ if os.path.exists('worker_manager.env'):
     load_dotenv(dotenv_path=Path('worker_manager.env'))
 else:
     print("worker_manager.env does not exist")
+
+for pip_install in os.getenv("PIP_INSTALLS").split(","):
+    print(subprocess.check_output(["pip", "install"] + pip_install.split(" ")))
 
 events_store = EventsStore(
     hostname=os.getenv("EVENTS_MONGODB_HOSTNAME"),

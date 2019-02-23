@@ -5,6 +5,9 @@ from abc import ABCMeta, abstractmethod
 from .amqp_rpc_client import AmqpRpcClient
 from .metadata_store import MetadataStore
 
+DefaultHandler = logging.StreamHandler()
+DefaultHandler.setFormatter(logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s] %(message)s"))
+
 
 class BaseWorker(metaclass=ABCMeta):
     events_store = None
@@ -17,11 +20,8 @@ class BaseWorker(metaclass=ABCMeta):
 
     def pre_work_wrap(self):
         self.logger = logging.getLogger(self._id)
-        # logger is already setup in workers.logger
-        # since logger "broccoli.workers.xxx" is a descendant of logger 'broccoli.workers"
-
-        # self.logger.setLevel(logging.INFO)
-        # self.logger.addHandler(DefaultHandler)
+        self.logger.setLevel(logging.INFO)
+        self.logger.addHandler(DefaultHandler)
 
         self.rpc_client = AmqpRpcClient(
             host=os.getenv("RPC_AMQP_HOSTNAME"),
