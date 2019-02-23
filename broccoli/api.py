@@ -26,7 +26,10 @@ app = Flask(__name__)
 configure_werkzeug_logger()
 CORS(app)
 
-handler_clazz = getattr(importlib.import_module("herr_ashi.api_handlers.default_handler"), "DefaultHandler")
+handler_clazz = getattr(
+    importlib.import_module(os.getenv("DEFAULT_API_HANDLER_MODULE")),
+    os.getenv("DEFAULT_API_HANDLER_CLASSNAME")
+)
 api_handler = handler_clazz()
 
 
