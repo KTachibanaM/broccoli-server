@@ -4,8 +4,15 @@ from typing import List, Tuple
 
 
 class BoardsStore(object):
-    def __init__(self, hostname: str, port: int, db: str):
-        self.client = pymongo.MongoClient(hostname, port)
+    def __init__(self, hostname: str, port: int, db: str, username: str, password: str):
+        self.client = pymongo.MongoClient(
+            host=hostname,
+            port=port,
+            username=username,
+            password=password,
+            authSource=db,
+            authMechanism='SCRAM-SHA-256'
+        )
         self.db = self.client[db]
         self.collection = self.db["broccoli.api.boards"]
 

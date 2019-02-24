@@ -18,9 +18,11 @@ else:
     print("api.env does not exist")
 
 boards_store = BoardsStore(
-    hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
-    port=int(os.getenv("CONFIG_MONGODB_PORT")),
-    db=os.getenv("CONFIG_MONGODB_DB")
+    hostname=os.getenv("API_MONGODB_HOSTNAME"),
+    port=int(os.getenv("API_MONGODB_PORT")),
+    db=os.getenv("API_MONGODB_DB"),
+    username=os.getenv("API_MONGODB_USERNAME"),
+    password=os.getenv("API_MONGODB_PASSWORD")
 )
 server_hostname = os.getenv("SERVER_HOSTNAME")
 

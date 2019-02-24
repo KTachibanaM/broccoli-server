@@ -19,9 +19,11 @@ else:
     print("server.env does not exist")
 
 content_store = ContentStore(
-    hostname=os.getenv("CONTENT_MONGODB_HOSTNAME"),
-    port=int(os.getenv("CONTENT_MONGODB_PORT")),
-    db=os.getenv("CONTENT_MONGODB_DB")
+    hostname=os.getenv("CONTENT_SERVER_MONGODB_HOSTNAME"),
+    port=int(os.getenv("CONTENT_SERVER_MONGODB_PORT")),
+    db=os.getenv("CONTENT_SERVER_MONGODB_DB"),
+    username=os.getenv("CONTENT_SERVER_MONGODB_USERNAME"),
+    password=os.getenv("CONTENT_SERVER_MONGODB_PASSWORD")
 )
 rpc_core = RpcCore(content_store, logger)
 

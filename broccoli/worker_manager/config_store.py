@@ -5,9 +5,16 @@ from worker_manager.load_object import load_object
 
 
 class ConfigStore(object):
-    def __init__(self, hostname: str, port: int, db: str):
+    def __init__(self, hostname: str, port: int, db: str, username: str, password: str):
         # todo: properly close all resources
-        self.client = pymongo.MongoClient(hostname, port)
+        self.client = pymongo.MongoClient(
+            host=hostname,
+            port=port,
+            username=username,
+            password=password,
+            authSource=db,
+            authMechanism='SCRAM-SHA-256'
+        )
         self.db = self.client[db]
         self.collection = self.db['broccoli.workers']
 

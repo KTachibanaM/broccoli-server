@@ -29,9 +29,11 @@ class BaseWorker(metaclass=ABCMeta):
             callback_queue_name=self._id
         )
         self.metadata_store = MetadataStore(
-            hostname=os.getenv("METADATA_MONGODB_HOSTNAME"),
-            port=int(os.getenv("METADATA_MONGODB_PORT")),
-            db=os.getenv("METADATA_MONGODB_DB"),
+            hostname=os.getenv("WORKER_MANAGER_MONGODB_HOSTNAME"),
+            port=int(os.getenv("WORKER_MANAGER_MONGODB_PORT")),
+            db=os.getenv("WORKER_MANAGER_MONGODB_DB"),
+            username=os.getenv("WORKER_MANAGER_MONGODB_USERNAME"),
+            password=os.getenv("WORKER_MANAGER_MONGODB_PASSWORD"),
             collection_name=self._id
         )
 

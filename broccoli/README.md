@@ -30,11 +30,19 @@
         ```
         * Debian and Ubuntu: Follow [this guide](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
     * To verify, run the `mongo` in your terminal and you should be dropped to a MongoDB interactive shell
+* Come up with a name for the instance. From now on we assume that name is `my_first_broccoli`
 
 ## Install Python dependencies
 ```bash
 pipenv install
 ```
+
+## Configure MongoDB
+* Create the Mongo database to contain data needed for this instance
+    ```bash
+    python dev/init_mongo.py my_first_broccoli
+    ```
+    This script will create a database named `my_first_broccoli` with a user named `my_first_broccoli` with the password `my_first_broccoli` who has `readWrites` role to the database
 
 ## Configure environment
 ```bash
@@ -42,6 +50,11 @@ cp api.sample.env api.env
 cp server.sample.env server.env
 cp worker_manager.sample.env worker_manager.env
 ```
+Then in all `*.env` (not `*.sample.env`) files, fill
+* `*_MONGODB_DB=my_first_broccoli`
+* `*_MONGODB_USERNAME=my_first_broccoli`
+* `*_MONGODB_PASSWORD=my_first_broccoli`
+This basically tells the server, the worker manager and the api server to connect to the MongoDB database that we just created with `dev/init_mongo.sh my_first_broccoli`
 
 ## Configure plugin installation
 Edit `PIP_INSTALLS` in `worker_manager.env` and `api.env` so that it contains a comma-separated list of Python packages that worker manager and api server will install using `pip`
@@ -91,15 +104,11 @@ dev/api.sh
 ```
 
 ## Development
-* Reset all stateful components
-```bash
-dev/reset_state.sh
-```
 * Reset RabbitMQ
 ```bash
 dev/reset_rabbit_mq.sh
 ```
 * Reset MongoDB
 ```bash
-dev/reset_mongo.sh
+dev/reset_mongo.sh my_first_broccoli
 ```

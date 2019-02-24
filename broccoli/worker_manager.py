@@ -22,14 +22,18 @@ else:
     print("worker_manager.env does not exist")
 
 config_store = ConfigStore(
-    hostname=os.getenv("CONFIG_MONGODB_HOSTNAME"),
-    port=int(os.getenv("CONFIG_MONGODB_PORT")),
-    db=os.getenv("CONFIG_MONGODB_DB")
+    hostname=os.getenv("WORKER_MANAGER_MONGODB_HOSTNAME"),
+    port=int(os.getenv("WORKER_MANAGER_MONGODB_PORT")),
+    db=os.getenv("WORKER_MANAGER_MONGODB_DB"),
+    username=os.getenv("WORKER_MANAGER_MONGODB_USERNAME"),
+    password=os.getenv("WORKER_MANAGER_MONGODB_PASSWORD")
 )
 global_metadata_store = GlobalMetadataStore(
-    hostname=os.getenv("METADATA_MONGODB_HOSTNAME"),
-    port=int(os.getenv("METADATA_MONGODB_PORT")),
-    db=os.getenv("METADATA_MONGODB_DB"),
+    hostname=os.getenv("WORKER_MANAGER_MONGODB_HOSTNAME"),
+    port=int(os.getenv("WORKER_MANAGER_MONGODB_PORT")),
+    db=os.getenv("WORKER_MANAGER_MONGODB_DB"),
+    username=os.getenv("WORKER_MANAGER_MONGODB_USERNAME"),
+    password=os.getenv("WORKER_MANAGER_MONGODB_PASSWORD")
 )
 
 app = Flask(__name__)
