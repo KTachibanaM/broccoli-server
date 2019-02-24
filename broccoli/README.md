@@ -38,11 +38,16 @@ pipenv install
 ```
 
 ## Configure MongoDB
-* Create the Mongo database to contain data needed for this instance
-    ```bash
-    python dev/init_mongo.py my_first_broccoli
-    ```
-    This script will create a database named `my_first_broccoli` with a user named `my_first_broccoli` with the password `my_first_broccoli` who has `readWrites` role to the database
+```bash
+dev/init_mongo.sh my_first_broccoli
+```
+This script will create a database named `my_first_broccoli` with a user named `my_first_broccoli` with the password `my_first_broccoli` who has `readWrites` role to the database
+
+## Configure RabbitMQ
+```bash
+dev/init_rabbitmq.sh my_first_broccoli
+```
+This script will create a virtual host named `my_first_broccoli` with a user named `my_first_broccoli` with the password `my_first_broccoli` who has admin access to the virtual host
 
 ## Configure environment
 ```bash
@@ -54,7 +59,12 @@ Then in all `*.env` (not `*.sample.env`) files, fill
 * `*_MONGODB_DB=my_first_broccoli`
 * `*_MONGODB_USERNAME=my_first_broccoli`
 * `*_MONGODB_PASSWORD=my_first_broccoli`
-This basically tells the server, the worker manager and the api server to connect to the MongoDB database that we just created with `dev/init_mongo.sh my_first_broccoli`
+* `RPC_AMQP_VHOST=/my_first_broccoli`
+* `RPC_AMQP_USERNAME=my_first_broccoli`
+* `RPC_AMQP_PASSWORD=my_first_broccoli`
+This basically tells the server, the worker manager and the api server to
+* Connect to the MongoDB database that we just created with `dev/init_mongo.sh my_first_broccoli`
+* Connect to the RabbitMQ virtual host that we just created with `dev/init_rabbitmq.sh my_first_broccoli`
 
 ## Configure plugin installation
 Edit `PIP_INSTALLS` in `worker_manager.env` and `api.env` so that it contains a comma-separated list of Python packages that worker manager and api server will install using `pip`
@@ -104,9 +114,13 @@ dev/api.sh
 ```
 
 ## Development
+* Reset all stateful components
+```bash
+dev/reset_state.sh my_first_broccoli
+```
 * Reset RabbitMQ
 ```bash
-dev/reset_rabbit_mq.sh
+dev/reset_rabbit_mq.sh my_first_broccoli
 ```
 * Reset MongoDB
 ```bash

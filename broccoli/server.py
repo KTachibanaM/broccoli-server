@@ -57,6 +57,9 @@ if __name__ == '__main__':
         rpc_server = AmqpRpcServer(
             host=os.getenv("RPC_AMQP_HOSTNAME"),
             port=int(os.getenv("RPC_AMQP_PORT")),
+            vhost=os.getenv("RPC_AMQP_VHOST"),
+            username=os.getenv("RPC_AMQP_USERNAME"),
+            password=os.getenv("RPC_AMQP_PASSWORD"),
             rpc_request_queue_name=os.getenv("RPC_AMQP_REQUEST_QUEUE_NAME"),
             rpc_core=rpc_core,
             logger=logger

@@ -24,9 +24,12 @@ class BaseWorker(metaclass=ABCMeta):
         self.rpc_client = AmqpRpcClient(
             host=os.getenv("RPC_AMQP_HOSTNAME"),
             port=int(os.getenv("RPC_AMQP_PORT")),
+            vhost=os.getenv("RPC_AMQP_VHOST"),
+            username=os.getenv("RPC_AMQP_USERNAME"),
+            password=os.getenv("RPC_AMQP_PASSWORD"),
             rpc_request_queue_name=os.getenv("RPC_AMQP_REQUEST_QUEUE_NAME"),
+            callback_queue_name=self._id,
             logger=self.logger,
-            callback_queue_name=self._id
         )
         self.metadata_store = MetadataStore(
             hostname=os.getenv("WORKER_MANAGER_MONGODB_HOSTNAME"),

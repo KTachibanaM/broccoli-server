@@ -17,9 +17,16 @@ class ResponseMetadata(object):
 
 
 class AmqpRpcServer(object):
-    def __init__(self, host: str, port: int, rpc_request_queue_name: str, rpc_core: RpcCore, logger: logging.Logger):
+    def __init__(self, host: str, port: int, vhost: str, username: str, password: str, rpc_request_queue_name: str,
+                 rpc_core: RpcCore, logger: logging.Logger):
+        credentials = pika.PlainCredentials(username, password)
         # todo: properly close the connection and channel
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(
+            host=host,
+            port=port,
+            virtual_host=vhost,
+            credentials=credentials
+        ))  # type: pika.BlockingConnection
         self.channel = self.connection.channel()  # type: pika.adapters.blocking_connection.BlockingChannel
         self.channel.queue_declare(queue=rpc_request_queue_name)
         self.rpc_request_queue_name = rpc_request_queue_name
