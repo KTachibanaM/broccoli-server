@@ -1,9 +1,8 @@
 import importlib
-from typing import Dict, Tuple, Union
-from broccoli_plugin_base.base_worker import BaseWorker
+from typing import Dict, Tuple
 
 
-def load_object(module: str, class_name: str, args: Dict) -> Tuple[bool, Union[BaseWorker, str]]:
+def load_object(module: str, class_name: str, args: Dict) -> Tuple:
     try:
         clazz = getattr(importlib.import_module(module), class_name)
     except Exception as e:
