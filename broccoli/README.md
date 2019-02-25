@@ -70,13 +70,14 @@ This basically tells the server, the worker manager and the api server to
 Edit `PIP_INSTALLS` in `worker_manager.env` and `api.env` so that it contains a comma-separated list of Python packages that worker manager and api server will install using `pip`
 For example
 ```env
-PIP_INSTALLS=git+https://github.com/KTachibanaM/some_broccoli_plugin.git,-e ~/projects/some_other_broccoli_plugin
+PIP_INSTALLS=git+https://github.com/KTachibanaM/some_broccoli_plugin.git#egg_info=some_broccoli_plugin-0.1,-e ~/projects/some_other_broccoli_plugin
 ```
 This will trigger worker manager and api server to run the following commands when they are started
 ```bash
-pip install git+https://github.com/KTachibanaM/some_broccoli_plugin.git
+pip install git+https://github.com/KTachibanaM/some_broccoli_plugin.git##egg_info=some_broccoli_plugin-0.1
 pip install -e ~/projects/some_other_broccoli_plugin
 ```
+**WARNING**: We current implicitly depend on `broccoli-plugin-base` in this codebase so that we don't have to handle transient dependency for plugins explicitly. This is not ideal but a must workaround.
 
 ## Configure worker manager environment injection
 Edit `PIP_ENVIRONMENT_MODULES` in `worker_manager.env` so that it contains a comma-separated list of Python module names. The worker manager will attempt to find the string variable called `Environment` under the submodule `environment` for every enlisted module names, and load the strings as dotenv files

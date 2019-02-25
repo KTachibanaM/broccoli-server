@@ -17,6 +17,7 @@ jsonschema = "*"
 flask-cors = "*"
 pymongo-schema = {file = "https://github.com/pajachiet/pymongo-schema/archive/0dd312c23f5d38fb7c1a1f3bbe977e79a814a119.zip"}
 pytz = "*"
+broccoli-plugin-base = {editable = true,path = "./../broccoli-plugin-base"}
 
 [requires]
 python_version = "3.7"

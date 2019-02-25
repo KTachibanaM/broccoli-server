@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "392b6571f7ea534a19cff14d0049c60ff7567ccabcb63aefc16f624d141c7852"
+            "sha256": "4345b087e9e7396f6eb9b0e54a7fc32625afc3f9b7f3cf5def614316dd499cc6"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -30,6 +30,10 @@
                 "sha256:ca4be454458f9dec299268d472aaa5a11f67a4ff70093396e1ceae9c76cf4bbb"
             ],
             "version": "==18.2.0"
+        },
+        "broccoli-plugin-base": {
+            "editable": true,
+            "path": "./../broccoli-plugin-base"
         },
         "certifi": {
             "hashes": [
