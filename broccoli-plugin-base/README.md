@@ -11,5 +11,7 @@ Base classes for Broccoli plugins
 * Install dependecies under the virtualenv
     * For example, using `pipenv`
     ```bash
-    pipenv run setup.py develop
+    pipenv shell
+    python setup.py develop
+    rm Pipfile Pipfile.lock
     ```
