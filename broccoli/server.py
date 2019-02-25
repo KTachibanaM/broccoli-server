@@ -1,29 +1,25 @@
-import os
 import sys
 from common.logging import configure_werkzeug_logger
 from common.is_flask_debug import is_flask_debug
-from pathlib import Path
+from common.load_dotenv import load_dotenv
+from common.getenv_or_raise import getenv_or_raise
 from threading import Thread
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from dotenv import load_dotenv
 from server.logger import logger
 from server.content_store import ContentStore
 from server.amqp_rpc_server import AmqpRpcServer
 from server.rpc_core import RpcCore
 
-if os.path.exists('server.env'):
-    print("Loading server.env")
-    load_dotenv(dotenv_path=Path('server.env'))
-else:
-    print("server.env does not exist")
+load_dotenv(__file__, "server.env")
+
 
 content_store = ContentStore(
-    hostname=os.getenv("CONTENT_SERVER_MONGODB_HOSTNAME"),
-    port=int(os.getenv("CONTENT_SERVER_MONGODB_PORT")),
-    db=os.getenv("CONTENT_SERVER_MONGODB_DB"),
-    username=os.getenv("CONTENT_SERVER_MONGODB_USERNAME"),
-    password=os.getenv("CONTENT_SERVER_MONGODB_PASSWORD")
+    hostname=getenv_or_raise("CONTENT_SERVER_MONGODB_HOSTNAME"),
+    port=int(getenv_or_raise("CONTENT_SERVER_MONGODB_PORT")),
+    db=getenv_or_raise("CONTENT_SERVER_MONGODB_DB"),
+    username=getenv_or_raise("CONTENT_SERVER_MONGODB_USERNAME"),
+    password=getenv_or_raise("CONTENT_SERVER_MONGODB_PASSWORD")
 )
 rpc_core = RpcCore(content_store, logger)
 
@@ -55,12 +51,12 @@ def api():
 if __name__ == '__main__':
     def start_rpc_server():
         rpc_server = AmqpRpcServer(
-            host=os.getenv("RPC_AMQP_HOSTNAME"),
-            port=int(os.getenv("RPC_AMQP_PORT")),
-            vhost=os.getenv("RPC_AMQP_VHOST"),
-            username=os.getenv("RPC_AMQP_USERNAME"),
-            password=os.getenv("RPC_AMQP_PASSWORD"),
-            rpc_request_queue_name=os.getenv("RPC_AMQP_REQUEST_QUEUE_NAME"),
+            host=getenv_or_raise("RPC_AMQP_HOSTNAME"),
+            port=int(getenv_or_raise("RPC_AMQP_PORT")),
+            vhost=getenv_or_raise("RPC_AMQP_VHOST"),
+            username=getenv_or_raise("RPC_AMQP_USERNAME"),
+            password=getenv_or_raise("RPC_AMQP_PASSWORD"),
+            rpc_request_queue_name=getenv_or_raise("RPC_AMQP_REQUEST_QUEUE_NAME"),
             rpc_core=rpc_core,
             logger=logger
         )

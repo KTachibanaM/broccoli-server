@@ -1,30 +1,26 @@
-import os
 import json
 import importlib
 from common.install_plugins import install_plugins
 from common.is_flask_debug import is_flask_debug
-from pathlib import Path
-from dotenv import load_dotenv
+from common.load_dotenv import load_dotenv
+from common.getenv_or_raise import getenv_or_raise
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from api.boards_store import BoardsStore
 from api.objects.board_query import BoardQuery
 from common.logging import configure_werkzeug_logger
 
-if os.path.exists('api.env'):
-    print("Loading api.env")
-    load_dotenv(dotenv_path=Path('api.env'))
-else:
-    print("api.env does not exist")
+
+load_dotenv(__file__, "api.env")
 
 boards_store = BoardsStore(
-    hostname=os.getenv("API_MONGODB_HOSTNAME"),
-    port=int(os.getenv("API_MONGODB_PORT")),
-    db=os.getenv("API_MONGODB_DB"),
-    username=os.getenv("API_MONGODB_USERNAME"),
-    password=os.getenv("API_MONGODB_PASSWORD")
+    hostname=getenv_or_raise("API_MONGODB_HOSTNAME"),
+    port=int(getenv_or_raise("API_MONGODB_PORT")),
+    db=getenv_or_raise("API_MONGODB_DB"),
+    username=getenv_or_raise("API_MONGODB_USERNAME"),
+    password=getenv_or_raise("API_MONGODB_PASSWORD")
 )
-server_hostname = os.getenv("SERVER_HOSTNAME")
+server_hostname = getenv_or_raise("SERVER_HOSTNAME")
 
 app = Flask(__name__)
 configure_werkzeug_logger()
@@ -124,8 +120,8 @@ if __name__ == '__main__':
     if not is_flask_debug(app):
         install_plugins()
         handler_clazz = getattr(
-            importlib.import_module(os.getenv("DEFAULT_API_HANDLER_MODULE")),
-            os.getenv("DEFAULT_API_HANDLER_CLASSNAME")
+            importlib.import_module(getenv_or_raise("DEFAULT_API_HANDLER_MODULE")),
+            getenv_or_raise("DEFAULT_API_HANDLER_CLASSNAME")
         )
         api_handler = handler_clazz()
 

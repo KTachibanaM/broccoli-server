@@ -2,10 +2,9 @@ import os
 import sys
 from common.logging import configure_werkzeug_logger
 from common.install_plugins import install_plugins
-from common.load_plugins_environment import load_plugins_environment
 from common.is_flask_debug import is_flask_debug
-from dotenv import load_dotenv
-from pathlib import Path
+from common.load_dotenv import load_dotenv
+from common.getenv_or_raise import getenv_or_raise
 from threading import Thread
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -15,25 +14,23 @@ from worker_manager.reconcile import reconcile, RECONCILE_JOB_ID
 from worker_manager.config_store import ConfigStore
 from worker_manager.global_metadata_store import GlobalMetadataStore
 
-if os.path.exists('worker_manager.env'):
-    print("Loading worker_manager.env")
-    load_dotenv(dotenv_path=Path('worker_manager.env'))
-else:
-    print("worker_manager.env does not exist")
+load_dotenv(__file__, "worker_manager.env")
+load_dotenv(__file__, "workers.env")
+
 
 config_store = ConfigStore(
-    hostname=os.getenv("WORKER_MANAGER_MONGODB_HOSTNAME"),
-    port=int(os.getenv("WORKER_MANAGER_MONGODB_PORT")),
-    db=os.getenv("WORKER_MANAGER_MONGODB_DB"),
-    username=os.getenv("WORKER_MANAGER_MONGODB_USERNAME"),
-    password=os.getenv("WORKER_MANAGER_MONGODB_PASSWORD")
+    hostname=getenv_or_raise("WORKER_MANAGER_MONGODB_HOSTNAME"),
+    port=int(getenv_or_raise("WORKER_MANAGER_MONGODB_PORT")),
+    db=getenv_or_raise("WORKER_MANAGER_MONGODB_DB"),
+    username=getenv_or_raise("WORKER_MANAGER_MONGODB_USERNAME"),
+    password=getenv_or_raise("WORKER_MANAGER_MONGODB_PASSWORD")
 )
 global_metadata_store = GlobalMetadataStore(
-    hostname=os.getenv("WORKER_MANAGER_MONGODB_HOSTNAME"),
-    port=int(os.getenv("WORKER_MANAGER_MONGODB_PORT")),
-    db=os.getenv("WORKER_MANAGER_MONGODB_DB"),
-    username=os.getenv("WORKER_MANAGER_MONGODB_USERNAME"),
-    password=os.getenv("WORKER_MANAGER_MONGODB_PASSWORD")
+    hostname=getenv_or_raise("WORKER_MANAGER_MONGODB_HOSTNAME"),
+    port=int(getenv_or_raise("WORKER_MANAGER_MONGODB_PORT")),
+    db=getenv_or_raise("WORKER_MANAGER_MONGODB_DB"),
+    username=getenv_or_raise("WORKER_MANAGER_MONGODB_USERNAME"),
+    password=getenv_or_raise("WORKER_MANAGER_MONGODB_PASSWORD")
 )
 
 app = Flask(__name__)
@@ -174,7 +171,6 @@ if __name__ == "__main__":
 
     if not is_flask_debug(app):
         install_plugins()
-        load_plugins_environment()
 
         t = Thread(target=start_workers)
         t.start()
