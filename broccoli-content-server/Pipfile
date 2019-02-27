@@ -1,0 +1,17 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+flask = "*"
+pika = "*"
+pymongo = "*"
+flask-cors = "*"
+pymongo-schema = {file = "https://github.com/pajachiet/pymongo-schema/archive/0dd312c23f5d38fb7c1a1f3bbe977e79a814a119.zip"}
+broccoli-common = {editable = true,path = "./../broccoli-common"}
+
+[requires]
+python_version = "3.7"

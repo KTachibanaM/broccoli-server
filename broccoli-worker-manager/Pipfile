@@ -1,0 +1,19 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+flask = "*"
+apscheduler = "*"
+pymongo = "*"
+jsonschema = "*"
+flask-cors = "*"
+broccoli-common = {editable = true,path = "./../broccoli-common"}
+broccoli-plugin-interface = {editable = true,path = "./../broccoli-plugin-interface"}
+pika = "*"
+
+[requires]
+python_version = "3.7"
