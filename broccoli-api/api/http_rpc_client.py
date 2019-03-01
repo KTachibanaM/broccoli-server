@@ -30,6 +30,16 @@ class HttpRpcClient(RpcClient):
     def blocking_append(self, idempotency_key: str, doc: Dict):
         raise NotImplemented()
 
+    def blocking_random_one(self, q: Dict, projection: List[str]) -> List[Dict]:
+        return self._call(
+            verb="random_one",
+            metadata={},
+            payload={
+                "q": q,
+                "projection": projection,
+            }
+        )
+
     def _call(self, verb: str, metadata: Dict, payload: Dict):
         rpc_response = requests.post(self.apiEndpoint, json={
             "verb": verb,

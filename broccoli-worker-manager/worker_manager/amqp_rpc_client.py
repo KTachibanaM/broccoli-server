@@ -157,6 +157,9 @@ class AmqpRpcClient(RpcClient):
         if not status:
             self.raise_error(f"Error making append idempotency_key={idempotency_key} doc={doc}, message {message}")
 
+    def blocking_random_one(self, q: Dict, projection: List[str]) -> List[Dict]:
+        raise NotImplemented()
+
     def raise_error(self, message: str):
         self.logger.error(message)
         raise Exception(message)

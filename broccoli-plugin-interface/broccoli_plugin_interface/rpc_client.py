@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple, Union
 from abc import ABCMeta, abstractmethod
 
 
@@ -18,4 +18,8 @@ class RpcClient(metaclass=ABCMeta):
 
     @abstractmethod
     def blocking_append(self, idempotency_key: str, doc: Dict):
+        pass
+
+    @abstractmethod
+    def blocking_random_one(self, q: Dict, projection: List[str]) -> List[Dict]:
         pass
