@@ -38,24 +38,28 @@ def add_jobs(actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs, 
         return
     logger.info(f"Going to add jobs with id {added_job_ids}")
     for added_job_id in added_job_ids:
-        module, class_name, args, interval_seconds = desired_jobs[added_job_id]
-        status, worker_or_message = load_object(module, class_name, args)
-        if not status:
-            logger.error(f"Fails to add worker module={module} class_name={class_name} args={args}, "
-                         f"message {worker_or_message}")
-            continue
-        work_context = WorkContextImpl(added_job_id)
-        worker_or_message.pre_work(work_context)
+        add_job(added_job_id, desired_jobs, scheduler)
 
-        def work_wrap():
-            worker_or_message.work(work_context)
 
-        scheduler.add_job(
-            work_wrap,
-            id=added_job_id,
-            trigger='interval',
-            seconds=interval_seconds
-        )
+def add_job(added_job_id: str, desired_jobs, scheduler: BlockingScheduler):
+    module, class_name, args, interval_seconds = desired_jobs[added_job_id]
+    status, worker_or_message = load_object(module, class_name, args)
+    if not status:
+        logger.error(f"Fails to add worker module={module} class_name={class_name} args={args}, "
+                     f"message {worker_or_message}")
+        return
+    work_context = WorkContextImpl(added_job_id)
+    worker_or_message.pre_work(work_context)
+
+    def work_wrap():
+        worker_or_message.work(work_context)
+
+    scheduler.add_job(
+        work_wrap,
+        id=added_job_id,
+        trigger='interval',
+        seconds=interval_seconds
+    )
 
 
 def configure_jobs(actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs, scheduler: BlockingScheduler):
