@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='broccoli_common',
@@ -8,7 +8,7 @@ setup(
     author='KTachibanaM',
     author_email='whj19931115@gmail.com',
     license='WTFPL',
-    packages=['broccoli_common'],
+    packages=find_packages(),
     install_requires=[
         'pytz',
         "python-dotenv",

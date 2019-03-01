@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='broccoli_plugin_interface',
@@ -8,6 +8,6 @@ setup(
     author='KTachibanaM',
     author_email='whj19931115@gmail.com',
     license='WTFPL',
-    packages=['broccoli_plugin_interface'],
+    packages=find_packages(),
     zip_safe=False
 )
