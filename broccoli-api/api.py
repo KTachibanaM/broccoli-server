@@ -5,6 +5,8 @@ from broccoli_plugin_interface.api.api_handler import ApiHandler
 from broccoli_common.is_flask_debug import is_flask_debug
 from broccoli_common.load_dotenv import load_dotenv
 from broccoli_common.getenv_or_raise import getenv_or_raise
+from broccoli_common.configure_flask_jwt_secret_key import configure_flask_jwt_secret_key
+from broccoli_common.flask_auth_route import flask_auth_route
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
@@ -31,48 +33,30 @@ http_rpc_client = HttpRpcClient(
 app = Flask(__name__)
 configure_werkzeug_logger()
 CORS(app)
-app.config["JWT_SECRET_KEY"] = getenv_or_raise("JWT_SECRET_KEY")
+configure_flask_jwt_secret_key(app)
 jwt = JWTManager(app)
 jwt_exceptions = ['/auth']
-admin_username = getenv_or_raise("ADMIN_USERNAME")
-admin_password = getenv_or_raise("ADMIN_PASSWORD")
+
+
+def create_access_token_f(identity: str) -> str:
+    return create_access_token(
+        identity=identity,
+        expires_delta=datetime.timedelta(days=365)  # todo: just for now
+    )
 
 
 @app.route('/auth', methods=['POST'])
-def login():
-    if not request.is_json:
+def auth():
+    status_code, token_or_message = flask_auth_route(request, create_access_token_f)
+    if status_code != 200:
         return jsonify({
             "status": "error",
-            "message": "Missing JSON in request"
-        }), 400
-
-    username = request.json.get('username', None)
-    password = request.json.get('password', None)
-    if not username:
-        return jsonify({
-            "status": "error",
-            "message": "Missing username parameter"
-        }), 400
-    if not password:
-        return jsonify({
-            "status": "error",
-            "message": "Missing password parameter"
-        }), 400
-
-    if username != admin_username or password != admin_password:
-        return jsonify({
-            "status": "error",
-            "message": "Bad username or password"
-        }), 401
-
-    access_token = create_access_token(
-        identity=username,
-        expires_delta=datetime.timedelta(days=365)  # todo: just for now
-    )
+            "message": token_or_message
+        }), status_code
     return jsonify({
         "status": "ok",
-        "access_token": access_token
-    }), 200
+        "access_token": token_or_message
+    }), status_code
 
 
 @app.before_request
