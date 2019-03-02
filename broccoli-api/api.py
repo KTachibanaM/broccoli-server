@@ -33,7 +33,7 @@ configure_werkzeug_logger()
 CORS(app)
 app.config["JWT_SECRET_KEY"] = getenv_or_raise("JWT_SECRET_KEY")
 jwt = JWTManager(app)
-jwt_exceptions = ['/auth', '/api']
+jwt_exceptions = ['/auth']
 admin_username = getenv_or_raise("ADMIN_USERNAME")
 admin_password = getenv_or_raise("ADMIN_PASSWORD")
 
@@ -78,8 +78,9 @@ def login():
 @app.before_request
 def before_request():
     r_path = request.path
-    if r_path not in jwt_exceptions:
-        verify_jwt_in_request()
+    if r_path in jwt_exceptions or r_path.startswith("/api"):
+        return
+    verify_jwt_in_request()
 
 
 default_api_handler = None  # type: ApiHandler
