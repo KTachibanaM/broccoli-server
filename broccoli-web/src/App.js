@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Route, Link, Switch, Redirect } from "react-ro
 import Icon from "./icon.png"
 import WorkerManagerClient from "./clients/WorkerManagerClient"
 import ContentClient from "./clients/ContentClient"
-import ApiClient from "./clients/ApiClient"
 
 import ViewWorkersPage from "./pages/workers/ViewWorkersPage"
 import CreateWorkerPage from "./pages/workers/CreateWorkerPage"
@@ -14,6 +13,7 @@ import Worker from "./pages/workers/Worker"
 
 import applyMessage from "./hoc/applyMessage"
 import applyRouting from "./hoc/applyRouting"
+import applyApiAuth from "./hoc/applyApiAuth"
 
 export default class App extends Component {
   constructor(props) {
@@ -21,10 +21,6 @@ export default class App extends Component {
     this.contentClient = new ContentClient(
       process.env.REACT_APP_SERVER_HOSTNAME,
       parseInt(process.env.REACT_APP_SERVER_PORT)
-    );
-    this.apiClient = new ApiClient(
-      process.env.REACT_APP_API_HOSTNAME,
-      parseInt(process.env.REACT_APP_API_PORT)
     );
     this.workerManagerClient = new WorkerManagerClient(
       process.env.REACT_APP_WORKER_MANAGER_HOSTNAME,
@@ -58,26 +54,25 @@ export default class App extends Component {
               exact
               path="/boards/view"
               component={() => {
-                const EnhancedPage = applyHoc(ViewBoardsPage, applyMessage, applyRouting);
-                return (<EnhancedPage apiClient={this.apiClient}/>)
+                const EnhancedPage = applyHoc(ViewBoardsPage, applyMessage, applyRouting, applyApiAuth);
+                return (<EnhancedPage />)
               }}
             />
             <Route
               exact
               path="/boards/upsert"
               component={() => {
-                const EnhancedPage = applyHoc(UpsertBoardPage, applyMessage, applyRouting);
-                return (<EnhancedPage apiClient={this.apiClient}/>)
+                const EnhancedPage = applyHoc(UpsertBoardPage, applyMessage, applyRouting, applyApiAuth);
+                return (<EnhancedPage />)
               }}
             />
             <Route
               exact
               path="/board/:name"
               component={() => {
-                const EnhancedPage = applyHoc(Board, applyMessage);
+                const EnhancedPage = applyHoc(Board, applyMessage, applyApiAuth);
                 return (<EnhancedPage
                   contentClient={this.contentClient}
-                  apiClient={this.apiClient}
                 />)
               }}
             />

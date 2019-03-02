@@ -1,17 +1,38 @@
 import axios from "axios"
 
 export default class ApiClient {
+  ApiTokenLocalStorageKey = "api_token";
+
   constructor(hostname, port) {
     this.endpoint = `http://${hostname}:${port}`;
-    this.apiConfigEndpoint = `${this.endpoint}/apiConfig`
+    this.axios = axios.create();
+    this.isAuth = false;
+    const token = localStorage.getItem(this.ApiTokenLocalStorageKey);
+    if (token) {
+      this.setAuth(token)
+    }
   }
 
-  getApiConfig() {
-    return axios.get(this.apiConfigEndpoint)
+  auth(username, password) {
+    return this.axios.post(`${this.endpoint}/auth`, {
+      username, password
+    }).then(response => {
+      const token = response.data['access_token'];
+      if (!token) {
+        throw new Error(`No access_token in ${response.data}`)
+      }
+      this.setAuth(token);
+      localStorage.setItem(this.ApiTokenLocalStorageKey, token)
+    })
   }
 
-  setApiConfig(q, projection) {
-    return axios.post(this.apiConfigEndpoint, {q, projection})
+  setAuth(token) {
+    this.isAuth = true;
+    this.axios.defaults.headers['Authorization'] = 'Bearer ' + token;
+  }
+
+  hasAuth() {
+    return this.isAuth;
   }
 
   upsertBoard(boardId, q, limit, sort, projections) {
@@ -22,22 +43,22 @@ export default class ApiClient {
     if (sort) {
       data["sort"] = sort
     }
-    return axios.post(`${this.endpoint}/board/${boardId}`, data)
+    return this.axios.post(`${this.endpoint}/board/${boardId}`, data)
   }
 
   getBoards() {
-    return axios.get(`${this.endpoint}/boards`).then(response => response.data)
+    return this.axios.get(`${this.endpoint}/boards`).then(response => response.data)
   }
 
   getBoard(boardId) {
-    return axios.get(`${this.endpoint}/board/${boardId}`).then(response => response.data)
+    return this.axios.get(`${this.endpoint}/board/${boardId}`).then(response => response.data)
   }
 
   swapBoards(boardId, anotherBoardId) {
-    return axios.post(`${this.endpoint}/boards/swap/${boardId}/${anotherBoardId}`)
+    return this.axios.post(`${this.endpoint}/boards/swap/${boardId}/${anotherBoardId}`)
   }
 
   removeBoard(boardId) {
-    return axios.delete(`${this.endpoint}/board/${boardId}`)
+    return this.axios.delete(`${this.endpoint}/board/${boardId}`)
   }
 }

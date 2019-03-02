@@ -1,5 +1,6 @@
 import json
 import importlib
+import datetime
 from broccoli_plugin_interface.api.api_handler import ApiHandler
 from broccoli_common.is_flask_debug import is_flask_debug
 from broccoli_common.load_dotenv import load_dotenv
@@ -64,7 +65,10 @@ def login():
             "message": "Bad username or password"
         }), 401
 
-    access_token = create_access_token(identity=username)
+    access_token = create_access_token(
+        identity=username,
+        expires_delta=datetime.timedelta(days=365)  # todo: just for now
+    )
     return jsonify({
         "status": "ok",
         "access_token": access_token
