@@ -28,7 +28,11 @@ export default class ApiClient {
 
   setAuth(token) {
     this.isAuth = true;
-    this.axios.defaults.headers['Authorization'] = 'Bearer ' + token;
+    this.axios = axios.create({
+      headers: {
+        "Authorization": 'Bearer ' + token
+      }
+    })
   }
 
   hasAuth() {

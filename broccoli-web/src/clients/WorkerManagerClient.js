@@ -29,8 +29,11 @@ export default class WorkerManagerClient {
 
   setAuth(token) {
     this.isAuth = true;
-    this.axios.defaults.headers['Authorization'] = 'Bearer ' + token;
-  }
+    this.axios = axios.create({
+      headers: {
+        "Authorization": 'Bearer ' + token
+      }
+    })  }
 
   hasAuth() {
     return this.isAuth;
