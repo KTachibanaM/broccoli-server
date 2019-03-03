@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Link, Switch, Redirect } from "react-router-dom"
 import Icon from "./icon.png"
-import WorkerManagerClient from "./clients/WorkerManagerClient"
 import ContentClient from "./clients/ContentClient"
 
 import ViewWorkersPage from "./pages/workers/ViewWorkersPage"
@@ -14,6 +13,7 @@ import Worker from "./pages/workers/Worker"
 import applyMessage from "./hoc/applyMessage"
 import applyRouting from "./hoc/applyRouting"
 import applyApiAuth from "./hoc/applyApiAuth"
+import applyWorkerManagerAuth from "./hoc/applyWorkerManagerAuth"
 
 export default class App extends Component {
   constructor(props) {
@@ -21,10 +21,6 @@ export default class App extends Component {
     this.contentClient = new ContentClient(
       process.env.REACT_APP_SERVER_HOSTNAME,
       parseInt(process.env.REACT_APP_SERVER_PORT)
-    );
-    this.workerManagerClient = new WorkerManagerClient(
-      process.env.REACT_APP_WORKER_MANAGER_HOSTNAME,
-      parseInt(process.env.REACT_APP_WORKER_MANAGER_PORT),
     );
   }
 
@@ -80,24 +76,24 @@ export default class App extends Component {
               exact
               path="/workers/view"
               component={() => {
-                const EnhancedPage = applyHoc(ViewWorkersPage, applyMessage, applyRouting);
-                return (<EnhancedPage workerManagerClient={this.workerManagerClient} />)
+                const EnhancedPage = applyHoc(ViewWorkersPage, applyMessage, applyRouting, applyWorkerManagerAuth);
+                return (<EnhancedPage />)
               }}
             />
             <Route
               exact
               path="/workers/create"
               component={() => {
-                const EnhancedPage = applyHoc(CreateWorkerPage, applyMessage, applyRouting);
-                return (<EnhancedPage workerManagerClient={this.workerManagerClient} />)
+                const EnhancedPage = applyHoc(CreateWorkerPage, applyMessage, applyRouting, applyWorkerManagerAuth);
+                return (<EnhancedPage />)
               }}
             />
             <Route
               exact
               path="/worker/:workerId"
               component={() => {
-                const EnhancedPage = applyHoc(Worker, applyMessage);
-                return (<EnhancedPage workerManagerClient={this.workerManagerClient}/>)
+                const EnhancedPage = applyHoc(Worker, applyMessage, applyWorkerManagerAuth);
+                return (<EnhancedPage />)
               }}
             />
           </Switch>

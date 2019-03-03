@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 import getDisplayName from "./getDisplayName"
-import ApiClient from "../clients/ApiClient";
+import WorkerManagerClient from "../clients/WorkerManagerClient";
 
 export default OriginalComponent => {
   class NewComponent extends Component {
     constructor(props) {
       super(props);
-      this.apiClient = new ApiClient(
-        process.env.REACT_APP_API_HOSTNAME,
-        parseInt(process.env.REACT_APP_API_PORT)
+      this.workerManagerClient = new WorkerManagerClient(
+        process.env.REACT_APP_WORKER_MANAGER_HOSTNAME,
+        parseInt(process.env.REACT_APP_WORKER_MANAGER_PORT),
       );
       this.state = {
         "username": "",
@@ -28,15 +28,15 @@ export default OriginalComponent => {
         username,
         password
       } = this.state;
-      this.apiClient.auth(username, password)
+      this.workerManagerClient.auth(username, password)
         .then()
     }
 
     render() {
-      if (!this.apiClient.hasAuth()) {
+      if (!this.workerManagerClient.hasAuth()) {
         return (
           <div>
-            <b>API: Log in</b>
+            <b>Worker manager: Log in</b>
             <div>
               Username:<br/>
               <input
@@ -55,10 +55,10 @@ export default OriginalComponent => {
           </div>
         )
       }
-      return (<OriginalComponent apiClient={this.apiClient} {...this.props} />)
+      return (<OriginalComponent workerManagerClient={this.workerManagerClient} {...this.props} />)
     }
   }
 
-  NewComponent.displayName = `applyApiAuth(${getDisplayName(OriginalComponent)})`;
+  NewComponent.displayName = `applyWorkerManagerAuth(${getDisplayName(OriginalComponent)})`;
   return NewComponent
 }
