@@ -4,8 +4,17 @@ from broccoli_plugin_interface.rpc_client import RpcClient
 
 
 class HttpRpcClient(RpcClient):
-    def __init__(self, hostname: str, port: int):
-        self.apiEndpoint = f"http://{hostname}:{port}/api"
+    def __init__(self, hostname: str, port: int, username: str, password: str):
+        self.endpoint = f"http://{hostname}:{port}"
+        self.apiEndpoint = f"{self.endpoint}/api"
+        token_response = requests.post(f"{self.endpoint}/auth", json={
+            "username": username,
+            "password": password
+        })
+        response = token_response.json()
+        if "access_token" not in response:
+            raise RuntimeError(f"Cannot obtain access token, json response is {response}")
+        self.accessToken = response["access_token"]
 
     def blocking_query(self, q: Dict, limit: Optional[int] = None, projection: List[str] = None,
                        sort: Dict[str, int] = None, datetime_q: List[Dict] = None) -> List[Dict]:
@@ -45,6 +54,8 @@ class HttpRpcClient(RpcClient):
             "verb": verb,
             "metadata": metadata,
             "payload": payload
+        }, headers={
+            "Authorization": f"Bearer {self.accessToken}"
         })
         response = rpc_response.json()
         if "status" not in response:

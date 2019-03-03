@@ -27,7 +27,9 @@ boards_store = BoardsStore(
 )
 http_rpc_client = HttpRpcClient(
     hostname=getenv_or_raise("CONTENT_SERVER_HOSTNAME"),
-    port=int(getenv_or_raise("CONTENT_SERVER_PORT"))
+    port=int(getenv_or_raise("CONTENT_SERVER_PORT")),
+    username=getenv_or_raise("CONTENT_SERVER_USERNAME"),
+    password=getenv_or_raise("CONTENT_SERVER_PASSWORD"),
 )
 
 app = Flask(__name__)
