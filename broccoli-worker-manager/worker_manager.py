@@ -1,12 +1,16 @@
 import os
 import sys
+import datetime
 from broccoli_common.logging import configure_werkzeug_logger
 from broccoli_common.is_flask_debug import is_flask_debug
 from broccoli_common.load_dotenv import load_dotenv
 from broccoli_common.getenv_or_raise import getenv_or_raise
+from broccoli_common.configure_flask_jwt_secret_key import configure_flask_jwt_secret_key
+from broccoli_common.flask_auth_route import flask_auth_route
 from threading import Thread
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
 from jsonschema import validate, ValidationError
 from apscheduler.schedulers.blocking import BlockingScheduler
 from worker_manager.reconcile import reconcile, RECONCILE_JOB_ID
@@ -35,8 +39,38 @@ global_metadata_store = GlobalMetadataStore(
 app = Flask(__name__)
 configure_werkzeug_logger()
 CORS(app)
+configure_flask_jwt_secret_key(app)
+jwt = JWTManager(app)
+jwt_exceptions = ['/auth']
 
-# todo: authenticate all those endpoints
+
+def create_access_token_f(identity: str) -> str:
+    return create_access_token(
+        identity=identity,
+        expires_delta=datetime.timedelta(days=365)  # todo: just for now
+    )
+
+
+@app.route('/auth', methods=['POST'])
+def auth():
+    status_code, token_or_message = flask_auth_route(request, create_access_token_f)
+    if status_code != 200:
+        return jsonify({
+            "status": "error",
+            "message": token_or_message
+        }), status_code
+    return jsonify({
+        "status": "ok",
+        "access_token": token_or_message
+    }), status_code
+
+
+@app.before_request
+def before_request():
+    r_path = request.path
+    if r_path in jwt_exceptions:
+        return
+    verify_jwt_in_request()
 
 
 ADD_WORKER_BODY_SCHEMA = {

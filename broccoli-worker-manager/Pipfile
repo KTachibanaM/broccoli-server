@@ -14,6 +14,7 @@ flask-cors = "*"
 broccoli-common = {editable = true,path = "./../broccoli-common"}
 broccoli-plugin-interface = {editable = true,path = "./../broccoli-plugin-interface"}
 pika = "*"
+flask-jwt-extended = "*"
 
 [requires]
 python_version = "3.7"
