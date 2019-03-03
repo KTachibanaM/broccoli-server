@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Link, Switch, Redirect } from "react-router-dom"
 import Icon from "./icon.png"
-import ContentClient from "./clients/ContentClient"
 
 import ViewWorkersPage from "./pages/workers/ViewWorkersPage"
 import CreateWorkerPage from "./pages/workers/CreateWorkerPage"
@@ -14,16 +13,9 @@ import applyMessage from "./hoc/applyMessage"
 import applyRouting from "./hoc/applyRouting"
 import applyApiAuth from "./hoc/applyApiAuth"
 import applyWorkerManagerAuth from "./hoc/applyWorkerManagerAuth"
+import applyContentServerAuth from "./hoc/applyContentServerAuth"
 
 export default class App extends Component {
-  constructor(props) {
-    super(props);
-    this.contentClient = new ContentClient(
-      process.env.REACT_APP_SERVER_HOSTNAME,
-      parseInt(process.env.REACT_APP_SERVER_PORT)
-    );
-  }
-
   render() {
     return (
       <Router>
@@ -66,10 +58,8 @@ export default class App extends Component {
               exact
               path="/board/:name"
               component={() => {
-                const EnhancedPage = applyHoc(Board, applyMessage, applyApiAuth);
-                return (<EnhancedPage
-                  contentClient={this.contentClient}
-                />)
+                const EnhancedPage = applyHoc(Board, applyMessage, applyApiAuth, applyContentServerAuth);
+                return (<EnhancedPage />)
               }}
             />
             <Route

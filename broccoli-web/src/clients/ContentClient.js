@@ -1,12 +1,47 @@
 import axios from "axios"
 
 export default class ContentClient {
+  ContentServerTokenLocalStorageKey = "content_server_token";
+
   constructor(hostname, port) {
-    this.apiEndpoint = `http://${hostname}:${port}/api`
+    this.endpoint = `http://${hostname}:${port}`;
+    this.apiEndpoint = `http://${hostname}:${port}/api`;
+    this.axios = axios.create();
+    this.isAuth = false;
+    const token = localStorage.getItem(this.ContentServerTokenLocalStorageKey);
+    if (token) {
+      this.setAuth(token)
+    }
+  }
+
+  auth(username, password) {
+    return this.axios.post(`${this.endpoint}/auth`, {
+      username, password
+    }).then(response => {
+      const token = response.data['access_token'];
+      if (!token) {
+        throw new Error(`No access_token in ${response.data}`)
+      }
+      this.setAuth(token);
+      localStorage.setItem(this.ContentServerTokenLocalStorageKey, token)
+    })
+  }
+
+  setAuth(token) {
+    this.isAuth = true;
+    this.axios = axios.create({
+      headers: {
+        "Authorization": 'Bearer ' + token
+      }
+    })
+  }
+
+  hasAuth() {
+    return this.isAuth;
   }
 
   async call(verb, metadata, payload) {
-    const response = await axios.post(this.apiEndpoint, {
+    const response = await this.axios.post(this.apiEndpoint, {
       verb: verb,
       metadata: metadata,
       payload: payload

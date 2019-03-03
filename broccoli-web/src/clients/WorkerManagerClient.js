@@ -33,7 +33,8 @@ export default class WorkerManagerClient {
       headers: {
         "Authorization": 'Bearer ' + token
       }
-    })  }
+    })
+  }
 
   hasAuth() {
     return this.isAuth;
