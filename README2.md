@@ -1,53 +1,9 @@
-# broccoli
-🥦, a web content crawling and sorting system
 
-## Prerequisites
-* `Python 3.7`
-* `pipenv`
-* `jq`
-* `RabbitMQ`
-    * Have an unauthenticated RabbitMQ running at `localhost:5672`
-        * macOS
-        ```bash
-        brew install rabbitmq
-        brew services start rabbitmq
-        ```
-        * Debian and Ubuntu: Follow [this guide](https://www.rabbitmq.com/install-debian.html)
-    * To verify, run the following command and you should see strings like `Listing queues for vhost / ...`
-    ```bash
-    rabbitmqctl report
-    ```
-    * Create a admin user and enable web interface at `localhost:15672` using the following script
-    ```bash
-    dev/reset_rabbit_mq.sh
-    ```
-* `MongoDB`
-    * Have an unauthenticated MongoDB running at `localhost:27017`
-        * macOS
-        ```bash
-        brew install mongodb
-        brew services start mongodb
-        ```
-        * Debian and Ubuntu: Follow [this guide](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
-    * To verify, run the `mongo` in your terminal and you should be dropped to a MongoDB interactive shell
-* Come up with a name for the instance. From now on we assume that name is `my_first_broccoli`
 
 ## Install Python dependencies
 ```bash
 pipenv install
 ```
-
-## Configure MongoDB
-```bash
-dev/init_mongo.sh my_first_broccoli
-```
-This script will create a database named `my_first_broccoli` with a user named `my_first_broccoli` with the password `my_first_broccoli` who has `readWrites` role to the database
-
-## Configure RabbitMQ
-```bash
-dev/init_rabbitmq.sh my_first_broccoli
-```
-This script will create a virtual host named `my_first_broccoli` with a user named `my_first_broccoli` with the password `my_first_broccoli` who has admin access to the virtual host
 
 ## Configure environment
 ```bash
@@ -114,16 +70,4 @@ Notice that Flask auto-reload sometimes doesn't work, so you might better off re
 dev/api.sh
 ```
 
-## Development
-* Reset all stateful components
-```bash
-dev/reset_state.sh my_first_broccoli
-```
-* Reset RabbitMQ
-```bash
-dev/reset_rabbit_mq.sh my_first_broccoli
-```
-* Reset MongoDB
-```bash
-dev/reset_mongo.sh my_first_broccoli
-```
+

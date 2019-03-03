@@ -17,6 +17,14 @@ pipenv run pip install pip==18.1
 pipenv run pip install SOME_PLUGIN_PATH --process-dependency-links
 ```
 
+## Configure environment
+```bash
+cp worker_manager.sample.env worker_manager.env
+# edit worker_manager.env  # TODO
+cp workers.sample.env workers.env
+# edit workers.env  # TODO
+```
+
 ## Run in development mode
 ```bash
 ./dev.sh

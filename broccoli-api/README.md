@@ -17,6 +17,12 @@ pipenv run pip install pip==18.1
 pipenv run pip install SOME_PLUGIN_PATH --process-dependency-links
 ```
 
+## Configure environment
+```bash
+cp api.sample.env api.env
+# edit api.env  # TODO
+```
+
 ## Configure the default API handler
 Edit `DEFAULT_API_HANDLER_MODULE` and `DEFAULT_API_HANDLER_CLASSNAME` in `api.env`
 so that the Python class `f"{DEFAULT_API_HANDLER_MODULE}.{DEFAULT_API_HANDLER_CLASSNAME}"` will be used as the default api handler for the api server

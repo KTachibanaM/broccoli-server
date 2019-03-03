@@ -26,5 +26,63 @@ This is a set of services and webapps that generalize the crawling, processing, 
 TBD
 
 ## Getting Started
-* Follow `README.md` under `broccoli` to start a broccoli instance without plugins
-* Then follow the `README.md` under the plugin codebase to configure the broccoli instance for the plugin's specific use case
+
+### Prerequisites
+* `Python 3.7`
+* `pipenv`
+* `jq`
+* `RabbitMQ`
+    * Have an unauthenticated RabbitMQ running at `localhost:5672`
+        * macOS
+        ```bash
+        brew install rabbitmq
+        brew services start rabbitmq
+        ```
+        * Debian and Ubuntu: Follow [this guide](https://www.rabbitmq.com/install-debian.html)
+    * To verify, run the following command and you should see strings like `Listing queues for vhost / ...`
+    ```bash
+    rabbitmqctl report
+    ```
+    * Create a admin user and enable web interface at `localhost:15672` using the following script
+    ```bash
+    dev/reset_rabbit_mq.sh
+    ```
+* `MongoDB`
+    * Have an unauthenticated MongoDB running at `localhost:27017`
+        * macOS
+        ```bash
+        brew install mongodb
+        brew services start mongodb
+        ```
+        * Debian and Ubuntu: Follow [this guide](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
+    * To verify, run the `mongo` in your terminal and you should be dropped to a MongoDB interactive shell
+* Come up with a name for the instance. From now on we assume that name is `my_first_broccoli`
+
+### Configure MongoDB
+```bash
+scripts/init_mongo.sh my_first_broccoli
+```
+This script will create a database named `my_first_broccoli` with a user named `my_first_broccoli` with the password `my_first_broccoli` who has `readWrites` role to the database
+
+### Configure RabbitMQ
+```bash
+dev/init_rabbitmq.sh my_first_broccoli
+```
+This script will create a virtual host named `my_first_broccoli` with a user named `my_first_broccoli` with the password `my_first_broccoli` who has admin access to the virtual host
+
+### Run the services
+Follow `README.md`s in `broccoli-content-server`, `broccoli-worker-manager`, `broccoli-api` and `broccoli-web` **in order** to spawn up the services
+
+### Reset MongoDB and RabbitMQ
+* Reset RabbitMQ
+```bash
+dev/reset_rabbit_mq.sh my_first_broccoli
+```
+* Reset MongoDB
+```bash
+dev/reset_mongo.sh my_first_broccoli
+```
+* Reset both
+```bash
+dev/reset_state.sh my_first_broccoli
+```
