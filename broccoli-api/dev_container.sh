@@ -7,6 +7,7 @@ cd ./broccoli-api
 docker images broccoli/api
 docker run \
     --env-file ./api.env \
+    --env-file ./dev_container.env \
     --env API_MONGODB_HOSTNAME=host.docker.internal \
     --env CONTENT_SERVER_HOSTNAME=host.docker.internal \
     --publish 5001:5001 \

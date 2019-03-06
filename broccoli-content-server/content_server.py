@@ -106,4 +106,4 @@ if __name__ == '__main__':
         t = Thread(target=start_rpc_server)
         t.start()
 
-    app.run(port=5000)
+    app.run(host='0.0.0.0', port=5000)

@@ -206,4 +206,4 @@ if __name__ == "__main__":
         t = Thread(target=start_workers)
         t.start()
 
-    app.run(port=5002)
+    app.run(host='0.0.0.0', port=5002)
