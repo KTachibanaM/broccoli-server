@@ -41,7 +41,7 @@ configure_werkzeug_logger()
 CORS(app)
 configure_flask_jwt_secret_key(app)
 jwt = JWTManager(app)
-jwt_exceptions = ['/auth']
+jwt_exceptions = ['/', '/auth']
 
 
 def create_access_token_f(identity: str) -> str:
@@ -49,6 +49,11 @@ def create_access_token_f(identity: str) -> str:
         identity=identity,
         expires_delta=datetime.timedelta(days=365)  # todo: just for now
     )
+
+
+@app.route('/', methods=['GET'])
+def root():
+    return "Hello from worker-manager!"
 
 
 @app.route('/auth', methods=['POST'])
