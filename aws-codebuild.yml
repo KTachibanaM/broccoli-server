@@ -7,12 +7,20 @@ phases:
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
   build:
     commands:
-      - echo Build started on `date`
-      - echo Building the Docker image...          
-      - docker build -t $IMAGE_REPO_NAME -f content-server.Dockerfile .
-      - docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+      - echo Building content-server...
+      - docker build -t broccoli/content-server -f content-server.Dockerfile .
+      - docker tag broccoli/content-server:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/broccoli/content-server:latest
+      - echo Building api...
+      - docker build -t broccoli/api -f api.Dockerfile .
+      - docker tag broccoli/api:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/broccoli/api:latest
+      - echo Building worker-manager...
+      - docker build -t broccoli/worker-manager -f worker-manager.Dockerfile .
+      - docker tag broccoli/worker-manager:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/broccoli/worker-manager:latest
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Pushing the Docker image...
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+      - echo Pushing content-server...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/broccoli/content-server:latest
+      - echo Pushing api...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/broccoli/api:latest
+      - echo Pushing worker-manager...
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/broccoli/worker-manager:latest
