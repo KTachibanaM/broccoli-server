@@ -12,4 +12,4 @@ RUN pip install pip==18.1
 ENV FLASK_ENV=production
 ENV BPI_DEP_LINK=git+file:///app/broccoli-plugin-interface#egg=broccoli_plugin_interface
 EXPOSE 5001
-CMD ["sh", "-c", "./install_plugin_container.sh && python api.py"]
+CMD ["sh", "-c", "./install_plugin.container.sh && python api.py"]

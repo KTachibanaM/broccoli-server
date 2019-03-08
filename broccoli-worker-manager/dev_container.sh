@@ -9,7 +9,7 @@ docker run \
     --env-file ./worker_manager.env \
     --env-file ./workers.env \
     --env-file ./workers.container.env \
-    --env-file ./dev_container.env \
+    --env-file ./worker_manager.container.env \
     --env RPC_AMQP_HOSTNAME=host.docker.internal \
     --env WORKER_MANAGER_MONGODB_HOSTNAME=host.docker.internal \
     --publish 5002:5002 \
