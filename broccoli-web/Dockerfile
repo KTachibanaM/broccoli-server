@@ -8,7 +8,6 @@ RUN apt-get update && \
 COPY . /app
 WORKDIR /app
 RUN npm install
-RUN npm install -g serve
 
-EXPOSE 5000
-CMD ["sh", "-c", "./inject_environment.container.sh && npm run build && serve /app/build"]
+EXPOSE 3000
+CMD ["sh", "-c", "./inject_environment.container.sh && npm run start"]

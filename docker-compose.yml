@@ -8,11 +8,6 @@ services:
       - "5000:5000"
     env_file:
       - ./broccoli-content-server/content_server.env
-    environment:
-      - RPC_AMQP_HOSTNAME=rabbitmq
-      - RPC_AMQP_PORT=5672
-    depends_on:
-      - rabbitmq
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000"]
       interval: 30s
@@ -45,11 +40,6 @@ services:
     env_file:
       - ./broccoli-worker-manager/worker_manager.env
       - ./broccoli-worker-manager/workers.env
-    environment:
-      - RPC_AMQP_HOSTNAME=rabbitmq
-      - RPC_AMQP_PORT=5672
-    depends_on:
-      - rabbitmq
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5002"]
       interval: 30s
@@ -59,7 +49,7 @@ services:
     build:
       context: ./broccoli-web
     ports:
-      - "3000:5000"
+      - "3000:3000"
     env_file:
       - ./broccoli-web/.env.development
       - ./broccoli-web/.env.development.local
@@ -67,12 +57,3 @@ services:
       - content-server
       - api
       - worker-manager
-  rabbitmq:
-    image: "rabbitmq:3.7.12-management"
-    env_file:
-      - ./rabbitmq.env
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:15672"]
-      interval: 30s
-      timeout: 10s
-      retries: 5

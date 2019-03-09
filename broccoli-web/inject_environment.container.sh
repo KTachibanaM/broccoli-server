@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-cat >/app/.env.production.local <<EOL
+cat >/app/.env.development.local <<EOL
 REACT_APP_SERVER_HOSTNAME=${REACT_APP_SERVER_HOSTNAME}
 REACT_APP_SERVER_PORT=${REACT_APP_SERVER_PORT}
 
