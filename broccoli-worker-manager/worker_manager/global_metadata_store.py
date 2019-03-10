@@ -10,8 +10,6 @@ class GlobalMetadataStore(object):
             port=port,
             username=username,
             password=password,
-            authSource=db,
-            authMechanism='SCRAM-SHA-256'
         )
         self.db = self.client[db]
 

@@ -12,8 +12,6 @@ class ConfigStore(object):
             port=port,
             username=username,
             password=password,
-            authSource=db,
-            authMechanism='SCRAM-SHA-256'
         )
         self.db = self.client[db]
         self.collection = self.db['broccoli.workers']

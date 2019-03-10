@@ -11,8 +11,6 @@ class MetadataStoreImpl(MetadataStore):
             port=port,
             username=username,
             password=password,
-            authSource=db,
-            authMechanism='SCRAM-SHA-256'
         )
         self.db = self.client[db]
         self.collection = self.db[collection_name]
