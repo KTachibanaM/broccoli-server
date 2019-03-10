@@ -14,6 +14,7 @@ pymongo-schema = {file = "https://github.com/pajachiet/pymongo-schema/archive/0d
 broccoli-common = {editable = true,path = "./../broccoli-common"}
 v = "*"
 flask-jwt-extended = "*"
+dnspython = "*"
 
 [requires]
 python_version = "3.7"

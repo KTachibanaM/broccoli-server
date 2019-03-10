@@ -13,6 +13,7 @@ broccoli-common = {editable = true,path = "./../broccoli-common"}
 broccoli-plugin-interface = {editable = true,path = "./../broccoli-plugin-interface"}
 requests = "*"
 flask-jwt-extended = "*"
+dnspython = "*"
 
 [requires]
 python_version = "3.7"
