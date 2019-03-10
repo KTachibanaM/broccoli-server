@@ -24,7 +24,7 @@ class AmqpRpcClient(RpcClient):
         self.callback_queue_name = callback_queue_name
 
         self.channel = self.connection.channel()  # type: pika.adapters.blocking_connection.BlockingChannel
-        self.channel.queue_declare(queue=callback_queue_name, exclusive=True)
+        self.channel.queue_declare(queue=callback_queue_name)
         self.channel.basic_consume(
             self.on_response,
             no_ack=True,
