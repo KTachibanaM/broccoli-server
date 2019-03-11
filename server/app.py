@@ -126,7 +126,7 @@ def auth():
     )
     return jsonify({
         "status": "ok",
-        "message": access_token
+        "access_token": access_token
     }), 200
 
 
