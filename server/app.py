@@ -87,6 +87,11 @@ admin_username = getenv_or_raise("ADMIN_USERNAME")
 admin_password = getenv_or_raise("ADMIN_PASSWORD")
 
 
+# Less verbose logging from apscheduler
+apscheduler_logger = logging.getLogger("apscheduler")
+apscheduler_logger.setLevel(logging.ERROR)
+
+
 # Configure so that every request except for a few are authenticated
 @app.before_request
 def before_request():
