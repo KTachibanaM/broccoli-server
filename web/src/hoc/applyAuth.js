@@ -6,10 +6,7 @@ export default OriginalComponent => {
   class NewComponent extends Component {
     constructor(props) {
       super(props);
-      this.apiClient = new ApiClient(
-        process.env.REACT_APP_SERVER_HOSTNAME,
-        parseInt(process.env.REACT_APP_SERVER_PORT)
-      );
+      this.apiClient = new ApiClient();
       this.state = {
         "username": "",
         "password": ""

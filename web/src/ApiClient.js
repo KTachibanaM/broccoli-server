@@ -3,8 +3,8 @@ import axios from "axios"
 export default class ApiClient {
   TokenLocalStorageKey = "accessToken";
 
-  constructor(hostname, port) {
-    this.endpoint = `http://${hostname}:${port}`;
+  constructor() {
+    this.endpoint = process.env.REACT_APP_SERVER_URL;
     this.axios = axios.create();
     this.isAuth = false;
     const token = localStorage.getItem(this.TokenLocalStorageKey);
