@@ -15,7 +15,7 @@ export default class ViewWorkersPage extends Component {
   }
 
   componentDidMount() {
-    this.props.schedulerClient.getWorkers()
+    this.props.apiClient.getWorkers()
       .then(response => {
         const workers = response.data;
         this.setState({
@@ -50,7 +50,7 @@ export default class ViewWorkersPage extends Component {
 
   remove(workerId) {
     if (window.confirm(`Are you sure you want to remove worker ${workerId}`)) {
-      this.props.schedulerClient.removeWorker(workerId)
+      this.props.apiClient.removeWorker(workerId)
         .then(() => {
           this.setState({
             ...this.state,
@@ -71,7 +71,7 @@ export default class ViewWorkersPage extends Component {
   }
 
   updateIntervalSeconds(workerId, intervalSeconds) {
-    this.props.schedulerClient.updateWorkerIntervalSeconds(workerId, intervalSeconds)
+    this.props.apiClient.updateWorkerIntervalSeconds(workerId, intervalSeconds)
       .then(() => {
 
         this.props.showOkMessage(`Updated worker ${workerId} with interval seconds ${intervalSeconds}`)

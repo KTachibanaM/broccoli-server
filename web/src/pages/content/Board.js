@@ -16,7 +16,7 @@ class Board extends Component {
   }
 
   componentDidMount() {
-    this.props.dashboardClient.getBoard(this.boardId)
+    this.props.apiClient.getBoard(this.boardId)
       .then(data => {
         this.setState({
           "boardQuery": {
@@ -78,7 +78,7 @@ class Board extends Component {
                   <td key={name}>
                     <LoadedComponent
                       document={document}
-                      rpcClient={this.props.rpcClient}
+                      apiClient={this.props.apiClient}
                       reload={this.reload}
                     />
                   </td>
@@ -96,7 +96,7 @@ class Board extends Component {
     this.setState({
       "loading": true
     });
-    this.props.rpcClient.query(
+    this.props.apiClient.rpcQuery(
       this.state.boardQuery.q,
       this.state.boardQuery.limit,
       this.state.boardQuery.sort

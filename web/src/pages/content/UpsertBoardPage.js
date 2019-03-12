@@ -28,7 +28,7 @@ class UpsertBoardPage extends Component {
 
   componentDidMount() {
     if (this.boardId) {
-      this.props.dashboardClient.getBoard(this.boardId)
+      this.props.apiClient.getBoard(this.boardId)
         .then(data => {
           this.setState({
             "loading": false,
@@ -58,7 +58,7 @@ class UpsertBoardPage extends Component {
 
   submit() {
     const {name, q, limit, sort, projections} = this.state;
-    this.props.dashboardClient.upsertBoard(
+    this.props.apiClient.upsertBoard(
       name,
       JSON.parse(q),
       limit !== 0 ? limit : undefined,

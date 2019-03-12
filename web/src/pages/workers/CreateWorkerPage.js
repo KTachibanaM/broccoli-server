@@ -30,7 +30,7 @@ class CreateWorkerPage extends Component {
       this.props.showErrorMessage("Arg is not valid JSON");
       return
     }
-    this.props.schedulerClient.addWorker(module, className, args, intervalSeconds)
+    this.props.apiClient.addWorker(module, className, args, intervalSeconds)
       .then(() => {
         this.props.redirectTo("/workers/view");
       })

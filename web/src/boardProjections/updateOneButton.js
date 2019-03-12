@@ -16,7 +16,7 @@ export default function (title, filter_q_key, update_set_doc) {
       }
       return (
         <button onClick={() => {
-          this.props.rpcClient.updateOne(
+          this.props.apiClient.rpcUpdateOne(
             {
               [filter_q_key]: this.props.document[filter_q_key]
             },

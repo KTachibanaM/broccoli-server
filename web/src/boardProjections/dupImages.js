@@ -13,8 +13,8 @@ export default function () {
     }
 
     componentDidMount() {
-      const {document, rpcClient} = this.props;
-      rpcClient.queryNearestHammingNeighbors(
+      const {document, apiClient} = this.props;
+      apiClient.rpcQueryNearestHammingNeighbors(
         {"mod": true},
         "image_dhash",
         document["image_dhash"],

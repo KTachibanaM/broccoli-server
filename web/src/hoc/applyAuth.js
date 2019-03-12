@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 import getDisplayName from "./getDisplayName"
-import SchedulerClient from "../clients/SchedulerClient";
+import ApiClient from "../ApiClient";
 
 export default OriginalComponent => {
   class NewComponent extends Component {
     constructor(props) {
       super(props);
-      this.schedulerClient = new SchedulerClient(
+      this.apiClient = new ApiClient(
         process.env.REACT_APP_SERVER_HOSTNAME,
-        parseInt(process.env.REACT_APP_SERVER_PORT),
+        parseInt(process.env.REACT_APP_SERVER_PORT)
       );
       this.state = {
         "username": "",
@@ -28,15 +28,15 @@ export default OriginalComponent => {
         username,
         password
       } = this.state;
-      this.schedulerClient.auth(username, password)
+      this.apiClient.auth(username, password)
         .then()
     }
 
     render() {
-      if (!this.schedulerClient.hasAuth()) {
+      if (!this.apiClient.hasAuth()) {
         return (
           <div>
-            <b>Worker manager: Log in</b>
+            <b>Log in</b>
             <div>
               Username:<br/>
               <input
@@ -55,10 +55,10 @@ export default OriginalComponent => {
           </div>
         )
       }
-      return (<OriginalComponent schedulerClient={this.schedulerClient} {...this.props} />)
+      return (<OriginalComponent apiClient={this.apiClient} {...this.props} />)
     }
   }
 
-  NewComponent.displayName = `applyWorkerManagerAuth(${getDisplayName(OriginalComponent)})`;
+  NewComponent.displayName = `applyApiAuth(${getDisplayName(OriginalComponent)})`;
   return NewComponent
 }

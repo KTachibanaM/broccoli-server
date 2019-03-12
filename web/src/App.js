@@ -11,9 +11,7 @@ import Worker from "./pages/workers/Worker"
 
 import applyMessage from "./hoc/applyMessage"
 import applyRouting from "./hoc/applyRouting"
-import applyApiAuth from "./hoc/applyDashboardAuth"
-import applyWorkerManagerAuth from "./hoc/applyWorkerManagerAuth"
-import applyContentServerAuth from "./hoc/applyRpcAuth"
+import applyAuth from "./hoc/applyAuth"
 
 export default class App extends Component {
   render() {
@@ -42,7 +40,7 @@ export default class App extends Component {
               exact
               path="/boards/view"
               component={() => {
-                const EnhancedPage = applyHoc(ViewBoardsPage, applyMessage, applyRouting, applyApiAuth);
+                const EnhancedPage = applyHoc(ViewBoardsPage, applyMessage, applyRouting, applyAuth);
                 return (<EnhancedPage />)
               }}
             />
@@ -50,7 +48,7 @@ export default class App extends Component {
               exact
               path="/boards/upsert"
               component={() => {
-                const EnhancedPage = applyHoc(UpsertBoardPage, applyMessage, applyRouting, applyApiAuth);
+                const EnhancedPage = applyHoc(UpsertBoardPage, applyMessage, applyRouting, applyAuth);
                 return (<EnhancedPage />)
               }}
             />
@@ -58,7 +56,7 @@ export default class App extends Component {
               exact
               path="/board/:name"
               component={() => {
-                const EnhancedPage = applyHoc(Board, applyMessage, applyApiAuth, applyContentServerAuth);
+                const EnhancedPage = applyHoc(Board, applyMessage, applyAuth);
                 return (<EnhancedPage />)
               }}
             />
@@ -66,7 +64,7 @@ export default class App extends Component {
               exact
               path="/workers/view"
               component={() => {
-                const EnhancedPage = applyHoc(ViewWorkersPage, applyMessage, applyRouting, applyWorkerManagerAuth);
+                const EnhancedPage = applyHoc(ViewWorkersPage, applyMessage, applyRouting, applyAuth);
                 return (<EnhancedPage />)
               }}
             />
@@ -74,7 +72,7 @@ export default class App extends Component {
               exact
               path="/workers/create"
               component={() => {
-                const EnhancedPage = applyHoc(CreateWorkerPage, applyMessage, applyRouting, applyWorkerManagerAuth);
+                const EnhancedPage = applyHoc(CreateWorkerPage, applyMessage, applyRouting, applyAuth);
                 return (<EnhancedPage />)
               }}
             />
@@ -82,7 +80,7 @@ export default class App extends Component {
               exact
               path="/worker/:workerId"
               component={() => {
-                const EnhancedPage = applyHoc(Worker, applyMessage, applyWorkerManagerAuth);
+                const EnhancedPage = applyHoc(Worker, applyMessage, applyAuth);
                 return (<EnhancedPage />)
               }}
             />

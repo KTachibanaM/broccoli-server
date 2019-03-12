@@ -14,7 +14,7 @@ export default class ViewBoardsPage extends Component {
   }
 
   componentDidMount() {
-    this.props.dashboardClient.getBoards()
+    this.props.apiClient.getBoards()
       .then(boards => {
         this.setState({
           "boards": boards.map(board => {
@@ -52,7 +52,7 @@ export default class ViewBoardsPage extends Component {
   moveUp(index) {
     const boardId = this.state.boards[index]["boardId"];
     const anotherBoardId = this.state.boards[index - 1]["boardId"];
-    this.props.dashboardClient.swapBoards(boardId, anotherBoardId)
+    this.props.apiClient.swapBoards(boardId, anotherBoardId)
       .then(() => {
         this.props.showOkMessage(`Moved up board ${boardId}`)
       })
@@ -69,7 +69,7 @@ export default class ViewBoardsPage extends Component {
   moveDown(index) {
     const boardId = this.state.boards[index]["boardId"];
     const anotherBoardId = this.state.boards[index + 1]["boardId"];
-    this.props.dashboardClient.swapBoards(boardId, anotherBoardId)
+    this.props.apiClient.swapBoards(boardId, anotherBoardId)
       .then(() => {
         this.props.showOkMessage(`Moved down board ${boardId}`)
       })
@@ -86,7 +86,7 @@ export default class ViewBoardsPage extends Component {
   remove(index) {
     const boardId = this.state.boards[index]["boardId"];
     if (window.confirm(`Are you sure you want to remove board "${boardId}?"`)){
-      this.props.dashboardClient.removeBoard(boardId)
+      this.props.apiClient.removeBoard(boardId)
         .then(() => {
           this.props.showOkMessage(`Removed board ${boardId}`)
         })

@@ -12,7 +12,7 @@ class Worker extends Component {
   }
 
   componentDidMount() {
-    this.props.schedulerClient.getWorkerMetadata(this.workerId)
+    this.props.apiClient.getWorkerMetadata(this.workerId)
       .then(response => {
         this.setState({
           "metadataStr": JSON.stringify(response.data)
@@ -39,7 +39,7 @@ class Worker extends Component {
           onChange={e => {this.setState({"metadataStr": e.target.value})}}
         /><br/>
         <button onClick={() => {
-          this.props.schedulerClient.setWorkerMetadata(
+          this.props.apiClient.setWorkerMetadata(
             this.workerId,
             JSON.parse(this.state.metadataStr)
           )
