@@ -282,3 +282,4 @@ site
 # Custom
 **/.env
 **/.workers.env
+**/web_static
