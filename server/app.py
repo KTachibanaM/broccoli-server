@@ -7,7 +7,7 @@ import json
 import dotenv
 from threading import Thread
 from pathlib import Path
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
 from apscheduler.schedulers.blocking import BlockingScheduler
@@ -73,7 +73,8 @@ default_api_handler_clazz = getattr(
 default_api_handler = default_api_handler_clazz()
 
 # Flask misc.
-app = Flask(__name__)
+STATIC_FOLDER = "web_static"
+app = Flask(__name__, static_folder=STATIC_FOLDER)
 CORS(app)
 
 # Less verbose logging from Flask
@@ -96,14 +97,18 @@ apscheduler_logger.setLevel(logging.ERROR)
 @app.before_request
 def before_request():
     r_path = request.path
-    if r_path in ['/', '/auth', '/api']:
-        return
-    verify_jwt_in_request()
+    if r_path.startswith("/apiInternal"):
+        verify_jwt_in_request()
 
 
-@app.route('/', methods=['GET'])
-def root():
-    return "A web content crawling and sorting platform"
+# Serve the static react app under web_static
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(f"{STATIC_FOLDER}/{path}"):
+        return send_from_directory(STATIC_FOLDER, path)
+    else:
+        return send_from_directory(STATIC_FOLDER, 'index.html')
 
 
 @app.route('/auth', methods=['POST'])
