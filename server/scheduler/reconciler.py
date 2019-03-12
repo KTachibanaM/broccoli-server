@@ -59,7 +59,10 @@ class Reconciler(object):
         worker_or_message.pre_work(work_context)
 
         def work_wrap():
-            worker_or_message.work(work_context)
+            try:
+                worker_or_message.work(work_context)
+            except Exception as e:
+                logger.error(f"Fail to execute work for {added_job_id}, message {e}")
 
         self.scheduler.add_job(
             work_wrap,
