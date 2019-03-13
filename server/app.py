@@ -10,7 +10,7 @@ from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from common.getenv_or_raise import getenv_or_raise
 from common.validate_schema_or_not import validate_schema_or_not
 from common.in_process_rpc_client import InProcessRpcClient
@@ -300,32 +300,27 @@ def _remove_board(board_id: str):
     }), 200
 
 
-def start_scheduler():
-    scheduler = BlockingScheduler()
-    reconciler.set_scheduler(scheduler)
-    scheduler.add_job(
-        reconciler.reconcile,
-        id=reconciler.RECONCILE_JOB_ID,
-        trigger='interval',
-        seconds=10
-    )
-
-    print(f"Press Ctrl+{'Break' if os.name == 'nt' else 'C'} to exit")
-    try:
-        scheduler.start()
-    except (KeyboardInterrupt, SystemExit):
-        print('Workers exit')
-        scheduler.shutdown(wait=False)
-        sys.exit(0)
-
-
 if __name__ == '__main__':
     # detect flask debug mode
     # https://stackoverflow.com/questions/14874782/apscheduler-in-flask-executes-twice
     if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         print("Not in debug mode, starting scheduler")
-        scheduler_t = Thread(target=start_scheduler)
-        scheduler_t.start()
+        scheduler = BackgroundScheduler()
+        reconciler.set_scheduler(scheduler)
+        scheduler.add_job(
+            reconciler.reconcile,
+            id=reconciler.RECONCILE_JOB_ID,
+            trigger='interval',
+            seconds=10
+        )
+
+        print(f"Press Ctrl+{'Break' if os.name == 'nt' else 'C'} to exit")
+        try:
+            scheduler.start()
+        except (KeyboardInterrupt, SystemExit):
+            print('Workers exit')
+            scheduler.shutdown(wait=False)
+            sys.exit(0)
     else:
         print("In debug mode, not starting scheduler")
 

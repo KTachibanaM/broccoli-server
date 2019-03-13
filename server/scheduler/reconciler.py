@@ -1,5 +1,5 @@
 from typing import Set
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.base import BaseScheduler
 from .worker_config_store import WorkerConfigStore
 from .load_object import load_object
 from .logging import logger
@@ -15,7 +15,7 @@ class Reconciler(object):
         self.scheduler = None
         self.rpc_client = rpc_client
 
-    def set_scheduler(self, scheduler: BlockingScheduler):
+    def set_scheduler(self, scheduler: BaseScheduler):
         self.scheduler = scheduler
 
     def reconcile(self):
