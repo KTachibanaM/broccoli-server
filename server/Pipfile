@@ -17,6 +17,7 @@ dnspython = "*"
 jsonschema = "*"
 broccoli-plugin-interface = {editable = true,path = "./../broccoli-plugin-interface"}
 apscheduler = "*"
+python-dotenv = "*"
 
 [requires]
 python_version = "3.7"

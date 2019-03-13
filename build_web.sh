@@ -8,7 +8,7 @@ export PUBLIC_URL=$PUBLIC_URL
 export REACT_APP_SERVER_URL=$REACT_APP_SERVER_URL
 
 echo "Building web"
-cd web
+cd ./web
 npm run build
 cd ..
 
