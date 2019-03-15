@@ -14,4 +14,5 @@ RUN npm install
 WORKDIR /app
 ENV FLASK_ENV=production
 ENV BPI_DEP_LINK=git+file:///app/broccoli-plugin-interface#egg=broccoli_plugin_interface
+EXPOSE 5000
 CMD ["sh", "-c", "./install_server_plugin.docker.sh && ./build_web.sh && cd /app/server && python app.py"]
