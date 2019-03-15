@@ -1,3 +1,4 @@
+import traceback
 from typing import Set
 from apscheduler.schedulers.base import BaseScheduler
 from .worker_config_store import WorkerConfigStore
@@ -62,6 +63,7 @@ class Reconciler(object):
             try:
                 worker_or_message.work(work_context)
             except Exception as e:
+                traceback.print_exc()
                 logger.error(f"Fail to execute work for {added_job_id}, message {e}")
 
         self.scheduler.add_job(
