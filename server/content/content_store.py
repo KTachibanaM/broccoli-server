@@ -122,3 +122,6 @@ class ContentStore(object):
         documents = self.query(q, projection=projection)
         random_index = random.randint(0, len(documents) - 1)
         return documents[random_index]
+
+    def count(self, q: Dict) -> int:
+        return self.collection.count_documents(q)

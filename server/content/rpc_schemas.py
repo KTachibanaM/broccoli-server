@@ -92,5 +92,16 @@ SCHEMAS = {
             },
             "required": ["idempotency_key", "doc"]
         }
+    },
+    "count": {
+        "payload": {
+            "type": "object",
+            "properties": {
+                "q": {
+                    "type": "object",
+                },
+            },
+            "required": ["q"]
+        }
     }
 }

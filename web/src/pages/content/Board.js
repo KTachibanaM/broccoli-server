@@ -9,7 +9,8 @@ class Board extends Component {
       "loading": true,
       "boardQuery": {},
       "loadedComponents": [],
-      "payload": []
+      "payload": [],
+      "countWithoutLimit": 0
     };
 
     this.reload = this.reload.bind(this)
@@ -107,6 +108,16 @@ class Board extends Component {
           "payload": payload
         })
       })
+      .then(() => {
+        return this.props.apiClient.rpcCount(
+          this.state.boardQuery.q
+        )
+      })
+      .then(count => {
+        this.setState({
+          "countWithoutLimit": count
+        })
+      })
       .catch(error => {
         this.props.showErrorMessage(`Fail to load the query, ${error.toString()}`)
       })
@@ -123,7 +134,7 @@ class Board extends Component {
         <div>Query: {JSON.stringify(this.state.boardQuery.q)}</div>
         <div>Limit: {this.state.boardQuery.limit ? this.state.boardQuery.limit : 'N/A'}</div>
         <div>Sort: {this.state.boardQuery.sort ? JSON.stringify(this.state.boardQuery.sort) : 'N/A'}</div>
-        <div>Document count: {this.state.payload.length}</div>
+        <div>Count without limit: {this.state.countWithoutLimit}</div>
         {this.renderQuery()}
       </div>
     )

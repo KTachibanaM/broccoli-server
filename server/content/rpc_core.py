@@ -36,6 +36,8 @@ class RpcCore(object):
             return self.query_nearest_hamming_neighbors(metadata, payload)
         if verb == 'random_one':
             return self.random_one(metadata, payload)
+        if verb == 'count':
+            return self.count(metadata, payload)
         return False, 'Unknown verb'
 
     def append(self, metadata: Dict, payload: Dict) -> Tuple[bool, str]:
@@ -127,3 +129,14 @@ class RpcCore(object):
             q=payload["q"],
             projection=payload["projection"]
         )
+
+    def count(self, metadata: Dict, payload: Dict) -> Tuple[bool, Union[int, str]]:
+        logger.debug(f"Calling count metadata={metadata} payload={payload}")
+
+        status, message = validate_schema_or_not(payload, SCHEMAS['count']['payload'])
+        if not status:
+            logger.info(f"Fails to validate count metadata={metadata} payload={payload}")
+            return False, message
+
+        # todo: failure
+        return True, self.content_store.count(payload['q'])

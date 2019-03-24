@@ -105,6 +105,12 @@ export default class ApiClient {
     })
   }
 
+  async rpcCount(q) {
+    return this.rpcCall("count", {}, {
+      "q": q
+    })
+  }
+
   async getWorkers() {
     return this.axios.get(`${this.endpoint}/apiInternal/worker`)
   }
