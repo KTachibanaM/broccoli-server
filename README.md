@@ -1,5 +1,5 @@
 # broccoli-platform
-🥦🥦, a web content crawling and sorting platform
+🥦, a web content crawling and sorting platform
 
 ## Problem Statement
 * I want to
@@ -14,13 +14,7 @@
     * Re-implement common elements in a management dashboard for different use cases
 
 ## Solution
-This is a set of services and webapps that generalize the crawling, processing, sorting and publishing of Internet content, while offer pluggability so that you customize it to fulfill individual use cases
-
-## Components
-* `server`: The backend server that serves the content repository. It exposes a set of RPC actions, via AMQP and HTTP, to query and manipulate the content repository
-* `worker_manager`: The backend server that schedules and runs workers which query and manipulate the content repository. It exposes a declarative API for end users to schedule workers
-* `api`: The backend server that hosts information about the content management dashboards. It additionally exposes a configurable selected portion of the content repository to the public Internet
-* `broccoli-web`: The frontend webapp that mainly displays the content management dashboards and additionally offers the UI to schedule the workers
+This is a monolith web application that generalizes the crawling, processing, sorting and publishing of Internet content, while offer pluggability so that you customize it to fulfill individual use cases
 
 ## Pluggability
 TBD
@@ -30,23 +24,7 @@ TBD
 ### Prerequisites
 * `Python 3.7`
 * `pipenv`
-* `jq`
-* `RabbitMQ`
-    * Have an unauthenticated RabbitMQ running at `localhost:5672`
-        * macOS
-        ```bash
-        brew install rabbitmq
-        brew services start rabbitmq
-        ```
-        * Debian and Ubuntu: Follow [this guide](https://www.rabbitmq.com/install-debian.html)
-    * To verify, run the following command and you should see strings like `Listing queues for vhost / ...`
-    ```bash
-    rabbitmqctl report
-    ```
-    * Create a admin user and enable web interface at `localhost:15672` using the following script
-    ```bash
-    dev/reset_rabbit_mq.sh
-    ```
+* `Npde.js`
 * `MongoDB`
     * Have an unauthenticated MongoDB running at `localhost:27017`
         * macOS
@@ -60,29 +38,64 @@ TBD
 
 ### Configure MongoDB
 ```bash
-scripts/init_mongo.sh my_first_broccoli
+./scripts/init_mongo.sh my_first_broccoli
 ```
 This script will create a database named `my_first_broccoli` with a user named `my_first_broccoli` with the password `my_first_broccoli` who has `readWrites` role to the database
 
-### Configure RabbitMQ
-```bash
-dev/init_rabbitmq.sh my_first_broccoli
-```
-This script will create a virtual host named `my_first_broccoli` with a user named `my_first_broccoli` with the password `my_first_broccoli` who has admin access to the virtual host
+### Run the service
 
-### Run the services
-Follow `README.md`s in `broccoli-content-server`, `broccoli-worker-manager`, `broccoli-api` and `broccoli-web` **in order** to spawn up the services
+#### Required environment
+```env
+ADMIN_USERNAME  # admin username used to authenticate API calls
+ADMIN_PASSWORD  # admin password used to authenticate API calls
+JWT_SECRET_KEY  # JWT secret key
+MONGODB_CONNECTION_STRING  # MongoDB connection string
+MONGODB_DB  # MongoDB database name
+DEFAULT_API_HANDLER_MODULE  # module of the default API handler
+DEFAULT_API_HANDLER_CLASSNAME  # class name of the default API handler
+```
+If you are running locally, you can copy `.env.sample` as `.env` and then edit `.env` in `server`
 
-### Reset MongoDB and RabbitMQ
-* Reset RabbitMQ
+#### Optional environment for workers
+You should also set additional environment variables for workers if the workers require
+
+If you are running locally, you can copy `.workers.env.sample` as `.workers.env` and then edit `.workers.env` in `server`
+
+#### Install service plugin
+Assume the PyPI module name or Python module URL is `$PLUGIN`
 ```bash
-dev/reset_rabbit_mq.sh my_first_broccoli
+pipenv run pip install pip==18.1
+pipenv run pip install $PLUGIN --process-dependency-links
 ```
-* Reset MongoDB
+
+#### Install dependencies
 ```bash
-dev/reset_mongo.sh my_first_broccoli
+cd server
+pipenv install
 ```
-* Reset both
+
+#### Run
 ```bash
-dev/reset_state.sh my_first_broccoli
+FLASK_ENV=development pipenv run python app.py
+```
+
+### Run the web frontend
+
+#### Optional environment
+If you are running locally, you can create and edit `.env.development.local` in `web`
+
+#### Install dependencies
+```bash
+cd web
+npm install
+```
+
+#### Run
+```bash
+npm start
+```
+
+### Reset MongoDB
+```bash
+./scripts/reset_mongo.sh my_first_broccoli
 ```
