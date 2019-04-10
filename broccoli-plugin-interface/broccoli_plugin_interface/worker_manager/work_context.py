@@ -1,5 +1,5 @@
 import logging
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from broccoli_plugin_interface.rpc_client import RpcClient
 from .metadata_store import MetadataStore
 
