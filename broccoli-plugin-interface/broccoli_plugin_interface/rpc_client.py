@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List, Tuple, Union
+from typing import Dict, Optional, List
 from abc import ABCMeta, abstractmethod
 
 
@@ -22,4 +22,8 @@ class RpcClient(metaclass=ABCMeta):
 
     @abstractmethod
     def blocking_random_one(self, q: Dict, projection: List[str]) -> List[Dict]:
+        pass
+
+    @abstractmethod
+    def blocking_count(self, q: Dict) -> int:
         pass

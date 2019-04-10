@@ -23,3 +23,6 @@ class InProcessRpcClient(RpcClient):
 
     def blocking_random_one(self, q: Dict, projection: List[str]) -> dict:
         return self.content_store.random_one(q, projection)
+
+    def blocking_count(self, q: Dict) -> int:
+        return self.content_store.count(q)
