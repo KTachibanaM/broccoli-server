@@ -61,17 +61,35 @@ You should also set additional environment variables for workers if the workers 
 
 If you are running locally, you can copy `.workers.env.sample` as `.workers.env` and then edit `.workers.env` in `server`
 
-#### Install service plugin
-Assume the PyPI module name or Python module URL is `$PLUGIN`
-```bash
-pipenv run pip install pip==18.1
-pipenv run pip install $PLUGIN --process-dependency-links
-```
-
 #### Install dependencies
 ```bash
 cd server
 pipenv install
+```
+
+#### Install service plugin
+* Configure your shell environment to include `BPI_DEP_LINK`
+This is an environment variable that is needed in `setup.py` to find a local version of `broccoli-plugin-interface`, a Python package needed to develop broccoli plugins
+In your `.zshrc` or `.bashrc`, add this line
+`export BPB_DEP_LINK=git+file:///ABS_PATH_TO_BPB#egg=broccoli_plugin_interface-0.1`
+Replace `ABS_PATH_TO_BPB` with the absolute path to the `broccoli-plugin-interface` directory in the `broccoli-platform` codebase
+For example, on my development environment with `zsh`, the line looks like this in `.zshrc`
+```bash
+export BPI_DEP_LINK=git+file:///Users/username/Projects/broccoli-platform/broccoli-plugin-interface#egg=broccoli_plugin_interface-0.1
+```
+* Install the plugin
+Assume the PyPI module name or Python module URL is `$PLUGIN`
+```bash
+cd server
+pipenv run pip install pip==18.1
+pipenv run pip install -e $PLUGIN --process-dependency-links
+```
+`$PLUGIN` might look something like `/Users/username/Projects/some-project/some-plugin`
+* Uninstall the plugin
+```bash
+pipenv run pip freeze | grep -e
+# figure about the Python module name of the plugin
+pipenv run pip uninstall $THE_MODULE_NAME
 ```
 
 #### Run
