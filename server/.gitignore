@@ -282,3 +282,4 @@ $RECYCLE.BIN/
 .env
 .workers.env
 web_static
+temp_requirements.txt
