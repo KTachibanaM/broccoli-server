@@ -47,7 +47,7 @@ EOF
 run()
 {
     codebase_path=$(pwd)
-    bpb_path=$codebase_path/broccoli-plugin-interface
+    bpi_path=$codebase_path/broccoli-plugin-interface
     server_plugin_txt_path=$codebase_path/$profile_dir/SERVER_PLUGIN.txt
     env_path=$codebase_path/$profile_dir/.env
     workers_env_path=$codebase_path/$profile_dir/.workers.env
@@ -63,7 +63,7 @@ run()
 
     echo "📦 Installing server plugin for $profile"
     pipenv run pip install pip==18.1
-    BPB_DEP_LINK=git+file:///$bpb_path#egg=broccoli_plugin_interface-0.1 pipenv run pip install -e $(cat $server_plugin_txt_path) --process-dependency-links
+    BPI_DEP_LINK=git+file:///$bpi_path#egg=broccoli_plugin_interface-0.1 pipenv run pip install -e $(cat $server_plugin_txt_path) --process-dependency-links
 
     echo "🥦 Running server for $profile"
     cp $env_path .env
