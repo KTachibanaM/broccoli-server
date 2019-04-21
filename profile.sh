@@ -3,10 +3,11 @@ set -e
 
 usage()
 {
-    echo "Usage: $0 {new|run|rm} [profile]"
+    echo "Usage: $0 {new|run|rm|rm_mongo} [profile]"
     echo "$0 new new_profile"
     echo "$0 run existing_profile"
     echo "$0 rm existing_profile"
+    echo "$0 rm_mongo existing_profile"
 }
 
 if [ "$#" -ne 2 ]; then
@@ -71,16 +72,56 @@ run()
     FLASK_ENV=development pipenv run python app.py
 }
 
-remove()
+rm_profile_dir()
 {
     echo "🗄️ Removing profile dir for $profile"
     rm -rf $profile_dir
+}
 
+rm_profile_dir_ask() {
+    while true; do
+        read -p "Do you want to remove profile dir for $profile [Y/y/N/n]?" yn
+        case $yn in
+            [Yy]* )
+                rm_profile_dir
+                break
+                ;;
+            [Nn]* )
+                break
+                ;;
+            * )
+                echo "Please answer [Y/y/N/n]"
+                ;;
+        esac
+    done
+}
+
+rm_mongo()
+{
     echo "💾 Dropping database $profile"
     mongo mongodb://localhost:27017/$profile -u $profile -p $profile --eval "db.dropDatabase()"
     
     echo "👩 Dropping user $profile"
     mongo mongodb://localhost:27017/$profile -u $profile -p $profile --eval "db.dropUser("\""$profile"\"")"
+}
+
+rm_mongo_ask()
+{
+    while true; do
+        read -p "Do you want to remove mongodb for $profile [Y/y/N/n]?" yn
+        case $yn in
+            [Yy]* )
+                rm_mongo
+                break
+                ;;
+            [Nn]* )
+                break
+                ;;
+            * )
+                echo "Please answer [Y/y/N/n]"
+                ;;
+        esac
+    done
 }
 
 case $verb in
@@ -90,8 +131,12 @@ case $verb in
     run)
         run
         ;;
+    rm_mongo)
+        rm_mongo_ask
+        ;;
     rm)
-        remove
+        rm_mongo_ask
+        rm_profile_dir_ask
         ;;
     *)
         usage
