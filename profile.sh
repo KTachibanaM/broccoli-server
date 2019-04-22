@@ -3,9 +3,10 @@ set -e
 
 usage()
 {
-    echo "Usage: $0 {new|run|rm|rm_mongo} [profile]"
+    echo "Usage: $0 {new|run|run_web|rm|rm_mongo} [profile]"
     echo "$0 new new_profile"
     echo "$0 run existing_profile"
+    echo "$0 run_web existing_profile"
     echo "$0 rm existing_profile"
     echo "$0 rm_mongo existing_profile"
 }
@@ -37,12 +38,14 @@ DEFAULT_API_HANDLER_CLASSNAME=
 EOF
     touch $profile_dir/.workers.env
     touch $profile_dir/SERVER_PLUGIN.txt
+    touch $profile_dir/web.env.development.local
 
     echo "🎉 Finished initializing $profile. Please fill in the following"
     echo "Line DEFAULT_API_HANDLER_MODULE= in file $profile_dir/.env"
     echo "Line DEFAULT_API_HANDLER_CLASSNAME= in file $profile_dir/.env"
     echo "File $profile_dir/.workers.env"
     echo "File $profile_dir/SERVER_PLUGIN.txt"
+    echo "File $profile_dir/web.env.development.local"
 }
 
 run()
@@ -52,9 +55,9 @@ run()
     server_plugin_txt_path=$codebase_path/$profile_dir/SERVER_PLUGIN.txt
     env_path=$codebase_path/$profile_dir/.env
     workers_env_path=$codebase_path/$profile_dir/.workers.env
+    cd server
 
     echo "🗑️ Removing all packages in server pipenv"
-    cd server
     rm -f temp_requirements.txt
     pipenv run pip freeze > temp_requirements.txt
     pipenv run pip uninstall -r temp_requirements.txt -y
@@ -70,6 +73,8 @@ run()
     cp $env_path .env
     cp $workers_env_path .workers.env
     FLASK_ENV=development pipenv run python app.py
+
+    cd ..
 }
 
 rm_profile_dir()
@@ -124,12 +129,28 @@ rm_mongo_ask()
     done
 }
 
+run_web()
+{
+    codebase_path=$(pwd)
+    web_env_path=$codebase_path/$profile_dir/web.env.development.local
+    cd web
+
+    echo "🌐 Running web for $profile"
+    cp $web_env_path .env.development.local
+    npm start
+
+    cd ..
+}
+
 case $verb in
     new)
         new
         ;;
     run)
         run
+        ;;
+    run_web)
+        run_web
         ;;
     rm_mongo)
         rm_mongo_ask
