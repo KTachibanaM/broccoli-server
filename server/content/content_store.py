@@ -1,10 +1,28 @@
 import pymongo
 import datetime
 import random
+import heapq
+from functools import total_ordering
 from pymongo_schema.extract import extract_collection_schema
 from typing import Dict, List, Optional
 from common.datetime_utils import datetime_to_milliseconds, milliseconds_to_datetime
 from .logging import logger
+
+
+@total_ordering
+class ComparableQueryResult(object):
+    def __init__(self, key, q_result):
+        self.key = key
+        self.q_result = q_result
+
+    def __lt__(self, other):
+        return self.key < other.key
+
+    def __eq__(self, other):
+        return self.key == other.key
+
+    def __repr__(self):
+        return '{0.__class__.__name__}(key={0.key}, q_result={0.q_result})'.format(self)
 
 
 class ContentStore(object):
@@ -94,29 +112,68 @@ class ContentStore(object):
                                         max_distance: int) -> List[Dict]:
         # todo: use a metric tree
         # todo: various failure case here
-        if set(from_binary_string) != set("01"):
-            logger.info(f"from_binary_string {from_binary_string} is not a 01 string")
+        if not ContentStore._check_if_string_is_binary(from_binary_string):
             return []
         results = []
         for q_result in self.query(q, limit=None):
-            if binary_string_key not in q_result:
-                logger.info(f"Document {q_result} does not have field {binary_string_key}")
+            if not ContentStore._check_if_q_result_has_valid_binary(q_result, binary_string_key, from_binary_string):
                 continue
             q_binary_string = q_result[binary_string_key]
-            if len(q_binary_string) != len(from_binary_string):
-                logger.info(f"Document {q_result} does not have string '{binary_string_key}' of the queried length "
-                            f"{len(q_binary_string)}")
-                continue
-            if set(q_binary_string) != set("01"):
-                logger.info(f"Document {q_result} does not a 01 string '{binary_string_key}")
-                continue
-            q_distance = 0
-            for i in range(len(q_binary_string)):
-                if q_binary_string[i] != from_binary_string[i]:
-                    q_distance += 1
-            if q_distance <= max_distance:
+            distance = ContentStore._compute_binary_hamming_distance(q_binary_string, from_binary_string)
+            if distance <= max_distance:
                 results.append(q_result)
         return results
+
+    def query_n_nearest_hamming_neighbors(self, q: Dict, binary_string_key: str, from_binary_string: str,
+                                          pick_n: int) -> List[Dict]:
+        # todo: use a metric tree
+        if not ContentStore._check_if_string_is_binary(from_binary_string):
+            logger.info(f"from_binary_string {from_binary_string} is not a 01 string")
+            return []
+        q_results = self.query(q, limit=None)
+        if len(q_results) < pick_n:
+            return []
+        results = []
+        heapq.heapify(results)
+        for q_result in q_results:
+            if not ContentStore._check_if_q_result_has_valid_binary(q_result, binary_string_key, from_binary_string):
+                continue
+            q_binary_string = q_result[binary_string_key]
+            distance = ContentStore._compute_binary_hamming_distance(q_binary_string, from_binary_string)
+            heapq.heappush(results, ComparableQueryResult(-distance, q_result))
+            if len(results) > pick_n:
+                heapq.heappop(results)
+        return list(map(lambda h_item: h_item.q_result, results))
+
+    @staticmethod
+    def _check_if_string_is_binary(string: str) -> bool:
+        if set(string) != set("01"):
+            logger.info(f"from_binary_string {string} is not a 01 string")
+            return False
+        return True
+
+    @staticmethod
+    def _check_if_q_result_has_valid_binary(q_result: Dict, binary_string_key: str, from_binary_string: str) -> bool:
+        if binary_string_key not in q_result:
+            logger.info(f"Document {q_result} does not have field {binary_string_key}")
+            return False
+        q_binary_string = q_result[binary_string_key]
+        if len(q_binary_string) != len(from_binary_string):
+            logger.info(f"Document {q_result} does not have string '{binary_string_key}' of the queried length "
+                        f"{len(q_binary_string)}")
+            return False
+        if set(q_binary_string) != set("01"):
+            logger.info(f"Document {q_result} is not a 01 string '{binary_string_key}")
+            return False
+        return True
+
+    @staticmethod
+    def _compute_binary_hamming_distance(s1: str, s2: str):
+        distance = 0
+        for i in range(len(s1)):
+            if s1[i] != s2[i]:
+                distance += 1
+        return distance
 
     def random_one(self, q: Dict, projection: List[str]) -> Dict:
         documents = self.query(q, projection=projection)

@@ -26,3 +26,7 @@ class InProcessRpcClient(RpcClient):
 
     def blocking_count(self, q: Dict) -> int:
         return self.content_store.count(q)
+
+    def blocking_query_n_nearest_hamming_neighbors(self, q: Dict, binary_string_key: str, from_binary_string: str,
+                                                   pick_n: int) -> List[Dict]:
+        return self.content_store.query_n_nearest_hamming_neighbors(q, binary_string_key, from_binary_string, pick_n)
