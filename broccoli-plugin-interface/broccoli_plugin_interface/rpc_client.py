@@ -27,3 +27,8 @@ class RpcClient(metaclass=ABCMeta):
     @abstractmethod
     def blocking_count(self, q: Dict) -> int:
         pass
+
+    @abstractmethod
+    def blocking_query_n_nearest_hamming_neighbors(self, q: Dict, binary_string_key: str, from_binary_string: str,
+                                                   pick_n: int) -> List[Dict]:
+        pass
