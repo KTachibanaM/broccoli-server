@@ -97,6 +97,11 @@ pipenv run pip uninstall $THE_MODULE_NAME
 FLASK_ENV=development pipenv run python app.py
 ```
 
+#### Run unit tests
+```bash
+pipenv run python -m unittest discover tests -v
+```
+
 ### Run the web frontend
 
 #### Optional environment
