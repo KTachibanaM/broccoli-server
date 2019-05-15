@@ -19,6 +19,8 @@ jsonschema = "*"
 broccoli-plugin-interface = {editable = true,path = "./../broccoli-plugin-interface"}
 apscheduler = "*"
 python-dotenv = "*"
+mongomock = "*"
+freezegun = "*"
 
 [requires]
 python_version = "3.7"
