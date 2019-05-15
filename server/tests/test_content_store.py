@@ -11,17 +11,22 @@ class TestContentStore(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.content_store = ContentStore("localhost:27017", "test_db")
 
-    def test_append_idempotency_key_absent(self):
+    def tearDown(self) -> None:
+        self.content_store.client.drop_database("test_db")
+
+
+class TestContentStoreAppend(TestContentStore):
+    def test_idempotency_key_absent(self):
         self.content_store.append({}, "idempotency_key")
         assert self.content_store.collection.count_documents({}) == 0
 
-    def test_append_idempotency_key_exists(self):
+    def test_idempotency_value_exists(self):
         self.content_store.append({"idempotency_key": "some_value"}, "idempotency_key")
         self.content_store.append({"idempotency_key": "some_value"}, "idempotency_key")
         assert self.content_store.collection.count_documents({"idempotency_key": "some_value"}) == 1
 
     @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
-    def test_append_succeed(self):
+    def test_succeed(self):
         self.content_store.append({"key": "value_1"}, "key")
         self.content_store.append({"key": "value_2"}, "key")
         actual_cursor = self.content_store.collection.find({})
@@ -40,7 +45,9 @@ class TestContentStore(unittest.TestCase):
             }
         ]
 
-    def test_query_nearest_hamming_neighbors_invalid_from_binary_string(self):
+
+class TestContentStoreQueryNearestNeighbor(TestContentStore):
+    def test_invalid_from_binary_string(self):
         assert self.content_store.query_nearest_hamming_neighbors(
             q={},
             binary_string_key="binary_string_key",
@@ -48,7 +55,7 @@ class TestContentStore(unittest.TestCase):
             max_distance=5
         ) == []
 
-    def test_query_nearest_hamming_neighbors_query_do_not_match(self):
+    def test_query_do_not_match(self):
         self.content_store.append({"key": "value_1", "bs": "0000"}, "key")
         self.content_store.append({"key": "value_2", "bs": "0000"}, "key")
         assert self.content_store.query_nearest_hamming_neighbors(
@@ -58,7 +65,7 @@ class TestContentStore(unittest.TestCase):
             max_distance=1
         ) == []
 
-    def test_query_nearest_hamming_neighbors_query_results_do_not_have_field(self):
+    def test_query_results_do_not_have_field(self):
         self.content_store.append({"key": "value_1", "bs_key_2": "0000"}, "key")
         self.content_store.append({"key": "value_2", "bs_key_2": "0000"}, "key")
         assert self.content_store.query_nearest_hamming_neighbors(
@@ -68,7 +75,7 @@ class TestContentStore(unittest.TestCase):
             max_distance=1
         ) == []
 
-    def test_query_nearest_hamming_neighbors_query_results_do_not_have_same_length_string(self):
+    def test_query_results_do_not_have_same_length_string(self):
         self.content_store.append({"key": "value_1", "bs": "0000"}, "key")
         self.content_store.append({"key": "value_2", "bs": "0000"}, "key")
         assert self.content_store.query_nearest_hamming_neighbors(
@@ -78,7 +85,7 @@ class TestContentStore(unittest.TestCase):
             max_distance=1
         ) == []
 
-    def test_query_nearest_hamming_neighbors_query_results_do_not_have_valid_binary_string(self):
+    def test_query_results_do_not_have_valid_binary_string(self):
         self.content_store.append({"key": "value_1", "bs": "abcd"}, "key")
         self.content_store.append({"key": "value_2", "bs": "abcd"}, "key")
         assert self.content_store.query_nearest_hamming_neighbors(
@@ -89,7 +96,7 @@ class TestContentStore(unittest.TestCase):
         ) == []
 
     @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
-    def test_query_nearest_hamming_neighbors_succeed(self):
+    def test_succeed(self):
         self.content_store.append({"key": "value_1", "attr": True, "bs": "0000"}, "key")
         self.content_store.append({"key": "value_2", "attr": True, "bs": "0001"}, "key")
         self.content_store.append({"key": "value_3", "attr": True, "bs": "1111"}, "key")
@@ -116,6 +123,3 @@ class TestContentStore(unittest.TestCase):
                 "created_at": 1557875710000
             }
         ]
-
-    def tearDown(self) -> None:
-        self.content_store.client.drop_database("test_db")
