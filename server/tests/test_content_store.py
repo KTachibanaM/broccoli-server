@@ -46,7 +46,7 @@ class TestContentStoreAppend(TestContentStore):
         ]
 
 
-class TestContentStoreQueryNearestNeighbor(TestContentStore):
+class TestContentStoreQueryNearestNeighbors(TestContentStore):
     def test_invalid_from_binary_string(self):
         assert self.content_store.query_nearest_hamming_neighbors(
             q={},
@@ -118,6 +118,86 @@ class TestContentStoreQueryNearestNeighbor(TestContentStore):
             },
             {
                 "key": "value_2",
+                "attr": True,
+                "bs": "0001",
+                "created_at": 1557875710000
+            }
+        ]
+
+
+class TestContentStoreQueryNNearestNeighbors(TestContentStore):
+    def test_invalid_from_binary_string(self):
+        assert self.content_store.query_n_nearest_hamming_neighbors(
+            q={},
+            binary_string_key="binary_string_key",
+            from_binary_string="abc",
+            pick_n=0
+        ) == []
+
+    def test_query_do_not_match(self):
+        self.content_store.append({"key": "value_1", "bs": "0000"}, "key")
+        self.content_store.append({"key": "value_2", "bs": "0001"}, "key")
+        assert self.content_store.query_n_nearest_hamming_neighbors(
+            q={"key": "value_3"},
+            binary_string_key="bs",
+            from_binary_string="0000",
+            pick_n=1
+        ) == []
+
+    def test_query_results_do_not_have_field(self):
+        self.content_store.append({"key": "value_1", "bs_key_2": "0000"}, "key")
+        self.content_store.append({"key": "value_2", "bs_key_2": "0001"}, "key")
+        assert self.content_store.query_n_nearest_hamming_neighbors(
+            q={},
+            binary_string_key="bs",
+            from_binary_string="0000",
+            pick_n=1
+        ) == []
+
+    def test_query_results_do_not_have_same_length_string(self):
+        self.content_store.append({"key": "value_1", "bs": "0000"}, "key")
+        self.content_store.append({"key": "value_2", "bs": "0001"}, "key")
+        assert self.content_store.query_n_nearest_hamming_neighbors(
+            q={},
+            binary_string_key="bs",
+            from_binary_string="00001",
+            pick_n=1
+        ) == []
+
+    def test_query_results_do_not_have_valid_binary_string(self):
+        self.content_store.append({"key": "value_1", "bs": "abcd"}, "key")
+        self.content_store.append({"key": "value_2", "bs": "abcd"}, "key")
+        assert self.content_store.query_n_nearest_hamming_neighbors(
+            q={},
+            binary_string_key="bs",
+            from_binary_string="0000",
+            pick_n=1
+        ) == []
+
+    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
+    def test_succeed(self):
+        self.content_store.append({"key": "value_1", "attr": True, "bs": "0001"}, "key")
+        self.content_store.append({"key": "value_2", "attr": True, "bs": "0011"}, "key")
+        self.content_store.append({"key": "value_3", "attr": True, "bs": "0011"}, "key")
+        self.content_store.append({"key": "value_4", "attr": True, "bs": "0111"}, "key")
+        self.content_store.append({"key": "value_5", "attr": False, "bs": "0000"}, "key")
+        actual_documents = self.content_store.query_n_nearest_hamming_neighbors(
+            q={"attr": True},
+            binary_string_key="bs",
+            from_binary_string="0000",
+            pick_n=2
+        )
+        for i in range(len(actual_documents)):
+            del actual_documents[i]["_id"]
+        assert actual_documents == [
+            {
+                "key": "value_3",
+                "attr": True,
+                "bs": "0011",
+                "created_at": 1557875710000
+            },
+            {
+                "key": "value_1",
                 "attr": True,
                 "bs": "0001",
                 "created_at": 1557875710000
