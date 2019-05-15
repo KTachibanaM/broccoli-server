@@ -99,7 +99,7 @@ class ContentStore(object):
         return field_names
 
     def update_one_binary_string(self, filter_q: Dict, key: str, binary_string: str):
-        if set(binary_string) != set("01"):
+        if not ContentStore._check_if_string_is_binary(binary_string):
             logger.info(f"from_binary_string {binary_string} is not a 01 string")
             return
         self.update_one(filter_q, {
@@ -147,8 +147,8 @@ class ContentStore(object):
 
     @staticmethod
     def _check_if_string_is_binary(string: str) -> bool:
-        if set(string) != set("01"):
-            logger.info(f"from_binary_string {string} is not a 01 string")
+        if not (set(string) <= set("01")):
+            logger.info(f"{string} is not a 01 string")
             return False
         return True
 
@@ -162,8 +162,7 @@ class ContentStore(object):
             logger.info(f"Document {q_result} does not have string '{binary_string_key}' of the queried length "
                         f"{len(q_binary_string)}")
             return False
-        if set(q_binary_string) != set("01"):
-            logger.info(f"Document {q_result} is not a 01 string '{binary_string_key}")
+        if not ContentStore._check_if_string_is_binary(q_binary_string):
             return False
         return True
 
