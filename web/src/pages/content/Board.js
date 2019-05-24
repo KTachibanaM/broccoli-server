@@ -33,17 +33,14 @@ class Board extends Component {
             }),
           },
         });
-        return Promise.all(
-          this.state.boardQuery.projections.map(p => import('herr-ashi-weblet'))
-        )
+        return import(process.env.REACT_APP_WEBLET_MODULE)
       })
-      .then(loadedModules => {
-        console.log(loadedModules)
+      .then(loadedModule => {
+        const projections = this.state.boardQuery.projections;
         const loadedComponents = [];
-        for (let i = 0; i < loadedModules.length; ++i) {
-          const loadedModule = loadedModules[i];
-          const { args } = this.state.boardQuery.projections[i];
-          loadedComponents.push(loadedModule.default(...args))
+        for (let i = 0; i < projections.length; ++i) {
+          const { jsFilename, args } = projections[i];
+          loadedComponents.push(loadedModule[jsFilename](...args))
         }
         this.setState({
           "loadedComponents": loadedComponents
