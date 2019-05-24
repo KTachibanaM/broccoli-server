@@ -34,10 +34,11 @@ class Board extends Component {
           },
         });
         return Promise.all(
-          this.state.boardQuery.projections.map(p => import(`../../boardProjections/${p["jsFilename"]}`))
+          this.state.boardQuery.projections.map(p => import('herr-ashi-weblet'))
         )
       })
       .then(loadedModules => {
+        console.log(loadedModules)
         const loadedComponents = [];
         for (let i = 0; i < loadedModules.length; ++i) {
           const loadedModule = loadedModules[i];
