@@ -154,7 +154,7 @@ run_web()
 
     echo "🌐 Running web for $profile"
     cp $web_env_path .env.development.local
-    npm start
+    REACT_APP_WEBLET_MODULE=$package_name npm start
 
     popd
 }
