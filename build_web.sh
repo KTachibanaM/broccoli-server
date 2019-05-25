@@ -12,7 +12,7 @@ export REACT_APP_WEBLET_MODULE=$REACT_APP_WEBLET_MODULE
 
 echo "Building web"
 pushd ./web
-npm install --no-save $WEBLET_URL
+npm install --verbose --no-save $WEBLET_URL
 npm run build
 popd
 
