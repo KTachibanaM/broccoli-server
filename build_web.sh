@@ -11,6 +11,7 @@ export REACT_APP_SERVER_URL=$REACT_APP_SERVER_URL
 
 echo "Installing weblet"
 pushd ./web
+rm -rf weblet
 git clone $WEBLET_GIT weblet
 pushd ./weblet
 rm -rf .git
