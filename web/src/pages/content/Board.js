@@ -33,14 +33,16 @@ class Board extends Component {
             }),
           },
         });
-        return import(process.env.REACT_APP_WEBLET_MODULE)
+        return Promise.all(
+          this.state.boardQuery.projections.map(p => import(`../../boardProjections/${p["jsFilename"]}`))
+        )
       })
-      .then(loadedModule => {
-        const projections = this.state.boardQuery.projections;
+      .then(loadedModules => {
         const loadedComponents = [];
-        for (let i = 0; i < projections.length; ++i) {
-          const { jsFilename, args } = projections[i];
-          loadedComponents.push(loadedModule[jsFilename](...args))
+        for (let i = 0; i < loadedModules.length; ++i) {
+          const loadedModule = loadedModules[i];
+          const { args } = this.state.boardQuery.projections[i];
+          loadedComponents.push(loadedModule.default(...args))
         }
         this.setState({
           "loadedComponents": loadedComponents
