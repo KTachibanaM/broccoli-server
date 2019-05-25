@@ -39,6 +39,7 @@ EOF
     touch $profile_dir/.workers.env
     touch $profile_dir/SERVER_PLUGIN.txt
     touch $profile_dir/web.env.development.local
+    touch $profile_dir/WEBLET.txt
 
     echo "🎉 Finished initializing $profile. Please fill in the following"
     echo "Line DEFAULT_API_HANDLER_MODULE= in file $profile_dir/.env"
@@ -46,6 +47,7 @@ EOF
     echo "File $profile_dir/.workers.env"
     echo "File $profile_dir/SERVER_PLUGIN.txt"
     echo "File $profile_dir/web.env.development.local"
+    echo "File $profile_dir/WEBLET.txt"
 }
 
 run()
@@ -55,7 +57,7 @@ run()
     server_plugin_txt_path=$codebase_path/$profile_dir/SERVER_PLUGIN.txt
     env_path=$codebase_path/$profile_dir/.env
     workers_env_path=$codebase_path/$profile_dir/.workers.env
-    cd server
+    pushd server
 
     echo "🗑️ Removing all packages in server pipenv"
     rm -f temp_requirements.txt
@@ -74,7 +76,7 @@ run()
     cp $workers_env_path .workers.env
     FLASK_ENV=development pipenv run python app.py
 
-    cd ..
+    popd
 }
 
 rm_profile_dir()
@@ -133,13 +135,28 @@ run_web()
 {
     codebase_path=$(pwd)
     web_env_path=$codebase_path/$profile_dir/web.env.development.local
-    cd web
+    weblet_txt_path=$codebase_path/$profile_dir/WEBLET.txt
+    pushd web
+
+    echo "🗑️ Removing all packages"
+    rm -rf node_modules
+    rm package-lock.json
+
+    echo "📦 Installing base packages"
+    npm install
+
+    echo "📦 Installing weblet for $profile"
+    pushd $(cat $weblet_txt_path)
+    npm link
+    package_name=$(jq '.name' -r package.json)
+    popd
+    npm link $package_name
 
     echo "🌐 Running web for $profile"
     cp $web_env_path .env.development.local
-    npm start
+    REACT_APP_WEBLET_MODULE=$package_name npm start
 
-    cd ..
+    popd
 }
 
 case $verb in
