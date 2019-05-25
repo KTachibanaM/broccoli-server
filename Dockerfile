@@ -1,7 +1,5 @@
 FROM nikolaik/python-nodejs:python3.7-nodejs11
 
-RUN apt-get update && apt-get install -y jq
-
 # Copy over here
 COPY . /app
 
