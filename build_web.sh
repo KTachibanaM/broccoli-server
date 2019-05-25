@@ -12,7 +12,7 @@ export REACT_APP_WEBLET_MODULE=$REACT_APP_WEBLET_MODULE
 
 echo "Building web"
 pushd ./web
-yarn install $WEBLET_URL
+yarn add $WEBLET_URL
 npm run build
 popd
 
