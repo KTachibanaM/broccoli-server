@@ -22,7 +22,7 @@ popd
 
 echo "Building web"
 npm link $PACKAGE_NAME
-REACT_APP_WEBLET_MODULE=$package_name npm run build
+REACT_APP_WEBLET_MODULE=$PACKAGE_NAME npm run build
 popd
 
 echo "Moving ./web/build to ./server/web_static"
