@@ -21,7 +21,7 @@ popd
 popd
 
 echo "Building web"
-npm link $PACKAGE_NAME
+npm install --no-save ./weblet/$WEBLET_SUBDIR
 REACT_APP_WEBLET_MODULE=$PACKAGE_NAME npm run build
 popd
 
