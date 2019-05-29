@@ -74,4 +74,4 @@
 # End of https://www.gitignore.io/api/osx,linux,windows
 
 # Custom
-**/deploy_dokku.json
+**/.profiles
