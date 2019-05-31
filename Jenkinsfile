@@ -8,7 +8,7 @@ pipeline {
                 }
             }
             steps {
-                withEnv(["HOME=${env.WORKSPACE}"]) {
+                withEnv(["HOME=/root"]) {
                     sh 'python --version'
                     sh 'pip install pipenv'
                     dir("server") {
