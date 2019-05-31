@@ -1,20 +1,25 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.7.3-stretch'
-        }
-    }
+    agent none
     stages {
         stage('Test') {
+            agent {
+                docker {
+                    image 'python:3.7.3-stretch'
+                }
+            }
             steps {
-                sh 'pwd'
-                sh 'ls -al'
-                sh 'python --version'
-                sh 'python3 --version'
-                sh 'pip install --user pipenv'
-                dir("server") {
-                    sh 'pipenv install'
-                    sh 'pipenv run python -m unittest discover tests -v'
+                withEnv(["HOME=${env.WORKSPACE}"]) {
+                    sh 'python --version'
+                    sh 'pip install --user pipenv'
+                    dir("server") {
+                        sh 'pipenv install'
+                        sh 'pipenv run python -m unittest discover tests -v'
+                    }
+                }
+            }
+            post {
+                cleanup {
+                    cleanWs()
                 }
             }
         }
