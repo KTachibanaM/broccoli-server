@@ -7,6 +7,9 @@ pipeline {
     stages {
         stage('Test') {
             steps {
+                sh 'whoami'
+                sh 'pwd'
+                sh 'ls -al'
                 sh 'pip install --user pipenv'
                 dir("server") {
                     sh 'pipenv install'
