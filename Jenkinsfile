@@ -9,6 +9,8 @@ pipeline {
             steps {
                 sh 'pwd'
                 sh 'ls -al'
+                sh 'python --version'
+                sh 'python3 --version'
                 sh 'pip install --user pipenv'
                 dir("server") {
                     sh 'pipenv install'
