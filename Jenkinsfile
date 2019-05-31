@@ -8,12 +8,12 @@ pipeline {
                 }
             }
             steps {
-                withEnv(["HOME=/root"]) {
+                withEnv(["HOME=${env.WORKSPACE}"]) {
                     sh 'python --version'
-                    sh 'pip install pipenv'
+                    sh 'pip install --user pipenv'
                     dir("server") {
-                        sh 'pipenv install'
-                        sh 'pipenv run python -m unittest discover tests -v'
+                        sh '$HOME/.local/bin/pipenv install'
+                        sh '$HOME/.local/bin/pipenv run python -m unittest discover tests -v'
                     }
                 }
             }
