@@ -10,7 +10,7 @@ pipeline {
             steps {
                 withEnv(["HOME=${env.WORKSPACE}"]) {
                     sh 'python --version'
-                    sh 'pip install --user pipenv'
+                    sh 'pip install pipenv'
                     dir("server") {
                         sh 'pipenv install'
                         sh 'pipenv run python -m unittest discover tests -v'
