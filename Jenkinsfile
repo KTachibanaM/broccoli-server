@@ -4,12 +4,11 @@ pipeline {
         stage('Test') {
             agent {
                 docker {
-                    image 'python:3.7.3-stretch'
+                    image 'kennethreitz/pipenv:latest'
                 }
             }
             steps {
                 dir("server") {
-                    sh 'pip install --user pipenv'
                     sh 'pipenv install'
                     sh 'pipenv run python -m unittest discover tests -v'
                 }
