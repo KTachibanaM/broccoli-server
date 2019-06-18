@@ -24,7 +24,7 @@ TBD
 ### Prerequisites
 * `Python 3.7`
 * `pipenv`
-* `Npde.js`
+* `Node.js`
 * `MongoDB`
     * Have an unauthenticated MongoDB running at `localhost:27017`
         * macOS
