@@ -1,5 +1,5 @@
-# broccoli-platform
-🥦, a web content crawling and sorting platform
+# broccoli-server
+The server component of a web content crawling and sorting platform
 
 ## Problem Statement
 * I want to
