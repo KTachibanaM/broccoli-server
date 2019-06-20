@@ -4,6 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+broccoli-plugin-interface = {editable = true, path = "./../broccoli-plugin-interface"}
 
 [packages]
 jinja2 = {version = ">= 2.10.1"}
@@ -16,11 +17,11 @@ v = "*"
 flask-jwt-extended = "*"
 dnspython = "*"
 jsonschema = "*"
-broccoli-plugin-interface = {editable = true,path = "./../broccoli-plugin-interface"}
 apscheduler = "*"
 python-dotenv = "*"
 mongomock = "*"
 freezegun = "*"
+broccoli-plugin-interface = {git = "https://github.com/broccoli-platform/broccoli-plugin-interface.git"}
 
 [requires]
 python_version = "3.7"

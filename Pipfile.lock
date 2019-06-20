@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6698b096aa6873e5a9e7f2aad7bf882bd8eedf8503276c1e47fc315671e4bc23"
+            "sha256": "160229dc61e581532c0daf4b494ebceb0485a63b000ae595c7f36cbbcdb200ea"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -32,8 +32,8 @@
             "version": "==19.1.0"
         },
         "broccoli-plugin-interface": {
-            "editable": true,
-            "path": "./../broccoli-plugin-interface"
+            "git": "https://github.com/broccoli-platform/broccoli-plugin-interface.git",
+            "ref": "df75862158eb014cf453687f9a1061c21fb3a6ec"
         },
         "click": {
             "hashes": [
@@ -52,19 +52,19 @@
         },
         "flask": {
             "hashes": [
-                "sha256:2271c0070dbcb5275fad4a82e29f23ab92682dc45f9dfbc22c02ba9b9322ce48",
-                "sha256:a080b744b7e345ccfcbc77954861cb05b3c63786e93f2b3875e0913d44b43f05"
+                "sha256:ad7c6d841e64296b962296c2c2dabc6543752985727af86a975072dea984b6f3",
+                "sha256:e7d32475d1de5facaa55e3958bc4ec66d3762076b074296aa50ef8fdc5b9df61"
             ],
             "index": "pypi",
-            "version": "==1.0.2"
+            "version": "==1.0.3"
         },
         "flask-cors": {
             "hashes": [
-                "sha256:7ad56ee3b90d4955148fc25a2ecaa1124fc84298471e266a7fea59aeac4405a5",
-                "sha256:7e90bf225fdf163d11b84b59fb17594d0580a16b97ab4e1146b1fb2737c1cfec"
+                "sha256:72170423eb4612f0847318afff8c247b38bd516b7737adfc10d1c2cdbb382d16",
+                "sha256:f4d97201660e6bbcff2d89d082b5b6d31abee04b1b3003ee073a6fd25ad1d69a"
             ],
             "index": "pypi",
-            "version": "==3.0.7"
+            "version": "==3.0.8"
         },
         "flask-jwt-extended": {
             "hashes": [
@@ -75,11 +75,11 @@
         },
         "freezegun": {
             "hashes": [
-                "sha256:6cb82b276f83f2acce67f121dc2656f4df26c71e32238334eb071170b892a278",
-                "sha256:e839b43bfbe8158b4d62bb97e6313d39f3586daf48e1314fb1083d2ef17700da"
+                "sha256:2a4d9c8cd3c04a201e20c313caf8b6338f1cfa4cda43f46a94cc4a9fd13ea5e7",
+                "sha256:edfdf5bc6040969e6ed2e36eafe277963bdc8b7c01daeda96c5c8594576c9390"
             ],
             "index": "pypi",
-            "version": "==0.3.11"
+            "version": "==0.3.12"
         },
         "itsdangerous": {
             "hashes": [
@@ -211,11 +211,11 @@
         },
         "python-dotenv": {
             "hashes": [
-                "sha256:156f218846bd90e0d537915545cde4a987947c2cecc628b50f9955fdde72534a",
-                "sha256:6640acd76e6cab84648e4fec16c9d19de6700971f9d91d045e7120622167bfda"
+                "sha256:debd928b49dbc2bf68040566f55cdb3252458036464806f4094487244e2a4093",
+                "sha256:f157d71d5fec9d4bd5f51c82746b6344dffa680ee85217c123f4a0c8117c4544"
             ],
             "index": "pypi",
-            "version": "==0.10.2"
+            "version": "==0.10.3"
         },
         "pytz": {
             "hashes": [
@@ -259,5 +259,10 @@
             "version": "==0.15.4"
         }
     },
-    "develop": {}
+    "develop": {
+        "broccoli-plugin-interface": {
+            "git": "https://github.com/broccoli-platform/broccoli-plugin-interface.git",
+            "ref": "df75862158eb014cf453687f9a1061c21fb3a6ec"
+        }
+    }
 }
