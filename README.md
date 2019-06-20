@@ -1,4 +1,6 @@
 # broccoli-server
+[![Build Status](https://travis-ci.org/broccoli-platform/broccoli-server.svg?branch=master)](https://travis-ci.org/broccoli-platform/broccoli-server)
+
 The server component of a web content crawling and sorting platform
 
 ## Problem Statement
