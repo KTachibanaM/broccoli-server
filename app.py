@@ -5,7 +5,6 @@ import datetime
 import importlib
 import json
 import dotenv
-from threading import Thread
 from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
@@ -298,6 +297,11 @@ def _remove_board(board_id: str):
     return jsonify({
         "status": "ok"
     }), 200
+
+
+@app.route("/apiInternal/renderBoard/<string:board_id>", methods=["GET"])
+def _render_board(board_id: str):
+    pass
 
 
 if __name__ == '__main__':
