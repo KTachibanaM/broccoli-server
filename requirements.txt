@@ -1,0 +1,11 @@
+jinja2==2.10.1
+flask==1.0.3
+pika==1.0.1
+pymongo==3.8.0
+flask-cors==3.0.8
+https://github.com/pajachiet/pymongo-schema/archive/0dd312c23f5d38fb7c1a1f3bbe977e79a814a119.zip#egg=pymongo-schema
+flask-jwt-extended==3.18.2
+dnspython==1.16.0
+jsonschema==3.0.1
+apscheduler==3.6.0
+python-dotenv==0.10.3
