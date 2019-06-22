@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "160229dc61e581532c0daf4b494ebceb0485a63b000ae595c7f36cbbcdb200ea"
+            "sha256": "6698b096aa6873e5a9e7f2aad7bf882bd8eedf8503276c1e47fc315671e4bc23"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -32,8 +32,8 @@
             "version": "==19.1.0"
         },
         "broccoli-plugin-interface": {
-            "git": "https://github.com/broccoli-platform/broccoli-plugin-interface.git",
-            "ref": "df75862158eb014cf453687f9a1061c21fb3a6ec"
+            "editable": true,
+            "path": "./../broccoli-plugin-interface"
         },
         "click": {
             "hashes": [
@@ -139,10 +139,11 @@
         },
         "mongomock": {
             "hashes": [
-                "sha256:f140ddcb7c920ee08d6577b0bd40d28df96e0d50adf762586cbc10bc8a992a6d"
+                "sha256:6a087a2191baa77e38171f7f97363898871235419e169b1033eba2af4e25f196",
+                "sha256:7c9c829abfcb7ae9074a3d2e3db15e279edea73f560da3b0b306d929619cca45"
             ],
             "index": "pypi",
-            "version": "==3.16.0"
+            "version": "==3.17.0"
         },
         "pika": {
             "hashes": [
@@ -259,10 +260,5 @@
             "version": "==0.15.4"
         }
     },
-    "develop": {
-        "broccoli-plugin-interface": {
-            "git": "https://github.com/broccoli-platform/broccoli-plugin-interface.git",
-            "ref": "df75862158eb014cf453687f9a1061c21fb3a6ec"
-        }
-    }
+    "develop": {}
 }
