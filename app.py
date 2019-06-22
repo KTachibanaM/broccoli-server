@@ -19,6 +19,7 @@ from scheduler.worker_config_store import WorkerConfigStore
 from scheduler.reconciler import Reconciler
 from scheduler.global_metadata_store import GlobalMetadataStore
 from dashboard.boards_store import BoardsStore
+from dashboard.boards_renderer import BoardsRenderer
 from dashboard.objects.board_query import BoardQuery
 from common.request_schemas import ADD_WORKER_BODY_SCHEMA
 
@@ -63,6 +64,7 @@ boards_store = BoardsStore(
     connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
     db=getenv_or_raise("MONGODB_DB")
 )
+boards_renderer = BoardsRenderer(in_process_rpc_client)
 
 # Initialize API objects
 default_api_handler_clazz = getattr(
@@ -301,7 +303,8 @@ def _remove_board(board_id: str):
 
 @app.route("/apiInternal/renderBoard/<string:board_id>", methods=["GET"])
 def _render_board(board_id: str):
-    pass
+    q = boards_store.get(board_id)
+    return jsonify(boards_renderer.render(q), 200)
 
 
 if __name__ == '__main__':
