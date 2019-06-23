@@ -37,8 +37,8 @@ This is an application that generalizes the crawling, processing, sorting and pu
 * A board is an user interface that allows end users to view and manipulate the repository of Internet content.
 * A board shows rows, each row corresponds to an entry in the repository of Internet content.
 * What rows to show, how many rows to show, in what order the rows are shown, are controlled by the metadata of each board.
-* A row have columns. What to show for each column is also controlled by the metadata of each board.
-* How to actually show each column is encoded within `weblets`, sets of runtime-pluggable JS functions that takes in an entry of the repository of Internet content and outputs a React component.
+* A row have columns. What to show for each column is controlled by pluggable BoardColumn classes ("class as in OOP") which are registered to the server application at runtime.
+* BoardColumn objects are instantiated when a request to render a board comes in, and the objects all render to standardized JSON representing frontend components, like a text and a button, that the frontend should implement actually rendering.
 
 ## Prerequisites
 * `Python 3.7`
