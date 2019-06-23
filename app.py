@@ -5,9 +5,9 @@ import datetime
 import importlib
 import json
 import dotenv
-from threading import Thread
+from typing import Dict
 from pathlib import Path
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -20,6 +20,7 @@ from scheduler.worker_config_store import WorkerConfigStore
 from scheduler.reconciler import Reconciler
 from scheduler.global_metadata_store import GlobalMetadataStore
 from dashboard.boards_store import BoardsStore
+from dashboard.boards_renderer import BoardsRenderer
 from dashboard.objects.board_query import BoardQuery
 from common.request_schemas import ADD_WORKER_BODY_SCHEMA
 
@@ -64,6 +65,7 @@ boards_store = BoardsStore(
     connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
     db=getenv_or_raise("MONGODB_DB")
 )
+boards_renderer = BoardsRenderer(in_process_rpc_client)
 
 # Initialize API objects
 default_api_handler_clazz = getattr(
@@ -73,8 +75,7 @@ default_api_handler_clazz = getattr(
 default_api_handler = default_api_handler_clazz()
 
 # Flask misc.
-STATIC_FOLDER = "web_static"
-app = Flask(__name__, static_folder=STATIC_FOLDER)
+app = Flask(__name__)
 CORS(app)
 
 # Less verbose logging from Flask
@@ -99,16 +100,6 @@ def before_request():
     r_path = request.path
     if r_path.startswith("/apiInternal"):
         verify_jwt_in_request()
-
-
-# Serve the static react app under web_static
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    if path != "" and os.path.exists(f"{STATIC_FOLDER}/{path}"):
-        return send_from_directory(STATIC_FOLDER, path)
-    else:
-        return send_from_directory(STATIC_FOLDER, 'index.html')
 
 
 @app.route('/auth', methods=['POST'])
@@ -149,25 +140,6 @@ def api(path):
         in_process_rpc_client
     )
     return jsonify(result), 200
-
-
-@app.route("/apiInternal/rpc", methods=['POST'])
-def _rpc():
-    # todo: parse json failure
-    parsed_body = request.json
-    status, message_or_result = rpc_core.call(parsed_body)
-    if not status:
-        return jsonify({
-            "status": "error",
-            "payload": {
-                "message": message_or_result
-            }
-        }), 500
-    else:
-        return jsonify({
-            "status": "ok",
-            "payload": message_or_result
-        })
 
 
 @app.route("/apiInternal/worker", methods=["POST"])
@@ -295,6 +267,25 @@ def _swap_boards(board_id: str, another_board_id: str):
 @app.route("/apiInternal/board/<string:board_id>", methods=["DELETE"])
 def _remove_board(board_id: str):
     boards_store.remove(board_id)
+    return jsonify({
+        "status": "ok"
+    }), 200
+
+
+@app.route("/apiInternal/renderBoard/<string:board_id>", methods=["GET"])
+def _render_board(board_id: str):
+    q = boards_store.get(board_id)
+    return jsonify({
+        "board_query": q.to_dict(),
+        "payload": boards_renderer.render_as_dict(q),
+        "count_without_limit": content_store.count(json.loads(q.q))
+    }), 200
+
+
+@app.route("/apiInternal/callbackBoard/<string:callback_id>", methods=["POST"])
+def _callback_board(callback_id: str):
+    document = request.json  # type: Dict
+    boards_renderer.callback(callback_id, document)
     return jsonify({
         "status": "ok"
     }), 200
