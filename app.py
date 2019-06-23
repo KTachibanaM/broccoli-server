@@ -5,8 +5,9 @@ import datetime
 import importlib
 import json
 import dotenv
+from typing import Dict
 from pathlib import Path
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -278,6 +279,15 @@ def _render_board(board_id: str):
         "board_query": q.to_dict(),
         "payload": boards_renderer.render_as_dict(q),
         "count_without_limit": content_store.count(json.loads(q.q))
+    }), 200
+
+
+@app.route("/apiInternal/callbackBoard/<string:callback_id>", methods=["POST"])
+def _callback_board(callback_id: str):
+    document = request.json  # type: Dict
+    boards_renderer.callback(callback_id, document)
+    return jsonify({
+        "status": "ok"
     }), 200
 
 
