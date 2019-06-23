@@ -74,8 +74,7 @@ default_api_handler_clazz = getattr(
 default_api_handler = default_api_handler_clazz()
 
 # Flask misc.
-STATIC_FOLDER = "web_static"
-app = Flask(__name__, static_folder=STATIC_FOLDER)
+app = Flask(__name__)
 CORS(app)
 
 # Less verbose logging from Flask
@@ -100,16 +99,6 @@ def before_request():
     r_path = request.path
     if r_path.startswith("/apiInternal"):
         verify_jwt_in_request()
-
-
-# Serve the static react app under web_static
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    if path != "" and os.path.exists(f"{STATIC_FOLDER}/{path}"):
-        return send_from_directory(STATIC_FOLDER, path)
-    else:
-        return send_from_directory(STATIC_FOLDER, 'index.html')
 
 
 @app.route('/auth', methods=['POST'])
@@ -150,25 +139,6 @@ def api(path):
         in_process_rpc_client
     )
     return jsonify(result), 200
-
-
-@app.route("/apiInternal/rpc", methods=['POST'])
-def _rpc():
-    # todo: parse json failure
-    parsed_body = request.json
-    status, message_or_result = rpc_core.call(parsed_body)
-    if not status:
-        return jsonify({
-            "status": "error",
-            "payload": {
-                "message": message_or_result
-            }
-        }), 500
-    else:
-        return jsonify({
-            "status": "ok",
-            "payload": message_or_result
-        })
 
 
 @app.route("/apiInternal/worker", methods=["POST"])
@@ -304,7 +274,11 @@ def _remove_board(board_id: str):
 @app.route("/apiInternal/renderBoard/<string:board_id>", methods=["GET"])
 def _render_board(board_id: str):
     q = boards_store.get(board_id)
-    return jsonify(boards_renderer.render(q), 200)
+    return jsonify({
+        "board_query": q.to_dict(),
+        "payload": boards_renderer.render_as_dict(q),
+        "count_without_limit": content_store.count(json.loads(q.q))
+    }), 200
 
 
 if __name__ == '__main__':

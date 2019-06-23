@@ -1,4 +1,5 @@
 import importlib
+import json
 from typing import Optional, Dict, List
 from broccoli_plugin_interface.rpc_client import RpcClient
 from broccoli_plugin_interface.board.column import BoardColumn, CallbackBoardColumn
@@ -10,10 +11,10 @@ class BoardsRenderer(object):
     def __init__(self, rpc_client: RpcClient):
         self.rpc_client = rpc_client
 
-    def render(self, board_query: BoardQuery) -> List[Dict[str, Optional[Render]]]:
+    def render_as_dict(self, board_query: BoardQuery) -> List[Dict[str, Optional[Dict]]]:
         # do the query
         documents = self.rpc_client.blocking_query(
-            q=board_query.q,
+            q=json.loads(board_query.q),
             limit=board_query.limit,
             sort=board_query.sort
         )
@@ -31,7 +32,7 @@ class BoardsRenderer(object):
                 if not column:
                     # TODO: return some error
                     continue
-                row[column_name] = column.render(d, self.rpc_client)
+                row[column_name] = self._render_to_dict(column.render(d, self.rpc_client))
             rows.append(row)
 
         return rows
@@ -46,3 +47,10 @@ class BoardsRenderer(object):
             return clazz(**projection.args)  # type: BoardColumn
         except Exception as e:
             return None
+
+    @staticmethod
+    def _render_to_dict(render: Render):
+        return {
+            "type": render.render_type(),
+            "data": render.render_data()
+        }
