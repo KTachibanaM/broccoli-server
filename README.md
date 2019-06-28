@@ -43,6 +43,7 @@ This is an application that generalizes the crawling, processing, sorting and pu
 ## Prerequisites
 * `Python 3.7`
 * `Node.js`
+* `yarn`
 * `MongoDB`
     * Have an unauthenticated MongoDB running at `localhost:27017`
         * macOS
