@@ -102,6 +102,11 @@ def before_request():
         verify_jwt_in_request()
 
 
+@app.route('/', methods=['GET'])
+def index():
+    return 'You\'ve hit broccoli-platform, now turn back.\n', 200
+
+
 @app.route('/auth', methods=['POST'])
 def auth():
     username = request.json.get('username', None)
