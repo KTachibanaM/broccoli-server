@@ -8,7 +8,7 @@ class WorkerConfigStore(object):
     def __init__(self, connection_string: str, db: str):
         self.client = pymongo.MongoClient(connection_string)
         self.db = self.client[db]
-        self.collection = self.db['broccoli.workers']
+        self.collection = self.db['workers']
 
     def add(self, module: str, class_name: str, args: Dict, interval_seconds: int) -> Tuple[bool, str]:
         # todo: garbage collect this w?

@@ -23,6 +23,11 @@ class Migration(object):
             self._update_schema_version(2)
             print(f"performed schema migration 1 to 2")
         elif schema_version == 2:
+            print(f"performing schema migration 2 to 3")
+            self._version_2_to_3()
+            self._update_schema_version(3)
+            print(f"performed schema migration 2 to 3")
+        elif schema_version == 3:
             print("already on latest schema version, yay!")
         else:
             raise RuntimeError(f"unknown schema version {schema_version}, :(")
@@ -39,6 +44,13 @@ class Migration(object):
             self.db["broccoli.api.boards"].rename("boards")
         except Exception as e:
             print(f"fail to rename broccoli.api.boards to boards, {e}")
+            raise e
+
+    def _version_2_to_3(self):
+        try:
+            self.db["broccoli.workers"].rename("workers")
+        except Exception as e:
+            print(f"fail to rename broccoli.workers to workers, {e}")
             raise e
 
     def _get_schema_version(self):
