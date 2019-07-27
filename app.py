@@ -23,6 +23,7 @@ from dashboard.boards_store import BoardsStore
 from dashboard.boards_renderer import BoardsRenderer
 from dashboard.objects.board_query import BoardQuery
 from common.request_schemas import ADD_WORKER_BODY_SCHEMA
+from database.migration import Migration
 
 # Load environment variables
 if Path(".env").exists():
@@ -35,6 +36,12 @@ if Path(".workers.env").exists():
     dotenv.load_dotenv(Path(".workers.env"))
 else:
     print("Not loading .workers.env")
+
+# Perform database migrations
+Migration(
+    admin_connection_string=getenv_or_raise("MONGODB_ADMIN_CONNECTION_STRING"),
+    db=getenv_or_raise("MONGODB_DB")
+).migrate()
 
 # Initialize content objects
 content_store = ContentStore(

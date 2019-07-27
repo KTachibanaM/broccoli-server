@@ -29,7 +29,7 @@ class ContentStore(object):
     def __init__(self, connection_string: str, db: str):
         self.client = pymongo.MongoClient(connection_string)
         self.db = self.client[db]
-        self.collection = self.db['broccoli.server']
+        self.collection = self.db['repo.default']
 
     def append(self, doc: Dict, idempotency_key: str):
         if idempotency_key not in doc:
