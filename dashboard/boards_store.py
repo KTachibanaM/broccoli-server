@@ -7,7 +7,7 @@ class BoardsStore(object):
     def __init__(self, connection_string: str, db: str):
         self.client = pymongo.MongoClient(connection_string)
         self.db = self.client[db]
-        self.collection = self.db["broccoli.api.boards"]
+        self.collection = self.db["boards"]
 
     def upsert(self, board_id: str, board_query: BoardQuery):
         existing_boards = []
