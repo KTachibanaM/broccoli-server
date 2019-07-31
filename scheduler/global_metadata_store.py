@@ -6,24 +6,23 @@ class GlobalMetadataStore(object):
     def __init__(self, connection_string: str, db: str):
         self.client = pymongo.MongoClient(connection_string)
         self.db = self.client[db]
+        self.workers_collection = self.db["workers"]
 
     def get_all(self, worker_id: str) -> List[Dict]:
-        collection = self.db[worker_id]
+        worker = self.workers_collection.find_one({"worker_id": worker_id})
+        if "state" not in worker:
+            return []
         result = []
-        for document in collection.find({}):
+        for key, value in worker["state"].items():
             result.append({
-                "key": document["key"],
-                "value": document["value"]
+                "key": key,
+                "value": value
             })
         return result
 
     def set_all(self, worker_id: str, metadata: List[Dict]):
-        collection = self.db[worker_id]
-        for m in metadata:
-            collection.update(
-                {"key": m["key"]},
-                {"$set": {
-                    "value": m["value"]
-                }},
-                upsert=True
-            )
+        self.workers_collection.update_one(
+            {"worker_id": worker_id},
+            {"$set": {"state": metadata}},
+            upsert=False
+        )

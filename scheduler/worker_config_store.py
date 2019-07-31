@@ -27,7 +27,8 @@ class WorkerConfigStore(object):
             "module": module,
             "class_name": class_name,
             "args": args,
-            "interval_seconds": interval_seconds
+            "interval_seconds": interval_seconds,
+            "state": {}
         })
         return True, worker_id
 

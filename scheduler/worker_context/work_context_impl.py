@@ -17,7 +17,7 @@ class WorkContextImpl(WorkContext):
         self._metadata_store = MetadataStoreImpl(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB"),
-            collection_name=worker_id
+            worker_id=worker_id
         )
 
     @property

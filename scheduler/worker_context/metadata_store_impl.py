@@ -3,28 +3,35 @@ from broccoli_plugin_interface.worker_manager.metadata_store import MetadataStor
 
 
 class MetadataStoreImpl(MetadataStore):
-    def __init__(self, connection_string: str, db: str, collection_name: str):
+    def __init__(self, connection_string: str, db: str, worker_id: str):
         self.client = pymongo.MongoClient(connection_string)
         self.db = self.client[db]
-        self.collection = self.db[collection_name]
+        self.workers_collection = self.db["workers"]
+        self.worker_id = worker_id
+
+    def _get_worker_state(self):
+        return self.workers_collection.find_one({"worker_id": self.worker_id})["state"]
+
+    def _get_another_worker_state(self, worker_id: str):
+        return self.workers_collection.find_one({"worker_id": worker_id})["state"]
 
     def exists(self, key: str) -> bool:
-        count = self.collection.count_documents({'key': key})
-        return count != 0
+        return key in self._get_worker_state()
 
     def get(self, key: str):
-        doc = self.collection.find_one({'key': key})
-        return doc['value']
+        return self._get_worker_state()[key]
 
     def set(self, key: str, value):
-        self.collection.update_one({'key': key}, {'$set': {'value': value}}, upsert=True)
+        state = self._get_worker_state()
+        state[key] = value
+        self.workers_collection.update_one(
+            {"worker_id": self.worker_id},
+            {"$set": {"state": state}},
+            upsert=False
+        )
 
     def get_from_another_worker(self, worker_id: str, key: str):
-        collection = self.db[worker_id]
-        doc = collection.find_one({'key': key})
-        return doc['value']
+        return self._get_another_worker_state(worker_id)[key]
 
     def exists_in_another_worker(self, worker_id: str, key: str):
-        collection = self.db[worker_id]
-        count = collection.count_documents({'key': key})
-        return count != 0
+        return key in self._get_another_worker_state(worker_id)

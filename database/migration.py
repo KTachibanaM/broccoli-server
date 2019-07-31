@@ -28,6 +28,11 @@ class Migration(object):
             self._update_schema_version(3)
             print(f"performed schema migration 2 to 3")
         elif schema_version == 3:
+            print(f"performing schema migration 3 to 4")
+            self._version_3_to_4()
+            self._update_schema_version(4)
+            print(f"performed schema migration 3 to 4")
+        elif schema_version == 4:
             print("already on latest schema version, yay!")
         else:
             raise RuntimeError(f"unknown schema version {schema_version}, :(")
@@ -51,6 +56,23 @@ class Migration(object):
             self.db["broccoli.workers"].rename("workers")
         except Exception as e:
             print(f"fail to rename broccoli.workers to workers, {e}")
+            raise e
+
+    def _version_3_to_4(self):
+        try:
+            for collection_name in self.db.list_collection_names():
+                if collection_name.startswith("broccoli.worker"):
+                    worker_states = {}
+                    old_worker_collection = self.db[collection_name]
+                    for worker_state in old_worker_collection.find({}):
+                        worker_states[worker_state["key"]] = worker_state["value"]
+                    self.db["workers"].update_one(
+                        {"worker_id": collection_name},  # old worker collection name happens to be worker id
+                        {"$set": {"state": worker_states}},
+                        upsert=False
+                    )
+        except Exception as e:
+            print(f"fail to migrate individual broccoli.worker.* to workers collection")
             raise e
 
     def _get_schema_version(self):
