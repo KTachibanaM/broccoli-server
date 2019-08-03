@@ -8,34 +8,30 @@ class Migration(object):
         self.client = pymongo.MongoClient(admin_connection_string)
         self.db = self.client[db]
         self.schema_version_collection = self.db[Migration.SCHEMA_VERSION_COLLECTION_NAME]
+        self.upgrade_map = {
+            0: self._version_0_to_1,
+            1: self._version_1_to_2,
+            2: self._version_2_to_3,
+            3: self._version_3_to_4,
+            4: self._version_4_to_5
+        }
+        self.latest_schema_version = max(self.upgrade_map.keys()) + 1
 
     def migrate(self):
         schema_version = self._get_schema_version()
         print(f"current schema version is {schema_version}")
-        if schema_version == 0:
-            print(f"performing schema migration 0 to 1")
-            self._version_0_to_1()
-            self._update_schema_version(1)
-            print(f"performed schema migration 0 to 1")
-        elif schema_version == 1:
-            print(f"performing schema migration 1 to 2")
-            self._version_1_to_2()
-            self._update_schema_version(2)
-            print(f"performed schema migration 1 to 2")
-        elif schema_version == 2:
-            print(f"performing schema migration 2 to 3")
-            self._version_2_to_3()
-            self._update_schema_version(3)
-            print(f"performed schema migration 2 to 3")
-        elif schema_version == 3:
-            print(f"performing schema migration 3 to 4")
-            self._version_3_to_4()
-            self._update_schema_version(4)
-            print(f"performed schema migration 3 to 4")
-        elif schema_version == 4:
-            print("already on latest schema version, yay!")
-        else:
+
+        if schema_version == self.latest_schema_version:
+            print(f"already on latest schema version {self.latest_schema_version}, yay!")
+            return
+        if schema_version not in self.upgrade_map:
             raise RuntimeError(f"unknown schema version {schema_version}, :(")
+
+        next_schema_version = schema_version + 1
+        print(f"performing schema migration {schema_version} to {next_schema_version}")
+        self.upgrade_map[schema_version]()
+        self._update_schema_version(next_schema_version)
+        print(f"performed schema migration {schema_version} to {next_schema_version}")
 
     def _version_0_to_1(self):
         try:
@@ -73,6 +69,15 @@ class Migration(object):
                     )
         except Exception as e:
             print(f"fail to migrate individual broccoli.worker.* to workers collection")
+            raise e
+
+    def _version_4_to_5(self):
+        try:
+            for collection_name in self.db.list_collection_names():
+                if collection_name.startswith("broccoli.worker"):
+                    self.db.drop_collection(collection_name)
+        except Exception as e:
+            print(f"fail to drop individual broccoli.worker.* collections")
             raise e
 
     def _get_schema_version(self):
