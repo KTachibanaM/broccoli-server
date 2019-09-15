@@ -56,3 +56,10 @@ This is an application that generalizes the crawling, processing, sorting and pu
 
 ## Getting Started
 * Follow `README.md` on `broccoli-dev-tools` to get an instance (or multiple) of `broccoli-platform` running
+
+## Develop
+```bash
+python3 -m virtualenv venv
+source venv/bin/activate
+python setup.py develop
+```
