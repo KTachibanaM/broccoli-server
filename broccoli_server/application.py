@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from typing import Callable
 from broccoli_server.database.migration import Migration
 from broccoli_server.common.getenv_or_raise import getenv_or_raise
 from broccoli_server.content import ContentStore
@@ -74,15 +75,22 @@ class Application(object):
         self.flask_app.before_request(self._before_request)
         self.flask_app.add_url_rule('/', view_func=self._index, methods=['GET'])
 
-    def add_worker(self, module, class_name, constructor):
+    def add_worker(self, module: str, class_name: str, constructor: Callable):
         self.worker_cache.add(
             module=module,
             class_name=class_name,
             constructor=constructor
         )
 
-    def set_default_api_handler(self, constructor):
+    def set_default_api_handler(self, constructor: Callable):
         self.default_api_handler = constructor()
+
+    def add_column(self, module: str, class_name: str, constructor: Callable):
+        self.boards_renderer.add_column(
+            module=module,
+            class_name=class_name,
+            constructor=constructor
+        )
 
     @staticmethod
     def _before_request():

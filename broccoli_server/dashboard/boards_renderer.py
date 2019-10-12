@@ -1,6 +1,5 @@
-import importlib
 import json
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple, Callable
 from broccoli_server.interface.rpc import RpcClient
 from broccoli_server.interface.board import BoardColumn
 from broccoli_server.interface.board import Render
@@ -11,12 +10,15 @@ class BoardsRenderer(object):
     def __init__(self, rpc_client: RpcClient):
         self.rpc_client = rpc_client
         self.callbacks = {}  # type: Dict[str, BoardColumn]
+        self._columns = {}  # type: Dict[Tuple[str, str], Callable]
+
+    def add_column(self, module: str, class_name: str, constructor: Callable):
+        self._columns[(module, class_name)] = constructor
 
     def render_as_dict(self, board_query: BoardQuery) -> List[Dict[str, Optional[Dict]]]:
         # load board columns
         board_columns = {}
         for p in board_query.projections:
-            # TODO: cache columns
             column = self._load_board_column(p)
             if not column:
                 # TODO: return some error
@@ -52,12 +54,10 @@ class BoardsRenderer(object):
             self.callbacks[callback_id].callback(document, self.rpc_client)
         # TODO: error here
 
-    @staticmethod
-    def _load_board_column(projection: BoardProjection) -> Optional[BoardColumn]:
-        try:
-            clazz = getattr(importlib.import_module(projection.module), projection.class_name)
-        except Exception as e:
+    def _load_board_column(self, projection: BoardProjection) -> Optional[BoardColumn]:
+        if (projection.module, projection.class_name) not in self._columns:
             return None
+        clazz = self._columns[(projection.module, projection.class_name)]
         try:
             return clazz(**projection.args)  # type: BoardColumn
         except Exception as e:
