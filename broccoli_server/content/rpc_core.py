@@ -28,8 +28,6 @@ class RpcCore(object):
             return self.query(metadata, payload)
         if verb == "update_one":
             return self.update_one(metadata, payload)
-        if verb == "schema":
-            return self.schema(metadata, payload)
         if verb == 'update_one_binary_string':
             return self.update_one_binary_string(metadata, payload)
         if verb == 'query_nearest_hamming_neighbors':
@@ -84,11 +82,6 @@ class RpcCore(object):
         # todo: failure
         self.content_store.update_one(filter_q=payload["filter_q"], update_doc=payload["update_doc"])
         return True, ''
-
-    def schema(self, metadata: Dict, payload: Dict) -> Tuple[bool, List[str]]:
-        logger.debug(f"Calling schema metadata={metadata}, payload={payload}")
-        # todo: failure
-        return True, self.content_store.schema()
 
     def update_one_binary_string(self, metadata: Dict, payload: Dict) -> Tuple[bool, str]:
         logger.debug(f"Calling update_one_binary_string metadata={metadata}, payload={payload}")

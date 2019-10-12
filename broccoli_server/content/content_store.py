@@ -3,7 +3,6 @@ import datetime
 import random
 import heapq
 from functools import total_ordering
-from pymongo_schema.extract import extract_collection_schema
 from typing import Dict, List, Optional
 from broccoli_server.common import datetime_to_milliseconds, milliseconds_to_datetime
 from .logging import logger
@@ -89,14 +88,6 @@ class ContentStore(object):
 
         # todo: update_one fails
         self.collection.update_one(filter_q, update_doc, upsert=False)
-
-    def schema(self) -> List[str]:
-        field_names = []
-        extracted_schema = extract_collection_schema(self.collection)["object"]
-        for field_name, _ in extracted_schema.items():
-            if field_name != "_id":
-                field_names.append(field_name)
-        return field_names
 
     def update_one_binary_string(self, filter_q: Dict, key: str, binary_string: str):
         if not ContentStore._check_if_string_is_binary(binary_string):
