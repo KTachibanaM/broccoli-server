@@ -3,16 +3,17 @@ import os
 import sys
 import datetime
 from typing import Callable
-from broccoli_server.database.migration import Migration
-from broccoli_server.common.getenv_or_raise import getenv_or_raise
+from broccoli_server.database import Migration
+from broccoli_server.common import validate_schema_or_not, getenv_or_raise
+from broccoli_server.common.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
 from broccoli_server.content import RpcCore
-from broccoli_server.content.in_process_rpc_client import InProcessRpcClient
-from broccoli_server.scheduler.worker_config_store import WorkerConfigStore
-from broccoli_server.scheduler.global_metadata_store import GlobalMetadataStore
-from broccoli_server.scheduler.reconciler import Reconciler
-from broccoli_server.dashboard.boards_store import BoardsStore
-from broccoli_server.dashboard.boards_renderer import BoardsRenderer
+from broccoli_server.content import InProcessRpcClient
+from broccoli_server.scheduler import WorkerConfigStore
+from broccoli_server.scheduler import GlobalMetadataStore
+from broccoli_server.scheduler import Reconciler
+from broccoli_server.dashboard import BoardsStore
+from broccoli_server.dashboard import BoardsRenderer
 from broccoli_server.scheduler import WorkerCache
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -34,7 +35,7 @@ class Application(object):
         self.rpc_core = RpcCore(content_store)
         self.worker_cache = WorkerCache()
         self.in_process_rpc_client = InProcessRpcClient(content_store)
-        worker_config_store = WorkerConfigStore(
+        self.worker_config_store = WorkerConfigStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB"),
             worker_cache=self.worker_cache
@@ -44,7 +45,7 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         )
         self.reconciler = Reconciler(
-            worker_config_store=worker_config_store,
+            worker_config_store=self.worker_config_store,
             rpc_client=self.in_process_rpc_client,
             worker_cache=self.worker_cache
         )
@@ -65,7 +66,7 @@ class Application(object):
 
         # Configure Flask JWT
         self.flask_app.config["JWT_SECRET_KEY"] = getenv_or_raise("JWT_SECRET_KEY")
-        jwt = JWTManager(self.flask_app)
+        JWTManager(self.flask_app)
         self.admin_username = getenv_or_raise("ADMIN_USERNAME")
         self.admin_password = getenv_or_raise("ADMIN_PASSWORD")
 
@@ -78,6 +79,18 @@ class Application(object):
         self.flask_app.add_url_rule('/auth', view_func=self._auth, methods=['POST'])
         self.flask_app.add_url_rule('/api', view_func=self._api, methods=['GET'])
         self.flask_app.add_url_rule('/api/<path:path>', view_func=self._api, methods=['GET'])
+        self.flask_app.add_url_rule('/apiInternal/worker', view_func=self._add_worker, methods=['POST'])
+        self.flask_app.add_url_rule('/apiInternal/worker', view_func=self._get_workers, methods=['GET'])
+        self.flask_app.add_url_rule(
+            '/apiInternal/worker/<string:worker_id>',
+            view_func=self._remove_worker,
+            methods=['DELETE']
+        )
+        self.flask_app.add_url_rule(
+            '/apiInternal/worker/<string:worker_id>/intervalSeconds/<int:interval_seconds>',
+            view_func=self._update_worker_interval_seconds,
+            methods=['PUT']
+        )
 
     def add_worker(self, module: str, class_name: str, constructor: Callable):
         self.worker_cache.add(
@@ -140,6 +153,68 @@ class Application(object):
             self.in_process_rpc_client
         )
         return jsonify(result), 200
+
+    def _add_worker(self):
+        body = request.json
+        success, message = validate_schema_or_not(instance=body, schema=ADD_WORKER_BODY_SCHEMA)
+        if not success:
+            return jsonify({
+                "status": "error",
+                "message": message
+            })
+        status, message_or_worker_id = self.worker_config_store.add(
+            module=body["module"],
+            class_name=body["class_name"],
+            args=body["args"],
+            interval_seconds=body["interval_seconds"]
+        )
+        if not status:
+            return jsonify({
+                "status": "error",
+                "message": message_or_worker_id
+            }), 400
+        else:
+            return jsonify({
+                "status": "ok",
+                "worker_id": message_or_worker_id
+            }), 200
+
+    def _get_workers(self):
+        workers = []
+        for worker_id, worker in self.worker_config_store.get_all().items():
+            module, class_name, args, interval_seconds = worker
+            workers.append({
+                "worker_id": worker_id,
+                "module": module,
+                "class_name": class_name,
+                "args": args,
+                "interval_seconds": interval_seconds
+            })
+        return jsonify(workers), 200
+
+    def _remove_worker(self, worker_id: str):
+        status, message = self.worker_config_store.remove(worker_id)
+        if not status:
+            return jsonify({
+                "status": "error",
+                "message": message
+            }), 400
+        else:
+            return jsonify({
+                "status": "ok"
+            }), 200
+
+    def _update_worker_interval_seconds(self, worker_id: str, interval_seconds: int):
+        status, message = self.worker_config_store.update_interval_seconds(worker_id, interval_seconds)
+        if not status:
+            return jsonify({
+                "status": "error",
+                "message": message
+            }), 400
+        else:
+            return jsonify({
+                "status": "ok"
+            }), 200
 
     def start(self):
         # detect flask debug mode
