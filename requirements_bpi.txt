@@ -1,1 +1,0 @@
-https://github.com/broccoli-platform/broccoli-plugin-interface/archive/master.zip#egg=broccoli_plugin_interface
