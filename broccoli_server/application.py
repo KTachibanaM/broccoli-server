@@ -164,7 +164,7 @@ class Application(object):
 
     @staticmethod
     def _index():
-        return 'You\'ve hit broccoli-platform, now turn back.\n', 200
+        return 'You\'ve hit broccoli-server, now turn back.\n', 200
 
     def _auth(self):
         username = request.json.get('username', None)

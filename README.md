@@ -1,7 +1,7 @@
 # broccoli-server
 [![Build Status](https://travis-ci.org/broccoli-platform/broccoli-server.svg?branch=master)](https://travis-ci.org/broccoli-platform/broccoli-server)
 
-The server component of a web content crawling and sorting platform
+The server component of a web content crawling and sorting framework
 
 ## Problem Statement
 * I want to
@@ -54,12 +54,19 @@ This is an application that generalizes the crawling, processing, sorting and pu
         * Debian and Ubuntu: Follow [this guide](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
     * To verify, run the `mongo` in your terminal and you should be dropped to a MongoDB interactive shell
 
-## Getting Started
-* Follow `README.md` on `broccoli-dev-tools` to get an instance (or multiple) of `broccoli-platform` running
+## Prepare virtualenv
+```bash
+python3 -m virtualenv venv
+```
 
 ## Develop
 ```bash
-python3 -m virtualenv venv
 source venv/bin/activate
 python setup.py develop
+```
+
+## Test
+```bash
+source venv/bin/activate
+python setup.py test
 ```

@@ -22,7 +22,7 @@ tests_require = [
 setup(
     name='broccoli_server',
     version='0.1',
-    description='The server component of a web content crawling and sorting platform',
+    description='The server component of a web content crawling and sorting framework',
     url='http://github.com/KTachibanaM/broccoli-platform',
     author='KTachibanaM',
     author_email='whj19931115@gmail.com',
@@ -30,5 +30,6 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     install_requires=install_requires,
-    tests_require=tests_require
+    tests_require=tests_require,
+    test_suite="broccoli_server.tests",
 )
