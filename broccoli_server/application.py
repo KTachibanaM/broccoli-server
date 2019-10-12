@@ -33,7 +33,7 @@ class Application(object):
         )
         self.rpc_core = RpcCore(content_store)
         self.worker_cache = WorkerCache()
-        in_process_rpc_client = InProcessRpcClient(content_store)
+        self.in_process_rpc_client = InProcessRpcClient(content_store)
         worker_config_store = WorkerConfigStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB"),
@@ -45,14 +45,14 @@ class Application(object):
         )
         self.reconciler = Reconciler(
             worker_config_store=worker_config_store,
-            rpc_client=in_process_rpc_client,
+            rpc_client=self.in_process_rpc_client,
             worker_cache=self.worker_cache
         )
         self.boards_store = BoardsStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
-        self.boards_renderer = BoardsRenderer(in_process_rpc_client)
+        self.boards_renderer = BoardsRenderer(self.in_process_rpc_client)
         self.default_api_handler = None
 
         # Flask
@@ -76,6 +76,8 @@ class Application(object):
         self.flask_app.before_request(self._before_request)
         self.flask_app.add_url_rule('/', view_func=self._index, methods=['GET'])
         self.flask_app.add_url_rule('/auth', view_func=self._auth, methods=['POST'])
+        self.flask_app.add_url_rule('/api', view_func=self._api, methods=['GET'])
+        self.flask_app.add_url_rule('/api/<path:path>', view_func=self._api, methods=['GET'])
 
     def add_worker(self, module: str, class_name: str, constructor: Callable):
         self.worker_cache.add(
@@ -130,6 +132,14 @@ class Application(object):
             "status": "ok",
             "access_token": access_token
         }), 200
+
+    def _api(self, path=''):
+        result = self.default_api_handler.handle_request(
+            path,
+            request.args.to_dict(),
+            self.in_process_rpc_client
+        )
+        return jsonify(result), 200
 
     def start(self):
         # detect flask debug mode
