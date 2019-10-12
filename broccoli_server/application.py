@@ -1,4 +1,3 @@
-import importlib
 import logging
 import os
 import sys
@@ -52,11 +51,7 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         )
         self.boards_renderer = BoardsRenderer(in_process_rpc_client)
-        default_api_handler_clazz = getattr(
-            importlib.import_module(getenv_or_raise("DEFAULT_API_HANDLER_MODULE")),
-            getenv_or_raise("DEFAULT_API_HANDLER_CLASSNAME")
-        )
-        self.default_api_handler = default_api_handler_clazz()
+        self.default_api_handler = None
 
         # Flask
         self.flask_app = Flask(__name__)
@@ -85,6 +80,9 @@ class Application(object):
             class_name=class_name,
             constructor=constructor
         )
+
+    def set_default_api_handler(self, constructor):
+        self.default_api_handler = constructor()
 
     @staticmethod
     def _before_request():
