@@ -10,8 +10,7 @@ install_requires = [
     'dnspython==1.16.0',
     'jsonschema==3.0.1',
     'apscheduler==3.6.0',
-    'pymongo-schema @ https://github.com/pajachiet/pymongo-schema/tarball/0dd312c23f5d38fb7c1a1f3bbe977e79a814a119'
-    '#egg=pymongo-schema'
+    'pymongo-schema @ https://github.com/pajachiet/pymongo-schema/tarball/0dd312c23f5d38fb7c1a1f3bbe977e79a814a119#egg=pymongo-schema'
 ]
 
 tests_require = [
