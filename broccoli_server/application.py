@@ -2,7 +2,8 @@ import logging
 import os
 import sys
 import datetime
-from typing import Callable
+import json
+from typing import Callable, Dict
 from broccoli_server.database import Migration
 from broccoli_server.common import validate_schema_or_not, getenv_or_raise
 from broccoli_server.common.request_schemas import ADD_WORKER_BODY_SCHEMA
@@ -14,6 +15,7 @@ from broccoli_server.scheduler import GlobalMetadataStore
 from broccoli_server.scheduler import Reconciler
 from broccoli_server.dashboard import BoardsStore
 from broccoli_server.dashboard import BoardsRenderer
+from broccoli_server.dashboard.objects import BoardQuery
 from broccoli_server.scheduler import WorkerCache
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -28,13 +30,13 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         ).migrate()
 
-        content_store = ContentStore(
+        self.content_store = ContentStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
-        self.rpc_core = RpcCore(content_store)
+        self.rpc_core = RpcCore(self.content_store)
         self.worker_cache = WorkerCache()
-        self.in_process_rpc_client = InProcessRpcClient(content_store)
+        self.in_process_rpc_client = InProcessRpcClient(self.content_store)
         self.worker_config_store = WorkerConfigStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB"),
@@ -99,6 +101,41 @@ class Application(object):
         self.flask_app.add_url_rule(
             '/apiInternal/worker/<string:worker_id>/metadata',
             view_func=self._set_worker_metadata,
+            methods=['POST']
+        )
+        self.flask_app.add_url_rule(
+            '/apiInternal/board/<string:board_id>',
+            view_func=self._upsert_board,
+            methods=['POST']
+        )
+        self.flask_app.add_url_rule(
+            '/apiInternal/board/<string:board_id>',
+            view_func=self._get_board,
+            methods=['GET']
+        )
+        self.flask_app.add_url_rule(
+            '/apiInternal/boards',
+            view_func=self._get_boards,
+            methods=['GET']
+        )
+        self.flask_app.add_url_rule(
+            '/apiInternal/boards/swap/<string:board_id>/<string:another_board_id>',
+            view_func=self._swap_boards,
+            methods=['POST']
+        )
+        self.flask_app.add_url_rule(
+            '/apiInternal/board/<string:board_id>',
+            view_func=self._remove_board,
+            methods=['DELETE']
+        )
+        self.flask_app.add_url_rule(
+            '/apiInternal/renderBoard/<string:board_id>',
+            view_func=self._render_board,
+            methods=['GET']
+        )
+        self.flask_app.add_url_rule(
+            '/apiInternal/callbackBoard/<string:callback_id>',
+            view_func=self._callback_board,
             methods=['POST']
         )
 
@@ -232,6 +269,57 @@ class Application(object):
     def _set_worker_metadata(self, worker_id: str):
         parsed_body = request.json
         self.global_metadata_store.set_all(worker_id, parsed_body)
+        return jsonify({
+            "status": "ok"
+        }), 200
+
+    def _upsert_board(self, board_id: str):
+        parsed_body = request.json
+        parsed_body["q"] = json.dumps(parsed_body["q"])
+        self.boards_store.upsert(board_id, BoardQuery(parsed_body))
+        return jsonify({
+            "status": "ok"
+        }), 200
+
+    def _get_board(self, board_id: str):
+        board_query = self.boards_store.get(board_id).to_dict()
+        board_query["q"] = json.loads(board_query["q"])
+        return jsonify(board_query), 200
+
+    def _get_boards(self):
+        boards = []
+        for (board_id, board_query) in self.boards_store.get_all():
+            board_query = board_query.to_dict()
+            board_query["q"] = json.loads(board_query["q"])
+            boards.append({
+                "board_id": board_id,
+                "board_query": board_query
+            })
+        return jsonify(boards), 200
+
+    def _swap_boards(self, board_id: str, another_board_id: str):
+        self.boards_store.swap(board_id, another_board_id)
+        return jsonify({
+            "status": "ok"
+        }), 200
+
+    def _remove_board(self, board_id: str):
+        self.boards_store.remove(board_id)
+        return jsonify({
+            "status": "ok"
+        }), 200
+
+    def _render_board(self, board_id: str):
+        q = self.boards_store.get(board_id)
+        return jsonify({
+            "board_query": q.to_dict(),
+            "payload": self.boards_renderer.render_as_dict(q),
+            "count_without_limit": self.content_store.count(json.loads(q.q))
+        }), 200
+
+    def _callback_board(self, callback_id: str):
+        document = request.json  # type: Dict
+        self.boards_renderer.callback(callback_id, document)
         return jsonify({
             "status": "ok"
         }), 200
