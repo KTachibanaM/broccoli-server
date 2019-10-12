@@ -6,7 +6,7 @@ from broccoli_server.database.migration import Migration
 from broccoli_server.common.getenv_or_raise import getenv_or_raise
 from broccoli_server.content import ContentStore
 from broccoli_server.content import RpcCore
-from broccoli_server.common.in_process_rpc_client import InProcessRpcClient
+from broccoli_server.content.in_process_rpc_client import InProcessRpcClient
 from broccoli_server.scheduler.worker_config_store import WorkerConfigStore
 from broccoli_server.scheduler.global_metadata_store import GlobalMetadataStore
 from broccoli_server.scheduler.reconciler import Reconciler
