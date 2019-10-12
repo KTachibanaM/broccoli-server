@@ -1,5 +1,6 @@
 # broccoli-server
 [![Build Status](https://travis-ci.org/broccoli-platform/broccoli-server.svg?branch=master)](https://travis-ci.org/broccoli-platform/broccoli-server)
+[![PyPI version](https://badge.fury.io/py/broccoli-server.svg)](https://badge.fury.io/py/broccoli-server)
 
 The server component of a web content crawling and sorting framework
 
