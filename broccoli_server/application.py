@@ -91,6 +91,16 @@ class Application(object):
             view_func=self._update_worker_interval_seconds,
             methods=['PUT']
         )
+        self.flask_app.add_url_rule(
+            '/apiInternal/worker/<string:worker_id>/metadata',
+            view_func=self._get_worker_metadata,
+            methods=['GET']
+        )
+        self.flask_app.add_url_rule(
+            '/apiInternal/worker/<string:worker_id>/metadata',
+            view_func=self._set_worker_metadata,
+            methods=['POST']
+        )
 
     def add_worker(self, module: str, class_name: str, constructor: Callable):
         self.worker_cache.add(
@@ -215,6 +225,16 @@ class Application(object):
             return jsonify({
                 "status": "ok"
             }), 200
+
+    def _get_worker_metadata(self, worker_id: str):
+        return jsonify(self.global_metadata_store.get_all(worker_id)), 200
+
+    def _set_worker_metadata(self, worker_id: str):
+        parsed_body = request.json
+        self.global_metadata_store.set_all(worker_id, parsed_body)
+        return jsonify({
+            "status": "ok"
+        }), 200
 
     def start(self):
         # detect flask debug mode
