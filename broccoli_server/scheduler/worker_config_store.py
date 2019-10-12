@@ -1,18 +1,19 @@
 import pymongo
 from typing import Dict, Tuple
 from .logging import logger
-from .load_object import load_object
+from .worker_cache import WorkerCache
 
 
 class WorkerConfigStore(object):
-    def __init__(self, connection_string: str, db: str):
+    def __init__(self, connection_string: str, db: str, worker_cache: WorkerCache):
         self.client = pymongo.MongoClient(connection_string)
         self.db = self.client[db]
         self.collection = self.db['workers']
+        self.worker_cache = worker_cache
 
     def add(self, module: str, class_name: str, args: Dict, interval_seconds: int) -> Tuple[bool, str]:
         # todo: garbage collect this w?
-        status, worker_or_message = load_object(module, class_name, args)
+        status, worker_or_message = self.worker_cache.load(module, class_name, args)
         if not status:
             logger.error(f"Fails to add worker module={module} class_name={class_name} args={args}, "
                          f"message {worker_or_message}")

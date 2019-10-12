@@ -2,19 +2,23 @@ import traceback
 from typing import Set
 from apscheduler.schedulers.base import BaseScheduler
 from .worker_config_store import WorkerConfigStore
-from .load_object import load_object
 from .logging import logger
 from .worker_context.work_context_impl import WorkContextImpl
+from .worker_cache import WorkerCache
 from broccoli_server.interface.rpc import RpcClient
 
 
 class Reconciler(object):
     RECONCILE_JOB_ID = "broccoli.worker_reconcile"
 
-    def __init__(self, worker_config_store: WorkerConfigStore, rpc_client: RpcClient):
+    def __init__(self,
+                 worker_config_store: WorkerConfigStore,
+                 rpc_client: RpcClient,
+                 worker_cache: WorkerCache):
         self.worker_config_store = worker_config_store
         self.scheduler = None
         self.rpc_client = rpc_client
+        self.worker_cache = worker_cache
 
     def set_scheduler(self, scheduler: BaseScheduler):
         self.scheduler = scheduler
@@ -51,7 +55,7 @@ class Reconciler(object):
 
     def add_job(self, added_job_id: str, desired_jobs):
         module, class_name, args, interval_seconds = desired_jobs[added_job_id]
-        status, worker_or_message = load_object(module, class_name, args)
+        status, worker_or_message = self.worker_cache.load(module, class_name, args)
         if not status:
             logger.error(f"Fails to add worker module={module} class_name={class_name} args={args}, "
                          f"message {worker_or_message}")

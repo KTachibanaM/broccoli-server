@@ -12,6 +12,7 @@ from broccoli_server.scheduler.global_metadata_store import GlobalMetadataStore
 from broccoli_server.scheduler.reconciler import Reconciler
 from broccoli_server.dashboard.boards_store import BoardsStore
 from broccoli_server.dashboard.boards_renderer import BoardsRenderer
+from broccoli_server.scheduler import WorkerCache
 from flask import Flask, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, verify_jwt_in_request
@@ -30,10 +31,12 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         )
         self.rpc_core = RpcCore(content_store)
+        self.worker_cache = WorkerCache()
         in_process_rpc_client = InProcessRpcClient(content_store)
         worker_config_store = WorkerConfigStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
-            db=getenv_or_raise("MONGODB_DB")
+            db=getenv_or_raise("MONGODB_DB"),
+            worker_cache=self.worker_cache
         )
         self.global_metadata_store = GlobalMetadataStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
@@ -41,7 +44,8 @@ class Application(object):
         )
         self.reconciler = Reconciler(
             worker_config_store=worker_config_store,
-            rpc_client=in_process_rpc_client
+            rpc_client=in_process_rpc_client,
+            worker_cache=self.worker_cache
         )
         self.boards_store = BoardsStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
@@ -74,6 +78,13 @@ class Application(object):
 
         self.flask_app.before_request(self._before_request)
         self.flask_app.add_url_rule('/', view_func=self._index, methods=['GET'])
+
+    def add_worker(self, module, class_name, constructor):
+        self.worker_cache.add(
+            module=module,
+            class_name=class_name,
+            constructor=constructor
+        )
 
     @staticmethod
     def _before_request():
