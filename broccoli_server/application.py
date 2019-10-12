@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import datetime
 from typing import Callable
 from broccoli_server.database.migration import Migration
 from broccoli_server.common.getenv_or_raise import getenv_or_raise
@@ -13,9 +14,9 @@ from broccoli_server.scheduler.reconciler import Reconciler
 from broccoli_server.dashboard.boards_store import BoardsStore
 from broccoli_server.dashboard.boards_renderer import BoardsRenderer
 from broccoli_server.scheduler import WorkerCache
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, verify_jwt_in_request
+from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
@@ -65,8 +66,8 @@ class Application(object):
         # Configure Flask JWT
         self.flask_app.config["JWT_SECRET_KEY"] = getenv_or_raise("JWT_SECRET_KEY")
         jwt = JWTManager(self.flask_app)
-        admin_username = getenv_or_raise("ADMIN_USERNAME")
-        admin_password = getenv_or_raise("ADMIN_PASSWORD")
+        self.admin_username = getenv_or_raise("ADMIN_USERNAME")
+        self.admin_password = getenv_or_raise("ADMIN_PASSWORD")
 
         # Less verbose logging from apscheduler
         apscheduler_logger = logging.getLogger("apscheduler")
@@ -74,6 +75,7 @@ class Application(object):
 
         self.flask_app.before_request(self._before_request)
         self.flask_app.add_url_rule('/', view_func=self._index, methods=['GET'])
+        self.flask_app.add_url_rule('/auth', view_func=self._auth, methods=['POST'])
 
     def add_worker(self, module: str, class_name: str, constructor: Callable):
         self.worker_cache.add(
@@ -101,6 +103,33 @@ class Application(object):
     @staticmethod
     def _index():
         return 'You\'ve hit broccoli-platform, now turn back.\n', 200
+
+    def _auth(self):
+        username = request.json.get('username', None)
+        password = request.json.get('password', None)
+        if not username:
+            return jsonify({
+                "status": "error",
+                "message": "Missing username"
+            }), 400
+        if not password:
+            return jsonify({
+                "status": "error",
+                "message": "Missing password"
+            }), 400
+        if username != self.admin_username or password != self.admin_password:
+            return jsonify({
+                "status": "error",
+                "message": "Wrong username/password"
+            }), 401
+        access_token = create_access_token(
+            identity=username,
+            expires_delta=datetime.timedelta(days=365)  # todo: just for now
+        )
+        return jsonify({
+            "status": "ok",
+            "access_token": access_token
+        }), 200
 
     def start(self):
         # detect flask debug mode
