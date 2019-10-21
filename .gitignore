@@ -280,5 +280,3 @@ $RECYCLE.BIN/
 
 # Custom
 .env
-.workers.env
-web_static
