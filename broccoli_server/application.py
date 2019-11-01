@@ -17,7 +17,7 @@ from broccoli_server.dashboard import BoardsStore
 from broccoli_server.dashboard import BoardsRenderer
 from broccoli_server.dashboard.objects import BoardQuery
 from broccoli_server.scheduler import WorkerCache
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -57,6 +57,13 @@ class Application(object):
         )
         self.boards_renderer = BoardsRenderer(self.in_process_rpc_client)
         self.default_api_handler = None
+
+        # Figure out static web artifact
+        if "WEB_DIR" in os.environ:
+            self.web_root = os.environ["WEB_DIR"]
+        else:
+            raise RuntimeError("todo: WEB_DIR has to be set")
+        print(f"Loading static web artifact from {self.web_root}")
 
         # Flask
         self.flask_app = Flask(__name__)
@@ -139,6 +146,7 @@ class Application(object):
         )
         self.flask_app.add_url_rule('/web', view_func=self._web, methods=['GET'])
         self.flask_app.add_url_rule('/web/<path:filename>', view_func=self._web, methods=['GET'])
+        self.flask_app.add_url_rule('/', view_func=self._index, methods=['GET'])
 
     def add_worker(self, module: str, class_name: str, constructor: Callable):
         self.worker_cache.add(
@@ -189,6 +197,10 @@ class Application(object):
             "status": "ok",
             "access_token": access_token
         }), 200
+
+    @staticmethod
+    def _index():
+        return redirect('/web')
 
     def _api(self, path=''):
         result = self.default_api_handler.handle_request(
@@ -321,11 +333,10 @@ class Application(object):
             "status": "ok"
         }), 200
 
-    @staticmethod
-    def _web(filename=''):
+    def _web(self, filename=''):
         if filename == '':
-            return send_from_directory('web', "index.html")
-        return send_from_directory('web', filename)
+            return send_from_directory(self.web_root, "index.html")
+        return send_from_directory(self.web_root, filename)
 
     def start(self):
         # detect flask debug mode
