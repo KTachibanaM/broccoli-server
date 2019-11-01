@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/broccoli-platform/broccoli-server.svg?branch=master)](https://travis-ci.org/broccoli-platform/broccoli-server)
 [![PyPI version](https://badge.fury.io/py/broccoli-server.svg)](https://badge.fury.io/py/broccoli-server)
 
-The server component of a web content crawling and sorting framework
+The server component of a web content crawling and sorting library
 
 ## Problem Statement
 * I want to
@@ -17,7 +17,7 @@ The server component of a web content crawling and sorting framework
     * Re-implement common elements in a management dashboard for different use cases
 
 ## Solution
-This is an application that generalizes the crawling, processing, sorting and publishing of Internet content, while offer pluggability so that you customize it to fulfill individual use cases
+This is a Python library that generalizes the crawling, processing, sorting and publishing of Internet content, while offer a public Python API so that you plugin implementation details to fulfill individual use cases
 
 ## Architecture
 * There is a server application that does the heavy-lifting of crawling and processing of Internet content. Those activities can also be queried and changed via HTTP endpoints.
@@ -41,32 +41,42 @@ This is an application that generalizes the crawling, processing, sorting and pu
 * A row have columns. What to show for each column is controlled by pluggable BoardColumn classes ("class as in OOP") which are registered to the server application at runtime.
 * BoardColumn objects are instantiated when a request to render a board comes in, and the objects all render to standardized JSON representing frontend components, like a text and a button, that the frontend should implement actually rendering.
 
-## Prerequisites
-* `Python 3.7`
-* `Node.js`
-* `yarn`
-* `MongoDB`
-    * Have an unauthenticated MongoDB running at `localhost:27017`
-        * macOS
-        ```bash
-        brew install mongodb
-        brew services start mongodb
-        ```
-        * Debian and Ubuntu: Follow [this guide](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/)
-    * To verify, run the `mongo` in your terminal and you should be dropped to a MongoDB interactive shell
+## Usage
+```bash
+pip install broccoli-server
+```
 
-## Prepare virtualenv
+You need a MongoDB database with two users, one for regular data operations (e.g. reading/writing the content repository), another for database schema migrations
+
+We will call the former `rw`, and the later `ddl`
+
+The following environment variables are expected to be found for the application to run
+* `ADMIN_USERNAME` is the username for the web application
+* `ADMIN_PASSWORD` is the password for the web application
+* `JWT_SECRET_KEY`
+* `MONGODB_CONNECTION_STRING` is the connection string for MongoDB user `rw`
+* `MONGODB_ADMIN_CONNECTION_STRING` is the connection string for MongoDB user `ddl`
+* `MONGODB_DB` is the actual name of the MongoDB database (even if the connection string already contains the database, this variable is still expected)
+
+## API
+TODO
+
+## Development
+### Prerequisites
+* `Python 3.7`
+
+### Prepare virtualenv
 ```bash
 python3 -m virtualenv venv
 ```
 
-## Develop
+### Develop
 ```bash
 source venv/bin/activate
 python setup.py develop
 ```
 
-## Test
+### Test
 ```bash
 source venv/bin/activate
 python setup.py test
