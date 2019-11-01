@@ -45,17 +45,24 @@ This is a Python library that generalizes the crawling, processing, sorting and 
 ```bash
 pip install broccoli-server
 ```
-
 You need a MongoDB database with two users, one for regular data operations (e.g. reading/writing the content repository), another for database schema migrations
-
 We will call the former `rw`, and the later `ddl`
 
+### Convenient dev scripts for local development
+If you have an "OS-default" version of MongoDB installed, you likely will have an unauthenticated MongoDB running locally on `localhost:27017`
+If that's the case, you can use a convenient dev script `./dev/create_mongodb.sh` to create both the MongoDB database and users
+In order to use the script, you need to give your application a name. We will call it `instance_0`
+Run `./dev/create_mongodb.sh instance_0` to create the appropriate MongoDB database and users for local development
+
+### Environment variables required
 The following environment variables are expected to be found for the application to run
 * `ADMIN_USERNAME` is the username for the web application
 * `ADMIN_PASSWORD` is the password for the web application
 * `JWT_SECRET_KEY`
 * `MONGODB_CONNECTION_STRING` is the connection string for MongoDB user `rw`
+    * If you used `./dev/create_mongodb.sh instance_0`, the connection string will simply be `mongodb://instance_0:instance_0@localhost:27017/instance_0`
 * `MONGODB_ADMIN_CONNECTION_STRING` is the connection string for MongoDB user `ddl`
+    * If you used `./dev/create_mongodb.sh instance_0`, the connection string will simply be `mongodb://instance_0:instance_0@localhost:27017/instance_0`
 * `MONGODB_DB` is the actual name of the MongoDB database (even if the connection string already contains the database, this variable is still expected)
 
 ## API
