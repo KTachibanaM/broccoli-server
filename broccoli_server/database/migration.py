@@ -87,7 +87,10 @@ class Migration(object):
             print(f"fail to get collection names, {e}")
             raise e
         if Migration.SCHEMA_VERSION_COLLECTION_NAME not in collection_names:
-            return 0
+            if "broccoli.server" in collection_names:
+                return 0
+            else:
+                return self.latest_schema_version
         try:
             v = self.schema_version_collection.find_one({"v": {"$exists": True}})
             return v["v"]
