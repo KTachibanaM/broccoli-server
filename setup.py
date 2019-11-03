@@ -35,7 +35,7 @@ class SdistCommand(sdist):
         if not web_version:
             raise RuntimeError("web versions is absent")
 
-        if os.path.exists(WEB_ARTIFACT_PATH):
+        if os.path.exists(WEB_ARCHIVE_PATH):
             print("removing old web archive")
             os.remove(WEB_ARCHIVE_PATH)
 
