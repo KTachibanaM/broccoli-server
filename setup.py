@@ -35,8 +35,9 @@ class SdistCommand(sdist):
         if not web_version:
             raise RuntimeError("web versions is absent")
 
-        print("removing old web archive in case")
-        os.remove(WEB_ARCHIVE_PATH)
+        if os.path.exists(WEB_ARTIFACT_PATH):
+            print("removing old web archive")
+            os.remove(WEB_ARCHIVE_PATH)
 
         print(f"downloading web archive version {web_version}")
         urllib.request.urlretrieve(
@@ -44,8 +45,9 @@ class SdistCommand(sdist):
             filename=WEB_ARCHIVE_PATH
         )
 
-        print("removing old web artifact in case")
-        shutil.rmtree(WEB_ARTIFACT_PATH)
+        if os.path.exists(WEB_ARTIFACT_PATH):
+            print("removing old web artifact")
+            shutil.rmtree(WEB_ARTIFACT_PATH)
 
         print(f"populating web artifact version {web_version}")
         f = tarfile.open(WEB_ARCHIVE_PATH, 'r')
@@ -56,7 +58,7 @@ class SdistCommand(sdist):
 
 setup(
     name='broccoli_server',
-    version='0.1.5',
+    version='0.1.6',
     description='The server component of a web content crawling and sorting framework',
     url='http://github.com/KTachibanaM/broccoli-platform',
     author='KTachibanaM',
