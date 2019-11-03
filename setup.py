@@ -58,21 +58,22 @@ class SdistCommand(sdist):
 
 setup(
     name='broccoli_server',
-    version='0.1.8',
+    version='0.1.9',
     description='The server component of a web content crawling and sorting framework',
     url='http://github.com/KTachibanaM/broccoli-platform',
     author='KTachibanaM',
     author_email='whj19931115@gmail.com',
     license='WTFPL',
     packages=find_packages(),
+    include_package_data=True,
+    package_data={
+        "broccoli_server": ["web"]
+    },
     zip_safe=False,
     install_requires=install_requires,
     tests_require=tests_require,
     test_suite="broccoli_server.tests",
     cmdclass={
         'sdist': SdistCommand
-    },
-    package_data={
-        "broccoli_server": ["broccoli_server/web"]
     }
 )
