@@ -65,7 +65,9 @@ setup(
     author_email='whj19931115@gmail.com',
     license='WTFPL',
     packages=find_packages(),
+    # this is important for including web when building wheel
     include_package_data=True,
+    # this is important for including web when building wheel
     package_data={
         "broccoli_server": ["web"]
     },
