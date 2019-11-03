@@ -60,9 +60,13 @@ class Application(object):
 
         # Figure out static web artifact
         if "WEB_DIR" in os.environ:
+            print("Web artifact is being override")
             self.web_root = os.environ["WEB_DIR"]
+        elif os.path.exists("web"):
+            print("Loading version-fixed web artifact")
+            self.web_root = "web"
         else:
-            raise RuntimeError("todo: WEB_DIR has to be set")
+            raise RuntimeError("Neither override nor version-fixed web artifact is found")
         print(f"Loading static web artifact from {self.web_root}")
 
         # Flask
