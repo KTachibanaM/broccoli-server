@@ -58,7 +58,7 @@ class SdistCommand(sdist):
 
 setup(
     name='broccoli_server',
-    version='0.1.7',
+    version='0.1.8',
     description='The server component of a web content crawling and sorting framework',
     url='http://github.com/KTachibanaM/broccoli-platform',
     author='KTachibanaM',
