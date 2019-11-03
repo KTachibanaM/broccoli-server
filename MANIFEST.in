@@ -1,0 +1,2 @@
+include WEB_VERSION.txt
+recursive-include web *
