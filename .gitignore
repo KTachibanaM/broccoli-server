@@ -280,4 +280,4 @@ $RECYCLE.BIN/
 
 # Custom
 web.tar.gz
-web
+broccoli_server/web

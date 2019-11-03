@@ -1,2 +1,2 @@
 include WEB_VERSION.txt
-recursive-include web *
+recursive-include broccoli_server/web *
