@@ -1,5 +1,8 @@
 # Development
 
+## Publish a version of the library
+You need to create a new release on GitHub to trigger travis-ci
+
 ## Webapp bundling
 * The library, when published, is bundled with a fixed version of [broccoli-web](https://github.com/broccoli-platform/broccoli-web)
 * This is done by
