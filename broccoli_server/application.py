@@ -344,7 +344,10 @@ class Application(object):
     def _web(self, filename=''):
         if filename == '':
             return send_from_directory(self.web_root, "index.html")
-        return send_from_directory(self.web_root, filename)
+        elif os.path.exists(os.path.join(self.web_root, *filename.split("/"))):
+            return send_from_directory(self.web_root, filename)
+        else:
+            return send_from_directory(self.web_root, "index.html")
 
     def start(self):
         # detect flask debug mode
