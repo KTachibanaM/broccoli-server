@@ -1,8 +1,8 @@
 import json
 from typing import Optional, Dict, List, Tuple, Callable
-from broccoli_server.interface.rpc import RpcClient
-from broccoli_server.interface.board import BoardColumn
-from broccoli_server.interface.board import Render
+from broccoli_interface.rpc import RpcClient
+from broccoli_interface.board import BoardColumn
+from broccoli_interface.board import Render
 from .objects.board_query import BoardQuery, BoardProjection
 
 

@@ -14,7 +14,8 @@ install_requires = [
     'flask-jwt-extended==3.18.2',
     'dnspython==1.16.0',
     'jsonschema==3.0.1',
-    'apscheduler==3.6.0'
+    'apscheduler==3.6.0',
+    'broccoli-interface==0.1'
 ]
 
 tests_require = [
@@ -58,7 +59,7 @@ class SdistCommand(sdist):
 
 setup(
     name='broccoli_server',
-    version='0.1.10',
+    version='0.1.11',
     description='The server component of a web content crawling and sorting framework',
     url='http://github.com/KTachibanaM/broccoli-platform',
     author='KTachibanaM',

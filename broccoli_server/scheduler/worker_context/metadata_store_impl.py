@@ -1,5 +1,5 @@
 import pymongo
-from broccoli_server.interface.worker_manager import MetadataStore
+from broccoli_interface.worker_manager import MetadataStore
 
 
 class MetadataStoreImpl(MetadataStore):
