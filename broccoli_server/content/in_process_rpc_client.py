@@ -21,6 +21,9 @@ class InProcessRpcClient(RpcClient):
     def blocking_append(self, idempotency_key: str, doc: Dict):
         self.content_store.append(doc, idempotency_key)
 
+    def blocking_append_multiple(self, idempotency_key: str, docs: List[Dict]):
+        self.content_store.append_multiple(docs, idempotency_key)
+
     def blocking_random_one(self, q: Dict, projection: List[str]) -> dict:
         return self.content_store.random_one(q, projection)
 

@@ -2,6 +2,7 @@ import unittest
 import mongomock
 import freezegun
 import datetime
+from typing import Dict, List
 from broccoli_server.content import ContentStore
 
 
@@ -13,6 +14,14 @@ class TestContentStore(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.content_store.client.drop_database("test_db")
+
+    def actual_documents_without_id(self) -> List[Dict]:
+        actual_cursor = self.content_store.collection.find({})
+        actual_documents = []
+        for actual_document in actual_cursor:
+            del actual_document["_id"]
+            actual_documents.append(actual_document)
+        return actual_documents
 
 
 class TestContentStoreAppend(TestContentStore):
@@ -29,12 +38,7 @@ class TestContentStoreAppend(TestContentStore):
     def test_succeed(self):
         self.content_store.append({"key": "value_1"}, "key")
         self.content_store.append({"key": "value_2"}, "key")
-        actual_cursor = self.content_store.collection.find({})
-        actual_documents = []
-        for actual_document in actual_cursor:
-            del actual_document["_id"]
-            actual_documents.append(actual_document)
-        assert actual_documents == [
+        assert self.actual_documents_without_id() == [
             {
                 "key": "value_1",
                 "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
@@ -43,6 +47,80 @@ class TestContentStoreAppend(TestContentStore):
                 "key": "value_2",
                 "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             }
+        ]
+
+
+class TestContentStoreAppendMultiple(TestContentStore):
+    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
+    def test_idempotency_key_absent(self):
+        self.content_store.append_multiple([
+            {"key": "value1"},
+            {"key2": "value2"}
+        ], "key2")
+        assert self.actual_documents_without_id() == [
+            {
+                "key2": "value2",
+                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
+            }
+        ]
+
+    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
+    def test_idempotency_value_exists_in_persistence(self):
+        self.content_store.append({"key": "value"}, "key")
+        self.content_store.append_multiple([
+            {"key": "value"},
+            {"key": "value2"}
+        ], "key")
+        assert self.actual_documents_without_id() == [
+            {
+                "key": "value",
+                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
+            },
+            {
+                "key": "value2",
+                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
+            }
+        ]
+
+    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
+    def test_idempotency_value_exists_in_batch(self):
+        self.content_store.append_multiple([
+            {"key": "value", "foo": "bar"},
+            {"key": "value"},
+            {"key": "value2"}
+        ], "key")
+        assert self.actual_documents_without_id() == [
+            {
+                "key": "value",
+                "foo": "bar",
+                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
+            },
+            {
+                "key": "value2",
+                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
+            }
+        ]
+
+    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
+    def test_succeed(self):
+        self.content_store.append({"key": "value"}, "key")
+        self.content_store.append_multiple([
+            {"key": "value2"},
+            {"key": "value3"}
+        ], "key")
+        assert self.actual_documents_without_id() == [
+            {
+                "key": "value",
+                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
+            },
+            {
+                "key": "value2",
+                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
+            },
+            {
+                "key": "value3",
+                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
+            },
         ]
 
 

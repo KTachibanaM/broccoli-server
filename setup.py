@@ -15,7 +15,7 @@ install_requires = [
     'dnspython==1.16.0',
     'jsonschema==3.0.1',
     'apscheduler==3.6.0',
-    'broccoli-interface==0.1'
+    'broccoli-interface==0.2'
 ]
 
 tests_require = [
@@ -59,7 +59,7 @@ class SdistCommand(sdist):
 
 setup(
     name='broccoli_server',
-    version='0.1.11',
+    version='0.2',
     description='The server component of a web content crawling and sorting framework',
     url='http://github.com/KTachibanaM/broccoli-platform',
     author='KTachibanaM',

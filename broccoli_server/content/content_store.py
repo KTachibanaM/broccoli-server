@@ -43,7 +43,39 @@ class ContentStore(object):
 
         # todo: insert fails?
         doc["created_at"] = datetime.datetime.utcnow()
-        self.collection.insert(doc)
+        self.collection.insert_one(doc)
+
+    def append_multiple(self, docs: List[Dict], idempotency_key: str):
+        keyed_docs = []
+        for doc in docs:
+            if idempotency_key not in doc:
+                logger.error(f"Idempotency key {idempotency_key} is not found in one of the payloads, {doc}")
+            else:
+                keyed_docs.append(doc)
+
+        idempotent_docs = []
+        for doc in keyed_docs:
+            idempotency_value = doc[idempotency_key]
+            existing_doc_count = self.collection.count_documents({idempotency_key: idempotency_value})
+            if existing_doc_count != 0:
+                logger.info(f"Document with {idempotency_key}={idempotency_value} is already present in persistence")
+                continue
+            doc_exists_in_batch = False
+            for d in idempotent_docs:
+                if d[idempotency_key] == idempotency_value:
+                    doc_exists_in_batch = True
+                    break
+            if doc_exists_in_batch:
+                logger.info(f"Document with {idempotency_key}={idempotency_value} is already present in current batch")
+                continue
+            idempotent_docs.append(doc)
+
+        now = datetime.datetime.utcnow()
+        for doc in idempotent_docs:
+            doc["created_at"] = now
+
+        # todo: insert fails?
+        self.collection.insert_many(idempotent_docs)
 
     def query(self, q: Dict, limit: Optional[int] = None, projection: Optional[List[str]] = None,
               sort: Optional[Dict[str, int]] = None, datetime_q: Optional[List[Dict]] = None) -> List[Dict]:
