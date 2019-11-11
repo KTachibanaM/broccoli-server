@@ -83,6 +83,19 @@ class TestContentStoreAppendMultiple(TestContentStore):
         ]
 
     @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
+    def test_idempotency_value_exists_in_persistence_and_nothing_to_append(self):
+        self.content_store.append({"key": "value"}, "key")
+        self.content_store.append_multiple([
+            {"key": "value"},
+        ], "key")
+        assert self.actual_documents_without_id() == [
+            {
+                "key": "value",
+                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
+            }
+        ]
+
+    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
     def test_idempotency_value_exists_in_batch(self):
         self.content_store.append_multiple([
             {"key": "value", "foo": "bar"},

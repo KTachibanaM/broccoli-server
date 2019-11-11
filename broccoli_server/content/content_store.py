@@ -70,6 +70,10 @@ class ContentStore(object):
                 continue
             idempotent_docs.append(doc)
 
+        if not idempotent_docs:
+            logger.info("There is nothing to be appended")
+            return
+
         now = datetime.datetime.utcnow()
         for doc in idempotent_docs:
             doc["created_at"] = now
