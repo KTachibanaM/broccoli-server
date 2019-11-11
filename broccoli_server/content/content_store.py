@@ -125,6 +125,15 @@ class ContentStore(object):
         # todo: update_one fails
         self.collection.update_one(filter_q, update_doc, upsert=False)
 
+    def update_many(self, filter_q: Dict, update_doc: Dict):
+        existing_doc_count = self.collection.count_documents(filter_q)
+        if existing_doc_count == 0:
+            logger.info(f"Document with query {filter_q} does not exist")
+            return
+
+        # todo: update_many fails
+        self.collection.update_many(filter_q, update_doc, upsert=False)
+
     def update_one_binary_string(self, filter_q: Dict, key: str, binary_string: str):
         if not ContentStore._check_if_string_is_binary(binary_string):
             logger.info(f"from_binary_string {binary_string} is not a 01 string")

@@ -14,6 +14,9 @@ class InProcessRpcClient(RpcClient):
     def blocking_update_one(self, filter_q: Dict, update_doc: Dict):
         self.content_store.update_one(filter_q, update_doc)
 
+    def blocking_update_many(self, filter_q: Dict, update_doc: Dict):
+        self.content_store.update_many(filter_q, update_doc)
+
     def blocking_update_one_binary_string(self, filter_q: Dict, key: str, binary_string: List[bool]):
         bs = ''.join(list(map(lambda b: '1' if b else '0', binary_string)))
         self.content_store.update_one_binary_string(filter_q, key, bs)
