@@ -8,19 +8,13 @@ class GlobalMetadataStore(object):
         self.db = self.client[db]
         self.workers_collection = self.db["workers"]
 
-    def get_all(self, worker_id: str) -> List[Dict]:
+    def get_all(self, worker_id: str) -> Dict:
         worker = self.workers_collection.find_one({"worker_id": worker_id})
         if "state" not in worker:
-            return []
-        result = []
-        for key, value in worker["state"].items():
-            result.append({
-                "key": key,
-                "value": value
-            })
-        return result
+            return {}
+        return worker['state']
 
-    def set_all(self, worker_id: str, metadata: List[Dict]):
+    def set_all(self, worker_id: str, metadata: Dict):
         self.workers_collection.update_one(
             {"worker_id": worker_id},
             {"$set": {"state": metadata}},
