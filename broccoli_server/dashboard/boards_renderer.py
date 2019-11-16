@@ -1,15 +1,15 @@
 import json
 from typing import Optional, Dict, List, Tuple, Callable
 from broccoli_interface.rpc import RpcClient
-from broccoli_interface.board import BoardColumn
-from broccoli_interface.board import Render
+from broccoli_ui_interface.mod_view import ModViewColumn
+from broccoli_ui_interface.mod_view import ModViewColumnRender
 from .objects.board_query import BoardQuery, BoardProjection
 
 
 class BoardsRenderer(object):
     def __init__(self, rpc_client: RpcClient):
         self.rpc_client = rpc_client
-        self.callbacks = {}  # type: Dict[str, BoardColumn]
+        self.callbacks = {}  # type: Dict[str, ModViewColumn]
         self._columns = {}  # type: Dict[Tuple[str, str], Callable]
 
     def add_column(self, module: str, class_name: str, constructor: Callable):
@@ -54,17 +54,17 @@ class BoardsRenderer(object):
             self.callbacks[callback_id].callback(document, self.rpc_client)
         # TODO: error here
 
-    def _load_board_column(self, projection: BoardProjection) -> Optional[BoardColumn]:
+    def _load_board_column(self, projection: BoardProjection) -> Optional[ModViewColumn]:
         if (projection.module, projection.class_name) not in self._columns:
             return None
         clazz = self._columns[(projection.module, projection.class_name)]
         try:
-            return clazz(**projection.args)  # type: BoardColumn
+            return clazz(**projection.args)  # type: ModViewColumn
         except Exception as e:
             return None
 
     @staticmethod
-    def _render_to_dict(render: Render) -> Dict:
+    def _render_to_dict(render: ModViewColumnRender) -> Dict:
         return {
             "type": render.render_type(),
             "data": render.render_data()
