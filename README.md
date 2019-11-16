@@ -35,11 +35,11 @@ This is a Python library that generalizes the crawling, processing, sorting and 
 * An API handler is an object that handles public query traffic to the repository of Internet content in HTTP.
 * API handler classes ("class" as in OOP) are registered to the server application at runtime and thus pluggable.
 * API handler objects are registered within the server application at runtime according to static configuration.
-* A board is an user interface that allows end users to view and manipulate the repository of Internet content.
-* A board shows rows, each row corresponds to an entry in the repository of Internet content.
-* What rows to show, how many rows to show, in what order the rows are shown, are controlled by the metadata of each board.
-* A row have columns. What to show for each column is controlled by pluggable BoardColumn classes ("class as in OOP") which are registered to the server application at runtime.
-* BoardColumn objects are instantiated when a request to render a board comes in, and the objects all render to standardized JSON representing frontend components, like a text and a button, that the frontend should implement actually rendering.
+* A mod view is an user interface that allows end users to view and manipulate the repository of Internet content.
+* A mod view shows rows, each row corresponds to an entry in the repository of Internet content.
+* What rows to show, how many rows to show, in what order the rows are shown, are controlled by the metadata of each mod view.
+* A row have columns. What to show for each column is controlled by pluggable ModViewColumn classes ("class as in OOP") which are registered to the server application at runtime.
+* ModViewColumn objects are instantiated when a request to render a mod view comes in, and the objects all render to standardized JSON representing frontend components, like a text and a button, that the frontend should implement actually rendering.
 
 ## Usage
 ```bash

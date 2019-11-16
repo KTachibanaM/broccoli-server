@@ -13,9 +13,9 @@ from broccoli_server.content import InProcessRpcClient
 from broccoli_server.scheduler import WorkerConfigStore
 from broccoli_server.scheduler import GlobalMetadataStore
 from broccoli_server.scheduler import Reconciler
-from broccoli_server.dashboard import BoardsStore
-from broccoli_server.dashboard import BoardsRenderer
-from broccoli_server.dashboard.objects import BoardQuery
+from broccoli_server.mod_view import ModViewStore
+from broccoli_server.mod_view import ModViewRenderer
+from broccoli_server.mod_view.objects import ModViewQuery
 from broccoli_server.scheduler import WorkerCache
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
@@ -51,11 +51,11 @@ class Application(object):
             rpc_client=self.in_process_rpc_client,
             worker_cache=self.worker_cache
         )
-        self.boards_store = BoardsStore(
+        self.boards_store = ModViewStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
-        self.boards_renderer = BoardsRenderer(self.in_process_rpc_client)
+        self.boards_renderer = ModViewRenderer(self.in_process_rpc_client)
         self.default_api_handler = None
 
         # Figure out static web artifact
@@ -293,7 +293,7 @@ class Application(object):
     def _upsert_board(self, board_id: str):
         parsed_body = request.json
         parsed_body["q"] = json.dumps(parsed_body["q"])
-        self.boards_store.upsert(board_id, BoardQuery(parsed_body))
+        self.boards_store.upsert(board_id, ModViewQuery(parsed_body))
         return jsonify({
             "status": "ok"
         }), 200

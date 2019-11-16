@@ -1,7 +1,7 @@
 from typing import Dict
 
 
-class BoardProjection(object):
+class ModViewColumnConstruct(object):
     def __init__(self, d: Dict):
         self.name = d["name"]
         self.module = d.get("module", "")
@@ -18,7 +18,7 @@ class BoardProjection(object):
         return d
 
 
-class BoardQuery(object):
+class ModViewQuery(object):
     def __init__(self, d: Dict):
         self.q = d["q"]
         if "limit" in d:
@@ -29,12 +29,12 @@ class BoardQuery(object):
             self.sort = d["sort"]
         else:
             self.sort = None
-        self.projections = list(map(lambda pd: BoardProjection(pd), d["projections"]))
+        self.column_constructs = list(map(lambda pd: ModViewColumnConstruct(pd), d["projections"]))
 
     def to_dict(self):
         d = {
             "q": self.q,
-            "projections": list(map(lambda p: p.to_dict(), self.projections))
+            "projections": list(map(lambda p: p.to_dict(), self.column_constructs))
         }
         if self.limit:
             d["limit"] = self.limit
