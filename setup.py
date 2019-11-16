@@ -15,7 +15,7 @@ install_requires = [
     'dnspython==1.16.0',
     'jsonschema==3.0.1',
     'apscheduler==3.6.0',
-    'broccoli-interface==1.0'
+    'broccoli-interface==1.0',
     'broccoli-ui-interface==1.0'
 ]
 
