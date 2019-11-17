@@ -18,6 +18,7 @@ install_requires = [
     'broccoli-interface==1.0',
     'broccoli-ui-interface==1.0'
 ]
+WEB_VERSION = "0.2"
 
 tests_require = [
     'mongomock==3.17.0',
@@ -31,19 +32,13 @@ WEB_ARTIFACT_PATH = os.path.join("broccoli_server", "web")
 
 class SdistCommand(sdist):
     def run(self):
-        print("reading web version")
-        with open("WEB_VERSION.txt") as f:
-            web_version = f.readline()
-        if not web_version:
-            raise RuntimeError("web versions is absent")
-
         if os.path.exists(WEB_ARCHIVE_PATH):
             print("removing old web archive")
             os.remove(WEB_ARCHIVE_PATH)
 
-        print(f"downloading web archive version {web_version}")
+        print(f"downloading web archive version {WEB_VERSION}")
         urllib.request.urlretrieve(
-            f"https://github.com/broccoli-platform/broccoli-web/releases/download/{web_version}/web.tar.gz",
+            f"https://github.com/broccoli-platform/broccoli-web/releases/download/{WEB_VERSION}/web.tar.gz",
             filename=WEB_ARCHIVE_PATH
         )
 
@@ -51,7 +46,7 @@ class SdistCommand(sdist):
             print("removing old web artifact")
             shutil.rmtree(WEB_ARTIFACT_PATH)
 
-        print(f"populating web artifact version {web_version}")
+        print(f"populating web artifact version {WEB_VERSION}")
         f = tarfile.open(WEB_ARCHIVE_PATH, 'r')
         f.extractall(path=WEB_ARTIFACT_PATH)
 
