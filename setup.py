@@ -18,7 +18,7 @@ install_requires = [
     'broccoli-interface==1.0',
     'broccoli-ui-interface==1.0'
 ]
-WEB_VERSION = "0.2.1"
+WEB_VERSION = "0.2.3"
 
 tests_require = [
     'mongomock==3.17.0',
@@ -55,7 +55,7 @@ class SdistCommand(sdist):
 
 setup(
     name='broccoli_server',
-    version='1.0.1',
+    version='1.0.2',
     description='The server component of a web content crawling and sorting framework',
     url='http://github.com/KTachibanaM/broccoli-platform',
     author='KTachibanaM',
