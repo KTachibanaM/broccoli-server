@@ -1,7 +1,6 @@
-import urllib.request
 import os
 import shutil
-import tarfile
+import subprocess
 from setuptools.command.sdist import sdist
 from setuptools import setup, find_packages
 
@@ -20,7 +19,6 @@ install_requires = [
 ]
 
 VERSION = "1.0.5"
-WEB_VERSION = "0.2.6"
 
 tests_require = [
     'mongomock==3.17.0',
@@ -28,29 +26,26 @@ tests_require = [
 ]
 
 
-WEB_ARCHIVE_PATH = "web.tar.gz"
 WEB_ARTIFACT_PATH = os.path.join("broccoli_server", "web")
 
 
 class SdistCommand(sdist):
     def run(self):
-        if os.path.exists(WEB_ARCHIVE_PATH):
-            print("removing old web archive")
-            os.remove(WEB_ARCHIVE_PATH)
+        # check executables which are required to build web
+        if not shutil.which("node"):
+            raise RuntimeError("node is not found on PATH")
+        if not shutil.which("yarn"):
+            raise RuntimeError("yarn is not found on PATH")
 
-        print(f"downloading web archive version {WEB_VERSION}")
-        urllib.request.urlretrieve(
-            f"https://github.com/broccoli-platform/broccoli-web/releases/download/{WEB_VERSION}/web.tar.gz",
-            filename=WEB_ARCHIVE_PATH
-        )
+        # build web
+        subprocess.check_call(["yarn", "install"], cwd="web")
+        subprocess.check_call(["yarn", "build"], cwd="web")
 
+        # move built artifact
         if os.path.exists(WEB_ARTIFACT_PATH):
             print("removing old web artifact")
             shutil.rmtree(WEB_ARTIFACT_PATH)
-
-        print(f"populating web artifact version {WEB_VERSION}")
-        f = tarfile.open(WEB_ARCHIVE_PATH, 'r')
-        f.extractall(path=WEB_ARTIFACT_PATH)
+        shutil.move(os.path.join("web", "build"), WEB_ARTIFACT_PATH)
 
         sdist.run(self)
 
