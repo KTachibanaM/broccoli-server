@@ -33,10 +33,12 @@ class RemoteSync(object):
     def run(self):
         # content store
         self.local_content_store.delete_all(actual_run=self.actual_run)
-        for content in self.remote_content_store.query({}):
-            self.local_content_store.append(content, idempotency_key=self.content_idempotency_key)
+        if self.actual_run:
+            for content in self.remote_content_store.query({}):
+                self.local_content_store.append(content, idempotency_key=self.content_idempotency_key)
 
         # mod view
         self.local_mod_view_store.remove_all(actual_run=self.actual_run)
-        for _id, mod_view in self.remote_mod_view_store.get_all():
-            self.local_mod_view_store.upsert(_id, mod_view)
+        if self.actual_run:
+            for _id, mod_view in self.remote_mod_view_store.get_all():
+                self.local_mod_view_store.upsert(_id, mod_view)
