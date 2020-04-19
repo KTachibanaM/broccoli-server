@@ -217,3 +217,9 @@ class ContentStore(object):
 
     def count(self, q: Dict) -> int:
         return self.collection.count_documents(q)
+
+    def delete_all(self, actual_run: bool = False):
+        if not actual_run:
+            logger.info(f"Going to remove {self.collection.count_documents({})} documents")
+        else:
+            self.collection.delete_many({})

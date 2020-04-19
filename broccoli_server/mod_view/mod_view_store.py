@@ -65,3 +65,9 @@ class ModViewStore(object):
     def remove(self, mod_view_id: str):
         # todo: shred positions afterwards
         self.collection.delete_one({"board_id": mod_view_id})
+
+    def remove_all(self, actual_run: bool = False):
+        if not actual_run:
+            print(f"Going to remove {self.collection.count_documents({})} documents")
+        else:
+            self.collection.delete_many({})
