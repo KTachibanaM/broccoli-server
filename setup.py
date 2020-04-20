@@ -80,6 +80,7 @@ setup(
     tests_require=tests_require,
     test_suite="broccoli_server.tests",
     cmdclass={
-        'sdist': SdistCommand
+        'sdist': SdistCommand,
+        'build_py': BuildPyCommand
     }
 )
