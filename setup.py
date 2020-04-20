@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 from setuptools.command.sdist import sdist
+from setuptools.command.bdist_egg import bdist_egg
 from setuptools import setup, find_packages
 
 install_requires = [
@@ -29,25 +30,34 @@ tests_require = [
 WEB_ARTIFACT_PATH = os.path.join("broccoli_server", "web")
 
 
+def build_web():
+    # check executables which are required to build web
+    if not shutil.which("node"):
+        raise RuntimeError("node is not found on PATH")
+    if not shutil.which("yarn"):
+        raise RuntimeError("yarn is not found on PATH")
+
+    # build web
+    subprocess.check_call(["yarn", "install"], cwd="web")
+    subprocess.check_call(["yarn", "build"], cwd="web")
+
+    # move built artifact
+    if os.path.exists(WEB_ARTIFACT_PATH):
+        print("removing old web artifact")
+        shutil.rmtree(WEB_ARTIFACT_PATH)
+    shutil.move(os.path.join("web", "build"), WEB_ARTIFACT_PATH)
+
+
 class SdistCommand(sdist):
     def run(self):
-        # check executables which are required to build web
-        if not shutil.which("node"):
-            raise RuntimeError("node is not found on PATH")
-        if not shutil.which("yarn"):
-            raise RuntimeError("yarn is not found on PATH")
-
-        # build web
-        subprocess.check_call(["yarn", "install"], cwd="web")
-        subprocess.check_call(["yarn", "build"], cwd="web")
-
-        # move built artifact
-        if os.path.exists(WEB_ARTIFACT_PATH):
-            print("removing old web artifact")
-            shutil.rmtree(WEB_ARTIFACT_PATH)
-        shutil.move(os.path.join("web", "build"), WEB_ARTIFACT_PATH)
-
+        build_web()
         sdist.run(self)
+
+
+class BdistEggCommand(bdist_egg):
+    def run(self):
+        build_web()
+        bdist_egg.run(self)
 
 
 setup(
