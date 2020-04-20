@@ -106,6 +106,21 @@ class Board extends React.Component<Props, State> {
     />;
   }
 
+  public getColumnWidthPx = (type: RenderTypes) => {
+    if (type === "text") {
+      return 400;
+    } else if (type === "image") {
+      return 400;
+    } else if (type === "image_list") {
+      return 400;
+    } else if (type === "button") {
+      return 100;
+    } else if (type === "video") {
+      return 400;
+    }
+    return 100;
+  }
+
   public onToggleRowMultiAction = (index: number) => {
     const newSelectedIndexes = new Set<number>(this.state.multiActionSelectedIndexes.values());
     if (newSelectedIndexes.has(index)) {
@@ -134,7 +149,11 @@ class Board extends React.Component<Props, State> {
     const rowRenders = row.renders;
     return (
       <DivTableRow key={rowIndex}>
-        <DivTableCell hidden={!this.state.multiActionOn} key="multi-action-selected">
+        <DivTableCell
+          hidden={!this.state.multiActionOn}
+          key="multi-action-selected"
+          widthPx={50}
+        >
           <input
             type="checkbox"
             checked={this.state.multiActionSelectedIndexes.has(rowIndex)}
@@ -157,7 +176,10 @@ class Board extends React.Component<Props, State> {
             );
           }
           return (
-            <DivTableCell key={name}>{cell}</DivTableCell>
+            <DivTableCell
+              key={name}
+              widthPx={this.getColumnWidthPx(rowRender.type)}
+            >{cell}</DivTableCell>
           );
         })}
       </DivTableRow>
@@ -191,11 +213,13 @@ class Board extends React.Component<Props, State> {
               key="multi-action-selected"
               text="Multi-action selected"
               hidden={!this.state.multiActionOn}
+              widthPx={50}
             />
             {projectionNames.map((name) =>
               <DivTableHeaderCell
                 key={name}
                 text={name}
+                widthPx={this.getColumnWidthPx(payload[0].renders[name].type)}
               />,
             )}
           </DivTableRow>

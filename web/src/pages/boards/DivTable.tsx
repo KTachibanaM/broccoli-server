@@ -25,6 +25,7 @@ const DivTableRow = (props) => {
 interface DivTableHeaderCellProps {
   hidden?: boolean;
   text: string;
+  widthPx: number;
 }
 
 const DivTableHeaderCell = (props: DivTableHeaderCellProps) => {
@@ -33,7 +34,7 @@ const DivTableHeaderCell = (props: DivTableHeaderCellProps) => {
   return (
     <div style={{
       display,
-      width: "200px",
+      width: `${props.widthPx}px`,
       justifyContent: "center",
     }}>
       {props.text}
@@ -44,6 +45,7 @@ const DivTableHeaderCell = (props: DivTableHeaderCellProps) => {
 interface DivTableCellProps {
   hidden?: boolean;
   children: any;
+  widthPx: number;
 }
 
 const DivTableCell = (props: DivTableCellProps) => {
@@ -52,8 +54,8 @@ const DivTableCell = (props: DivTableCellProps) => {
   return (
     <div style={{
       display,
-      width: "200px",
-      height: "150px",
+      width: `${props.widthPx}px`,
+      height: "400px",
       justifyContent: "center",
       alignItems: "center",
     }}>
