@@ -18,7 +18,7 @@ install_requires = [
     'broccoli-ui-interface==1.0'
 ]
 
-VERSION = "1.2.2"
+VERSION = "1.2.3"
 
 tests_require = [
     'mongomock==3.17.0',
