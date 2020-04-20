@@ -2,7 +2,6 @@ import os
 import shutil
 import subprocess
 from setuptools.command.sdist import sdist
-from setuptools.command.build_py import build_py
 from setuptools import setup, find_packages
 
 install_requires = [
@@ -19,7 +18,7 @@ install_requires = [
     'broccoli-ui-interface==1.0'
 ]
 
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 
 tests_require = [
     'mongomock==3.17.0',
@@ -54,12 +53,6 @@ class SdistCommand(sdist):
         sdist.run(self)
 
 
-class BuildPyCommand(build_py):
-    def run(self):
-        build_web()
-        build_py.run(self)
-
-
 setup(
     name='broccoli_server',
     version=VERSION,
@@ -80,7 +73,6 @@ setup(
     tests_require=tests_require,
     test_suite="broccoli_server.tests",
     cmdclass={
-        'sdist': SdistCommand,
-        'build_py': BuildPyCommand
+        'sdist': SdistCommand
     }
 )
