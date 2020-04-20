@@ -13,14 +13,11 @@ const Image: React.FunctionComponent<Props> = (props: Props) => {
   const { url } = data;
 
   return (
-    <div style={{
-      display: "flex",
-      flexDirection: "column",
-      height: "300px",
-      width: "300px",
-    }}>
-      <img src={url} alt={url} style={{objectFit: "contain"}}/>
-    </div>
+    <img src={url} alt={url} style={{
+      objectFit: "scale-down",
+      width: "100%",
+      height: "100%",
+    }}/>
   );
 };
 
