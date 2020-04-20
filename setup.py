@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 from setuptools.command.sdist import sdist
+from setuptools.command.build_py import build_py
 from setuptools import setup, find_packages
 
 install_requires = [
@@ -18,7 +19,7 @@ install_requires = [
     'broccoli-ui-interface==1.0'
 ]
 
-VERSION = "1.2"
+VERSION = "1.2.1"
 
 tests_require = [
     'mongomock==3.17.0',
@@ -29,25 +30,34 @@ tests_require = [
 WEB_ARTIFACT_PATH = os.path.join("broccoli_server", "web")
 
 
+def build_web():
+    # check executables which are required to build web
+    if not shutil.which("node"):
+        raise RuntimeError("node is not found on PATH")
+    if not shutil.which("yarn"):
+        raise RuntimeError("yarn is not found on PATH")
+
+    # build web
+    subprocess.check_call(["yarn", "install"], cwd="web")
+    subprocess.check_call(["yarn", "build"], cwd="web")
+
+    # move built artifact
+    if os.path.exists(WEB_ARTIFACT_PATH):
+        print("removing old web artifact")
+        shutil.rmtree(WEB_ARTIFACT_PATH)
+    shutil.move(os.path.join("web", "build"), WEB_ARTIFACT_PATH)
+
+
 class SdistCommand(sdist):
     def run(self):
-        # check executables which are required to build web
-        if not shutil.which("node"):
-            raise RuntimeError("node is not found on PATH")
-        if not shutil.which("yarn"):
-            raise RuntimeError("yarn is not found on PATH")
-
-        # build web
-        subprocess.check_call(["yarn", "install"], cwd="web")
-        subprocess.check_call(["yarn", "build"], cwd="web")
-
-        # move built artifact
-        if os.path.exists(WEB_ARTIFACT_PATH):
-            print("removing old web artifact")
-            shutil.rmtree(WEB_ARTIFACT_PATH)
-        shutil.move(os.path.join("web", "build"), WEB_ARTIFACT_PATH)
-
+        build_web()
         sdist.run(self)
+
+
+class BuildPyCommand(build_py):
+    def run(self):
+        build_web()
+        build_py.run(self)
 
 
 setup(
@@ -70,6 +80,7 @@ setup(
     tests_require=tests_require,
     test_suite="broccoli_server.tests",
     cmdclass={
-        'sdist': SdistCommand
+        'sdist': SdistCommand,
+        'build_py': BuildPyCommand
     }
 )

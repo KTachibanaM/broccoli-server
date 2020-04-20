@@ -13,7 +13,11 @@ const Video: React.FunctionComponent<Props> = (props: Props) => {
   const { url } = data;
 
   return (
-    <video controls height={250}>
+    <video controls style={{
+      objectFit: "scale-down",
+      width: "100%",
+      height: "100%",
+    }}>
       <source src={url} type="video/mp4"/>
     </video>
   );
