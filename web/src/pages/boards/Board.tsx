@@ -157,7 +157,13 @@ class Board extends React.Component<Props, State> {
     const rowRenders = row.renders;
     return (
       <div style={rowStyle} key={rowIndex}>
-        <div style={cellStyle} key="multi-action-selected" hidden={!this.state.multiActionOn}>
+        <div style={
+          Object.assign(
+            {},
+            cellStyle,
+            { display: this.state.multiActionOn ? "flex" : "none" },
+          )
+        } key="multi-action-selected">
           <input
             type="checkbox"
             checked={this.state.multiActionSelectedIndexes.has(rowIndex)}
@@ -210,7 +216,13 @@ class Board extends React.Component<Props, State> {
         </div>
         <div style={tableStyle}>
           <div style={rowStyle}>
-            <div style={headerCellStyle} key="multi-action-selected" hidden={!this.state.multiActionOn}>
+            <div style={
+              Object.assign(
+                {},
+                headerCellStyle,
+                { display: this.state.multiActionOn ? "flex" : "none" },
+              )
+            } key="multi-action-selected">
               Multi-action selected
             </div>
             {projectionNames.map((name) =>
