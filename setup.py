@@ -54,7 +54,7 @@ class SdistCommand(sdist):
         sdist.run(self)
 
 
-class BuildByCommand(build_py):
+class BuildPyCommand(build_py):
     def run(self):
         build_web()
         build_py.run(self)
