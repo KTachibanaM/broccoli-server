@@ -1,4 +1,4 @@
-import React, {CSSProperties} from "react";
+import React from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import BoardRender, {ActionableRenderTypes, RenderDataTypes, RenderTypes, Row} from "../../api/BoardRender";
 import { InjectedAuthProps } from "../../hoc/withAuth";
@@ -9,6 +9,7 @@ import Image from "../modView/columnRenders/Image";
 import ImageList from "../modView/columnRenders/ImageList";
 import Text from "../modView/columnRenders/Text";
 import Video from "../modView/columnRenders/Video";
+import {DivTable, DivTableCell, DivTableHeaderCell, DivTableRow} from "./DivTable";
 
 interface Params {
   name: string;
@@ -24,30 +25,6 @@ interface State {
   multiActionLastSelectedIndex: number;
   holdingShift: boolean;
 }
-
-const tableStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-};
-
-const rowStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "row",
-};
-
-const headerCellStyle: CSSProperties = {
-  display: "flex",
-  width: "200px",
-  justifyContent: "center",
-};
-
-const cellStyle: CSSProperties = {
-  display: "flex",
-  width: "200px",
-  height: "150px",
-  justifyContent: "center",
-  alignItems: "center",
-};
 
 class Board extends React.Component<Props, State> {
   private static InitialState = {
@@ -129,6 +106,21 @@ class Board extends React.Component<Props, State> {
     />;
   }
 
+  public getColumnWidthPx = (type: RenderTypes) => {
+    if (type === "text") {
+      return 400;
+    } else if (type === "image") {
+      return 400;
+    } else if (type === "image_list") {
+      return 400;
+    } else if (type === "button") {
+      return 100;
+    } else if (type === "video") {
+      return 400;
+    }
+    return 100;
+  }
+
   public onToggleRowMultiAction = (index: number) => {
     const newSelectedIndexes = new Set<number>(this.state.multiActionSelectedIndexes.values());
     if (newSelectedIndexes.has(index)) {
@@ -156,14 +148,12 @@ class Board extends React.Component<Props, State> {
   public renderRow = (projectionNames: string[], row: Row, rowIndex: number) => {
     const rowRenders = row.renders;
     return (
-      <div style={rowStyle} key={rowIndex}>
-        <div style={
-          Object.assign(
-            {},
-            cellStyle,
-            { display: this.state.multiActionOn ? "flex" : "none" },
-          )
-        } key="multi-action-selected">
+      <DivTableRow key={rowIndex}>
+        <DivTableCell
+          hidden={!this.state.multiActionOn}
+          key="multi-action-selected"
+          widthPx={50}
+        >
           <input
             type="checkbox"
             checked={this.state.multiActionSelectedIndexes.has(rowIndex)}
@@ -171,7 +161,7 @@ class Board extends React.Component<Props, State> {
               this.onToggleRowMultiAction(rowIndex);
             }}
           />
-        </div>
+        </DivTableCell>
         {projectionNames.map((name) => {
           const rowRender = rowRenders[name];
           let cell;
@@ -186,10 +176,13 @@ class Board extends React.Component<Props, State> {
             );
           }
           return (
-            <div style={cellStyle} key={name}>{cell}</div>
+            <DivTableCell
+              key={name}
+              widthPx={this.getColumnWidthPx(rowRender.type)}
+            >{cell}</DivTableCell>
           );
         })}
-      </div>
+      </DivTableRow>
     );
   }
 
@@ -214,25 +207,26 @@ class Board extends React.Component<Props, State> {
           {this.renderRangeSelectPrompt()}
           {this.renderMultiActions()}
         </div>
-        <div style={tableStyle}>
-          <div style={rowStyle}>
-            <div style={
-              Object.assign(
-                {},
-                headerCellStyle,
-                { display: this.state.multiActionOn ? "flex" : "none" },
-              )
-            } key="multi-action-selected">
-              Multi-action selected
-            </div>
+        <DivTable>
+          <DivTableRow>
+            <DivTableHeaderCell
+              key="multi-action-selected"
+              text="Multi-action selected"
+              hidden={!this.state.multiActionOn}
+              widthPx={50}
+            />
             {projectionNames.map((name) =>
-              <div style={headerCellStyle} key={name}>{name}</div>,
+              <DivTableHeaderCell
+                key={name}
+                text={name}
+                widthPx={this.getColumnWidthPx(payload[0].renders[name].type)}
+              />,
             )}
-          </div>
+          </DivTableRow>
           {payload.map((row, index) => {
             return this.renderRow(projectionNames, row, index);
           })}
-        </div>
+        </DivTable>
       </div>
     );
   }
