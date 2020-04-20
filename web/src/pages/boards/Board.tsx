@@ -1,4 +1,4 @@
-import React from "react";
+import React, {CSSProperties} from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import BoardRender, {ActionableRenderTypes, RenderDataTypes, RenderTypes, Row} from "../../api/BoardRender";
 import { InjectedAuthProps } from "../../hoc/withAuth";
@@ -25,8 +25,32 @@ interface State {
   holdingShift: boolean;
 }
 
+const tableStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+};
+
+const rowStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "row",
+};
+
+const headerCellStyle: CSSProperties = {
+  display: "flex",
+  width: "200px",
+  justifyContent: "center",
+};
+
+const cellStyle: CSSProperties = {
+  display: "flex",
+  width: "200px",
+  height: "150px",
+  justifyContent: "center",
+  alignItems: "center",
+};
+
 class Board extends React.Component<Props, State> {
-  private InitialState = {
+  private static InitialState = {
     loading: true,
     boardRender: {},
     multiActionOn: false,
@@ -34,16 +58,16 @@ class Board extends React.Component<Props, State> {
     multiActionLastSelectedIndex: -1,
     holdingShift: false,
   };
-  private boardId: string;
+  private readonly boardId: string;
 
   constructor(props: Props) {
     super(props);
     this.boardId = decodeURIComponent(this.props.match.params.name);
-    this.state = this.InitialState;
+    this.state = Board.InitialState;
   }
 
   public loadQuery = () => {
-    this.setState(this.InitialState);
+    this.setState(Board.InitialState);
     this.props.apiClient.renderBoard(this.boardId)
       .then((data) => {
         this.setState({
@@ -132,8 +156,8 @@ class Board extends React.Component<Props, State> {
   public renderRow = (projectionNames: string[], row: Row, rowIndex: number) => {
     const rowRenders = row.renders;
     return (
-      <tr key={rowIndex}>
-        <td key="multi-action-selected" hidden={!this.state.multiActionOn}>
+      <div style={rowStyle} key={rowIndex}>
+        <div style={cellStyle} key="multi-action-selected" hidden={!this.state.multiActionOn}>
           <input
             type="checkbox"
             checked={this.state.multiActionSelectedIndexes.has(rowIndex)}
@@ -141,7 +165,7 @@ class Board extends React.Component<Props, State> {
               this.onToggleRowMultiAction(rowIndex);
             }}
           />
-        </td>
+        </div>
         {projectionNames.map((name) => {
           const rowRender = rowRenders[name];
           let cell;
@@ -156,10 +180,10 @@ class Board extends React.Component<Props, State> {
             );
           }
           return (
-            <td key={name}>{cell}</td>
+            <div style={cellStyle} key={name}>{cell}</div>
           );
         })}
-      </tr>
+      </div>
     );
   }
 
@@ -184,23 +208,19 @@ class Board extends React.Component<Props, State> {
           {this.renderRangeSelectPrompt()}
           {this.renderMultiActions()}
         </div>
-        <table>
-          <thead>
-          <tr>
-            <th key="multi-action-selected" hidden={!this.state.multiActionOn}>
+        <div style={tableStyle}>
+          <div style={rowStyle}>
+            <div style={headerCellStyle} key="multi-action-selected" hidden={!this.state.multiActionOn}>
               Multi-action selected
-            </th>
+            </div>
             {projectionNames.map((name) =>
-              <th key={name}>{name}</th>,
+              <div style={headerCellStyle} key={name}>{name}</div>,
             )}
-          </tr>
-          </thead>
-          <tbody>
+          </div>
           {payload.map((row, index) => {
             return this.renderRow(projectionNames, row, index);
           })}
-          </tbody>
-        </table>
+        </div>
       </div>
     );
   }
