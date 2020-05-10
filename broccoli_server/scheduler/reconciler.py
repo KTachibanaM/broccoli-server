@@ -1,6 +1,7 @@
 import traceback
 from typing import Set
 from apscheduler.schedulers.base import BaseScheduler
+from sentry_sdk import capture_exception
 from .worker_config_store import WorkerConfigStore
 from .logging import logger
 from .worker_context.work_context_impl import WorkContextImpl
@@ -14,11 +15,14 @@ class Reconciler(object):
     def __init__(self,
                  worker_config_store: WorkerConfigStore,
                  rpc_client: RpcClient,
-                 worker_cache: WorkerCache):
+                 worker_cache: WorkerCache,
+                 sentry_enabled: bool
+                 ):
         self.worker_config_store = worker_config_store
         self.scheduler = None
         self.rpc_client = rpc_client
         self.worker_cache = worker_cache
+        self.sentry_enabled = sentry_enabled
 
     def set_scheduler(self, scheduler: BaseScheduler):
         self.scheduler = scheduler
@@ -29,7 +33,7 @@ class Reconciler(object):
             return
         actual_job_ids = set(map(lambda j: j.id, self.scheduler.get_jobs())) - {self.RECONCILE_JOB_ID}  # type: Set[str]
         desired_jobs = self.worker_config_store.get_all()
-        desired_job_ids = desired_jobs.keys()  # type: Set[str]
+        desired_job_ids = set(desired_jobs.keys())  # type: Set[str]
 
         self.remove_jobs(actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids)
         self.add_jobs(actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids, desired_jobs=desired_jobs)
@@ -68,6 +72,8 @@ class Reconciler(object):
                 worker_or_message.work(work_context)
             except Exception as e:
                 traceback.print_exc()
+                if self.sentry_enabled:
+                    capture_exception(e)
                 logger.error(f"Fail to execute work for {added_job_id}, message {e}")
 
         self.scheduler.add_job(
