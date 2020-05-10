@@ -14,7 +14,9 @@ class RpcCore(object):
                 or "verb" not in parsed_body or type(parsed_body["verb"]) != str \
                 or "metadata" not in parsed_body or type(parsed_body["metadata"]) != dict \
                 or "payload" not in parsed_body or type(parsed_body["payload"]) != dict:
-            logger.error(f"Invalid message body {parsed_body}")
+            logger.error(f"Invalid message body", extra={
+                'parsed_body': parsed_body
+            })
             return False, 'Invalid message body'
 
         verb = parsed_body["verb"]  # type: str

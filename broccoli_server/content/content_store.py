@@ -32,7 +32,10 @@ class ContentStore(object):
 
     def append(self, doc: Dict, idempotency_key: str):
         if idempotency_key not in doc:
-            logger.error(f"Idempotency key {idempotency_key} is not found in payload {doc}")
+            logger.error("Idempotency key is not found in payload", extra={
+                'idempotency_key': idempotency_key,
+                'payload': doc
+            })
             return
 
         idempotency_value = doc[idempotency_key]
@@ -49,7 +52,10 @@ class ContentStore(object):
         keyed_docs = []
         for doc in docs:
             if idempotency_key not in doc:
-                logger.error(f"Idempotency key {idempotency_key} is not found in one of the payloads, {doc}")
+                logger.error("Idempotency key is not found in one of the payloads", extra={
+                    'idempotency_key': idempotency_key,
+                    'payload': doc
+                })
             else:
                 keyed_docs.append(doc)
 

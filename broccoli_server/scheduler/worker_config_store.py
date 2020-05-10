@@ -15,8 +15,12 @@ class WorkerConfigStore(object):
         # todo: garbage collect this w?
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
         if not status:
-            logger.error(f"Fails to add worker module={module} class_name={class_name} args={args}, "
-                         f"message {worker_or_message}")
+            logger.error("Fails to add worker", extra={
+                'module': module,
+                'class_name': class_name,
+                'args': args,
+                'message': worker_or_message
+            })
             return False, worker_or_message
         worker_id = f"broccoli.worker.{worker_or_message.get_id()}"
         existing_doc_count = self.collection.count_documents({"worker_id": worker_id})
