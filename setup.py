@@ -15,10 +15,11 @@ install_requires = [
     'jsonschema==3.0.1',
     'apscheduler==3.6.0',
     'broccoli-interface==1.0',
-    'broccoli-ui-interface==1.0'
+    'broccoli-ui-interface==1.0',
+    'sentry-sdk==0.14.3'
 ]
 
-VERSION = "1.2.3"
+VERSION = "1.2.4"
 
 tests_require = [
     'mongomock==3.17.0',

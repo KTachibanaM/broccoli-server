@@ -3,6 +3,7 @@ import os
 import sys
 import datetime
 import json
+import sentry_sdk
 from typing import Callable, Dict
 from broccoli_server.database import Migration
 from broccoli_server.common import validate_schema_or_not, getenv_or_raise
@@ -25,6 +26,14 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 class Application(object):
     def __init__(self):
+        if 'SENTRY_DSN' in os.environ:
+            print("SENTRY_DSN environ found, settings up sentry")
+            sentry_sdk.init(os.environ['SENTRY_DSN'])
+            sentry_enabled = True
+        else:
+            print("Not setting up sentry")
+            sentry_enabled = False
+
         Migration(
             admin_connection_string=getenv_or_raise("MONGODB_ADMIN_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
@@ -49,7 +58,8 @@ class Application(object):
         self.reconciler = Reconciler(
             worker_config_store=self.worker_config_store,
             rpc_client=self.in_process_rpc_client,
-            worker_cache=self.worker_cache
+            worker_cache=self.worker_cache,
+            sentry_enabled=sentry_enabled
         )
         self.boards_store = ModViewStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
