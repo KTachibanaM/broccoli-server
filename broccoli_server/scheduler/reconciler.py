@@ -29,7 +29,7 @@ class Reconciler(object):
 
     def reconcile(self):
         if not self.scheduler:
-            logger.error("scheduler is not configured!")
+            logger.error("Scheduler is not configured!")
             return
         actual_job_ids = set(map(lambda j: j.id, self.scheduler.get_jobs())) - {self.RECONCILE_JOB_ID}  # type: Set[str]
         desired_jobs = self.worker_config_store.get_all()
@@ -61,8 +61,12 @@ class Reconciler(object):
         module, class_name, args, interval_seconds = desired_jobs[added_job_id]
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
         if not status:
-            logger.error(f"Fails to add worker module={module} class_name={class_name} args={args}, "
-                         f"message {worker_or_message}")
+            logger.error("Fails to add worker", extra={
+                'module': module,
+                'class_name': class_name,
+                'args': args,
+                'message': worker_or_message
+            })
             return
         work_context = WorkContextImpl(added_job_id, self.rpc_client)
         worker_or_message.pre_work(work_context)
@@ -74,7 +78,10 @@ class Reconciler(object):
                 traceback.print_exc()
                 if self.sentry_enabled:
                     capture_exception(e)
-                logger.error(f"Fail to execute work for {added_job_id}, message {e}")
+                logger.error("Fails to execute work", extra={
+                    'job_id': added_job_id,
+                    'message': e
+                })
 
         self.scheduler.add_job(
             work_wrap,
