@@ -80,7 +80,7 @@ class Reconciler(object):
                     capture_exception(e)
                 logger.error("Fails to execute work", extra={
                     'job_id': added_job_id,
-                    'message': e
+                    '_exception': e
                 })
 
         self.scheduler.add_job(
