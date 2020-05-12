@@ -70,7 +70,7 @@ class WorkerConfigStore(object):
             return False, f"Worker with id {worker_id} does not exist"
         # todo: update_one fails
         self.collection.update_one(
-            fitler={
+            filter={
                 "worker_id": worker_id
             },
             update={

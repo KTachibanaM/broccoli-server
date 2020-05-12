@@ -19,7 +19,7 @@ install_requires = [
     'sentry-sdk==0.14.3'
 ]
 
-VERSION = "1.3"
+VERSION = "1.3.1"
 
 tests_require = [
     'mongomock==3.17.0',
