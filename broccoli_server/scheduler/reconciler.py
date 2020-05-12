@@ -101,11 +101,15 @@ class Reconciler(object):
                     if self.sentry_enabled:
                         capture_exception(e)
                     else:
-                        traceback.print_exc()
-                        logger.error("Fails to execute work", extra={
-                            'job_id': added_job_id,
-                            '_exception': str(e)
+                        print(str(e))
+                        logger.exception("Fails to execute work", extra={
+                            'worker_id': added_job_id,
                         })
+                else:
+                    print(str(e))
+                    logger.info("Not reporting exception because of error resiliency", extra={
+                        'worker_id': added_job_id
+                    })
 
                 if error_resiliency != -1:
                     # only to touch error count if error resiliency is set
