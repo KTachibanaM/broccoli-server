@@ -14,6 +14,7 @@ from broccoli_server.content import InProcessRpcClient
 from broccoli_server.scheduler import WorkerConfigStore
 from broccoli_server.scheduler import GlobalMetadataStore
 from broccoli_server.scheduler import Reconciler
+from broccoli_server.scheduler import Worker
 from broccoli_server.mod_view import ModViewStore
 from broccoli_server.mod_view import ModViewRenderer
 from broccoli_server.mod_view.objects import ModViewQuery
@@ -231,10 +232,14 @@ class Application(object):
                 "message": message
             })
         status, message_or_worker_id = self.worker_config_store.add(
-            module=body["module"],
-            class_name=body["class_name"],
-            args=body["args"],
-            interval_seconds=body["interval_seconds"]
+            Worker(
+                module=body["module"],
+                class_name=body["class_name"],
+                args=body["args"],
+                interval_seconds=body["interval_seconds"],
+                # TODO: allow changing when add
+                error_resiliency=-1
+            )
         )
         if not status:
             return jsonify({
@@ -250,13 +255,15 @@ class Application(object):
     def _get_workers(self):
         workers = []
         for worker_id, worker in self.worker_config_store.get_all().items():
-            module, class_name, args, interval_seconds = worker
+            module, class_name, args, interval_seconds, error_resiliency \
+                = worker.module, worker.class_name, worker.args, worker.interval_seconds, worker.error_resiliency
             workers.append({
                 "worker_id": worker_id,
                 "module": module,
                 "class_name": class_name,
                 "args": args,
-                "interval_seconds": interval_seconds
+                "interval_seconds": interval_seconds,
+                "error_resiliency": error_resiliency
             })
         return jsonify(workers), 200
 

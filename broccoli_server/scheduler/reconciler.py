@@ -1,11 +1,12 @@
 import traceback
-from typing import Set
+from typing import Set, Dict
 from apscheduler.schedulers.base import BaseScheduler
 from sentry_sdk import capture_exception
 from .worker_config_store import WorkerConfigStore
 from .logging import logger
 from .worker_context.work_context_impl import WorkContextImpl
 from .worker_cache import WorkerCache
+from .worker import Worker
 from broccoli_interface.rpc import RpcClient
 
 
@@ -48,7 +49,7 @@ class Reconciler(object):
         for removed_job_id in removed_job_ids:
             self.scheduler.remove_job(job_id=removed_job_id)
 
-    def add_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs):
+    def add_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs: Dict[str, Worker]):
         added_job_ids = desired_job_ids - actual_job_ids
         if not added_job_ids:
             logger.debug(f"No job to add")
@@ -57,8 +58,10 @@ class Reconciler(object):
         for added_job_id in added_job_ids:
             self.add_job(added_job_id, desired_jobs)
 
-    def add_job(self, added_job_id: str, desired_jobs):
-        module, class_name, args, interval_seconds = desired_jobs[added_job_id]
+    def add_job(self, added_job_id: str, desired_jobs: Dict[str, Worker]):
+        worker = desired_jobs[added_job_id]
+        module, class_name, args, interval_seconds, error_resiliency \
+            = worker.module, worker.class_name, worker.args, worker.interval_seconds, worker.error_resiliency
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
         if not status:
             logger.error("Fails to add worker", extra={
@@ -74,14 +77,48 @@ class Reconciler(object):
         def work_wrap():
             try:
                 worker_or_message.work(work_context)
+                # always reset error count
+                ok, err = self.worker_config_store.reset_error_count(added_job_id)
+                if not ok:
+                    logger.error("Fails to reset error count", extra={
+                        'worker_id': added_job_id,
+                        'reason': err
+                    })
             except Exception as e:
-                traceback.print_exc()
-                if self.sentry_enabled:
-                    capture_exception(e)
-                logger.error("Fails to execute work", extra={
-                    'job_id': added_job_id,
-                    '_exception': e
-                })
+                report_ex = True
+                if error_resiliency != -1:
+                    ok, error_count, err = self.worker_config_store.get_error_count(added_job_id)
+                    if not ok:
+                        logger.error("Fails to get error count", extra={
+                            'worker_id': added_job_id,
+                            'reason': err
+                        })
+                    if error_count < error_resiliency:
+                        # only not to report exception when error resiliency is set and error count is below resiliency
+                        report_ex = False
+
+                if report_ex:
+                    if self.sentry_enabled:
+                        capture_exception(e)
+                    else:
+                        print(str(e))
+                        logger.exception("Fails to execute work", extra={
+                            'worker_id': added_job_id,
+                        })
+                else:
+                    print(str(e))
+                    logger.info("Not reporting exception because of error resiliency", extra={
+                        'worker_id': added_job_id
+                    })
+
+                if error_resiliency != -1:
+                    # only to touch error count if error resiliency is set
+                    ok, err = self.worker_config_store.increment_error_count(added_job_id)
+                    if not ok:
+                        logger.error('Fails to increment error count', extra={
+                            'worker_id': added_job_id,
+                            'reason': err
+                        })
 
         self.scheduler.add_job(
             work_wrap,
@@ -90,11 +127,11 @@ class Reconciler(object):
             seconds=interval_seconds
         )
 
-    def configure_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs):
+    def configure_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs: Dict[str, Worker]):
         # todo: configure job if worker.work bytecode changes..?
         same_job_ids = actual_job_ids.intersection(desired_job_ids)
         for job_id in same_job_ids:
-            _1, _2, _3, desired_interval_seconds = desired_jobs[job_id]
+            desired_interval_seconds = desired_jobs[job_id].interval_seconds
             actual_interval_seconds = self.scheduler.get_job(job_id).trigger.interval.seconds
             if desired_interval_seconds != actual_interval_seconds:
                 logger.info(f"Going to reconfigure job interval with id {job_id} to {desired_interval_seconds} seconds")
