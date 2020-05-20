@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, Union, List
-from broccoli_server.common import validate_schema_or_not
+from broccoli_server.utils import validate_schema_or_not
 from .content_store import ContentStore
 from .rpc_schemas import SCHEMAS
 from .logging import logger

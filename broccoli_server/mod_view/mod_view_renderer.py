@@ -1,8 +1,8 @@
 import json
 from typing import Optional, Dict, List, Tuple, Callable
-from broccoli_interface.rpc import RpcClient
-from broccoli_ui_interface.mod_view import ModViewColumn
-from broccoli_ui_interface.mod_view import ModViewColumnRender
+from broccoli_server.interface.rpc import RpcClient
+from broccoli_server.interface.mod_view import ModViewColumn
+from broccoli_server.interface.mod_view import ModViewColumnRender
 from .objects.mod_view_query import ModViewQuery, ModViewColumnConstruct
 
 

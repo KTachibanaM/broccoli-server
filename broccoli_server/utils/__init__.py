@@ -1,4 +1,4 @@
-from .datetime_utils import milliseconds_to_datetime, datetime_to_milliseconds
+from .datetime import milliseconds_to_datetime, datetime_to_milliseconds
 from .getenv_or_raise import getenv_or_raise
 from .logging import DefaultHandler, get_logging_level
 from .request_schemas import ADD_WORKER_BODY_SCHEMA

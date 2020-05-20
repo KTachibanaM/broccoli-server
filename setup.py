@@ -14,12 +14,14 @@ install_requires = [
     'dnspython==1.16.0',
     'jsonschema==3.0.1',
     'apscheduler==3.6.0',
-    'broccoli-interface==1.0',
-    'broccoli-ui-interface==1.0',
-    'sentry-sdk==0.14.3'
+    'sentry-sdk==0.14.3',
+    # userspace
+    'oauthlib==3.1.0',
+    'requests==2.22.0',
+    'python-twitter==3.5'
 ]
 
-VERSION = "1.3.1"
+VERSION = "2.0.0"
 
 tests_require = [
     'mongomock==3.17.0',

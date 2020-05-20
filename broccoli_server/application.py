@@ -6,8 +6,8 @@ import json
 import sentry_sdk
 from typing import Callable, Dict
 from broccoli_server.database import Migration
-from broccoli_server.common import validate_schema_or_not, getenv_or_raise
-from broccoli_server.common.request_schemas import ADD_WORKER_BODY_SCHEMA
+from broccoli_server.utils import validate_schema_or_not, getenv_or_raise
+from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
 from broccoli_server.content import RpcCore
 from broccoli_server.content import InProcessRpcClient
