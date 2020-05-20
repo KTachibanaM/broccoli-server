@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 from broccoli_server.content.content_store import ContentStore
-from broccoli_interface.rpc import RpcClient
+from broccoli_server.interface.rpc import RpcClient
 
 
 class InProcessRpcClient(RpcClient):

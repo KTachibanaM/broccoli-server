@@ -7,7 +7,7 @@ from .logging import logger
 from .worker_context.work_context_impl import WorkContextImpl
 from .worker_cache import WorkerCache
 from .worker import Worker
-from broccoli_interface.rpc import RpcClient
+from broccoli_server.interface.rpc import RpcClient
 
 
 class Reconciler(object):

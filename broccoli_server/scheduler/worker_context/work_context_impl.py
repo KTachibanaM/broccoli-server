@@ -2,9 +2,9 @@ import logging
 from .metadata_store_impl import MetadataStoreImpl
 from broccoli_server.utils import DefaultHandler, get_logging_level
 from broccoli_server.utils.getenv_or_raise import getenv_or_raise
-from broccoli_interface.worker_manager import WorkContext
-from broccoli_interface.worker_manager import MetadataStore
-from broccoli_interface.rpc import RpcClient
+from broccoli_server.interface.worker_manager import WorkContext
+from broccoli_server.interface.worker_manager import MetadataStore
+from broccoli_server.interface.rpc import RpcClient
 
 
 class WorkContextImpl(WorkContext):
