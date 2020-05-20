@@ -4,7 +4,7 @@ import random
 import heapq
 from functools import total_ordering
 from typing import Dict, List, Optional
-from broccoli_server.common import datetime_to_milliseconds, milliseconds_to_datetime
+from broccoli_server.utils import datetime_to_milliseconds, milliseconds_to_datetime
 from .logging import logger
 
 

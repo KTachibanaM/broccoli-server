@@ -1,4 +1,4 @@
-from broccoli_server.common import getenv_or_raise
+from broccoli_server.utils import getenv_or_raise
 from broccoli_server.content import ContentStore
 from broccoli_server.mod_view import ModViewStore
 
