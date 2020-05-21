@@ -118,18 +118,26 @@ class ContentStore(object):
             res.append(document)
         return res
 
-    def update_one(self, filter_q: Dict, update_doc: Dict):
+    def update_one(self, filter_q: Dict, update_doc: Dict, allow_many: bool = False):
         existing_doc_count = self.collection.count_documents(filter_q)
         if existing_doc_count == 0:
             logger.info(f"Document with query {filter_q} does not exist")
             return
 
-        if existing_doc_count > 1:
+        more_than_one = existing_doc_count > 1
+        if more_than_one and not allow_many:
             logger.info(f"More than one document with query {filter_q} exists")
             return
 
-        # todo: update_one fails
-        self.collection.update_one(filter_q, update_doc, upsert=False)
+        if not more_than_one:
+            # todo: update_one fails
+            self.collection.update_one(filter_q, update_doc, upsert=False)
+            return
+
+        logger.error(f"More than one document is updated because of allow_many", extra={
+            'filter_q': filter_q
+        })
+        self.update_many(filter_q, update_doc)
 
     def update_many(self, filter_q: Dict, update_doc: Dict):
         existing_doc_count = self.collection.count_documents(filter_q)
