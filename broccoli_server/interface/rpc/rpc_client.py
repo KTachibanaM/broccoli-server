@@ -9,7 +9,7 @@ class RpcClient(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def blocking_update_one(self, filter_q: Dict, update_doc: Dict):
+    def blocking_update_one(self, filter_q: Dict, update_doc: Dict, allow_many: bool = False):
         pass
 
     @abstractmethod

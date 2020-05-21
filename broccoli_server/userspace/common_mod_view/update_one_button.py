@@ -9,11 +9,14 @@ class UpdateOneButton(ModViewColumn):
                  text: str,
                  callback_id: str,
                  filter_q_key: str,
-                 update_set_doc: str):
+                 update_set_doc: str,
+                 allow_many: bool = False
+                 ):
         self.text = text
         self._callback_id = callback_id
         self.filter_q_key = filter_q_key
         self.update_set_doc = update_set_doc
+        self.allow_many = allow_many
 
     def render(self, document: Dict, rpc_client: RpcClient) -> Button:
         return Button(
@@ -34,5 +37,6 @@ class UpdateOneButton(ModViewColumn):
             },
             update_doc={
                 "$set": self.update_set_doc
-            }
+            },
+            allow_many=self.allow_many
         )

@@ -11,8 +11,8 @@ class InProcessRpcClient(RpcClient):
                        sort: Dict[str, int] = None, datetime_q: List[Dict] = None) -> List[Dict]:
         return self.content_store.query(q, limit, projection, sort, datetime_q)
 
-    def blocking_update_one(self, filter_q: Dict, update_doc: Dict):
-        self.content_store.update_one(filter_q, update_doc)
+    def blocking_update_one(self, filter_q: Dict, update_doc: Dict, allow_many: bool = False):
+        self.content_store.update_one(filter_q, update_doc, allow_many)
 
     def blocking_update_many(self, filter_q: Dict, update_doc: Dict):
         self.content_store.update_many(filter_q, update_doc)
