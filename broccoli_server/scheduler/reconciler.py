@@ -1,4 +1,3 @@
-import traceback
 from typing import Set, Dict
 from apscheduler.schedulers.base import BaseScheduler
 from sentry_sdk import capture_exception
@@ -17,13 +16,15 @@ class Reconciler(object):
                  worker_config_store: WorkerConfigStore,
                  rpc_client: RpcClient,
                  worker_cache: WorkerCache,
-                 sentry_enabled: bool
+                 sentry_enabled: bool,
+                 pause_workers: bool
                  ):
         self.worker_config_store = worker_config_store
         self.scheduler = None
         self.rpc_client = rpc_client
         self.worker_cache = worker_cache
         self.sentry_enabled = sentry_enabled
+        self.pause_workers = pause_workers
 
     def set_scheduler(self, scheduler: BaseScheduler):
         self.scheduler = scheduler
@@ -76,6 +77,10 @@ class Reconciler(object):
 
         def work_wrap():
             try:
+                if self.pause_workers:
+                    logger.info("Workers have been globally paused")
+                    return
+
                 worker_or_message.work(work_context)
                 # always reset error count
                 ok, err = self.worker_config_store.reset_error_count(added_job_id)

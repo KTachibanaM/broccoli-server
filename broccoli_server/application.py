@@ -35,6 +35,11 @@ class Application(object):
             print("Not setting up sentry")
             sentry_enabled = False
 
+        if 'PAUSE_WORKERS' in os.environ and os.environ['PAUSE_WORKERS'] == 'true':
+            pause_workers = True
+        else:
+            pause_workers = False
+
         Migration(
             admin_connection_string=getenv_or_raise("MONGODB_ADMIN_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
@@ -60,7 +65,8 @@ class Application(object):
             worker_config_store=self.worker_config_store,
             rpc_client=self.in_process_rpc_client,
             worker_cache=self.worker_cache,
-            sentry_enabled=sentry_enabled
+            sentry_enabled=sentry_enabled,
+            pause_workers=pause_workers
         )
         self.boards_store = ModViewStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
