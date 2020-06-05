@@ -1,7 +1,7 @@
 from typing import Dict
 from broccoli_server.interface.mod_view import ModViewColumn
 from broccoli_server.interface.mod_view.column_render import Button
-from broccoli_server.interface.rpc import RpcClient
+from broccoli_server.content import ContentStore
 
 
 class UpdateOneButton(ModViewColumn):
@@ -18,7 +18,7 @@ class UpdateOneButton(ModViewColumn):
         self.update_set_doc = update_set_doc
         self.allow_many = allow_many
 
-    def render(self, document: Dict, rpc_client: RpcClient) -> Button:
+    def render(self, document: Dict, content_store: ContentStore) -> Button:
         return Button(
             text=self.text,
             reload_after_callback=True
@@ -30,8 +30,8 @@ class UpdateOneButton(ModViewColumn):
     def callback_id(self) -> str:
         return self._callback_id
 
-    def callback(self, document: Dict, rpc_client: RpcClient):
-        rpc_client.blocking_update_one(
+    def callback(self, document: Dict, content_store: ContentStore):
+        content_store.update_one(
             filter_q={
                 self.filter_q_key: document[self.filter_q_key]
             },

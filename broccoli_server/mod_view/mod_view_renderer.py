@@ -1,14 +1,14 @@
 import json
 from typing import Optional, Dict, List, Tuple, Callable
-from broccoli_server.interface.rpc import RpcClient
+from broccoli_server.content import ContentStore
 from broccoli_server.interface.mod_view import ModViewColumn
 from broccoli_server.interface.mod_view import ModViewColumnRender
-from .objects.mod_view_query import ModViewQuery, ModViewColumnConstruct
+from broccoli_server.mod_view.mod_view_query import ModViewQuery, ModViewColumnConstruct
 
 
 class ModViewRenderer(object):
-    def __init__(self, rpc_client: RpcClient):
-        self.rpc_client = rpc_client
+    def __init__(self, content_store: ContentStore):
+        self.content_store = content_store
         self.callbacks = {}  # type: Dict[str, ModViewColumn]
         self._columns = {}  # type: Dict[Tuple[str, str], Callable]
 
@@ -28,7 +28,7 @@ class ModViewRenderer(object):
                 self.callbacks[column.callback_id()] = column
 
         # do the query
-        documents = self.rpc_client.blocking_query(
+        documents = self.content_store.query(
             q=json.loads(mod_view_query.q),
             limit=mod_view_query.limit,
             sort=mod_view_query.sort
@@ -39,7 +39,7 @@ class ModViewRenderer(object):
         for d in documents:
             row_renders = {}
             for column_name, column in mod_view_columns.items():
-                row_renders[column_name] = self._render_to_dict(column.render(d, self.rpc_client))
+                row_renders[column_name] = self._render_to_dict(column.render(d, self.content_store))
                 if column.has_callback():
                     row_renders[column_name]["callback_id"] = column.callback_id()
             rows.append({
@@ -51,7 +51,7 @@ class ModViewRenderer(object):
 
     def callback(self, callback_id: str, document: Dict):
         if callback_id in self.callbacks:
-            self.callbacks[callback_id].callback(document, self.rpc_client)
+            self.callbacks[callback_id].callback(document, self.content_store)
         # TODO: error here
 
     def _load_mod_view_column(self, column_construct: ModViewColumnConstruct) -> Optional[ModViewColumn]:

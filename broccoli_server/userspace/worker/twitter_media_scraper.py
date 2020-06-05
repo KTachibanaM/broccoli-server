@@ -5,8 +5,8 @@ import twitter.models
 from typing import List, Dict
 from abc import ABC, abstractmethod
 from .twitter_media import TwitterMedia
-from broccoli_server.interface.worker_manager import Worker
-from broccoli_server.interface.worker_manager import WorkContext
+from broccoli_server.interface.worker import Worker
+from broccoli_server.worker import WorkContext
 
 
 class TwitterMediaScraper(Worker, ABC):
@@ -90,7 +90,7 @@ class TwitterMediaScraper(Worker, ABC):
 
         # Append the results
         context.logger.info(f"Going to append {len(new_documents)} new documents")
-        context.rpc_client.blocking_append_multiple(
+        context.content_store.append_multiple(
             idempotency_key=self.document_idempotency_key(),
             docs=new_documents
         )

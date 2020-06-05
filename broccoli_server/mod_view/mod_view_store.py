@@ -1,5 +1,5 @@
 import pymongo
-from .objects.mod_view_query import ModViewQuery
+from broccoli_server.mod_view.mod_view_query import ModViewQuery
 from typing import List, Tuple
 
 
