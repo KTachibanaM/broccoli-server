@@ -1,12 +1,12 @@
 from abc import ABCMeta, abstractmethod
 from typing import Dict
-from broccoli_server.interface.rpc import RpcClient
+from broccoli_server.content import ContentStore
 from .column_render import ModViewColumnRender
 
 
 class ModViewColumn(metaclass=ABCMeta):
     @abstractmethod
-    def render(self, document: Dict, rpc_client: RpcClient) -> ModViewColumnRender:
+    def render(self, document: Dict, content_store: ContentStore) -> ModViewColumnRender:
         pass
 
     @abstractmethod
@@ -18,13 +18,13 @@ class ModViewColumn(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def callback(self, document: Dict, rpc_client: RpcClient):
+    def callback(self, document: Dict, content_store: ContentStore):
         pass
 
 
 class NonCallbackModViewColumn(ModViewColumn):
     @abstractmethod
-    def render(self, document: Dict, rpc_client: RpcClient) -> ModViewColumnRender:
+    def render(self, document: Dict, content_store: ContentStore) -> ModViewColumnRender:
         pass
 
     def has_callback(self) -> bool:
@@ -33,5 +33,5 @@ class NonCallbackModViewColumn(ModViewColumn):
     def callback_id(self) -> str:
         return ""
 
-    def callback(self, document: Dict, rpc_client: RpcClient):
+    def callback(self, document: Dict, content_store: ContentStore):
         pass

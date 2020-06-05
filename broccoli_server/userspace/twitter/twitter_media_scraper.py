@@ -90,7 +90,7 @@ class TwitterMediaScraper(Worker, ABC):
 
         # Append the results
         context.logger.info(f"Going to append {len(new_documents)} new documents")
-        context.rpc_client.blocking_append_multiple(
+        context.content_store.append_multiple(
             idempotency_key=self.document_idempotency_key(),
             docs=new_documents
         )

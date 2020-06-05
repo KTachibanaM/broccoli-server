@@ -9,8 +9,6 @@ from broccoli_server.database import Migration
 from broccoli_server.utils import validate_schema_or_not, getenv_or_raise
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
-from broccoli_server.content import RpcCore
-from broccoli_server.content import InProcessRpcClient
 from broccoli_server.scheduler import WorkerConfigStore
 from broccoli_server.scheduler import GlobalMetadataStore
 from broccoli_server.scheduler import Reconciler
@@ -49,9 +47,7 @@ class Application(object):
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
-        self.rpc_core = RpcCore(self.content_store)
         self.worker_cache = WorkerCache()
-        self.in_process_rpc_client = InProcessRpcClient(self.content_store)
         self.worker_config_store = WorkerConfigStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB"),
@@ -63,7 +59,7 @@ class Application(object):
         )
         self.reconciler = Reconciler(
             worker_config_store=self.worker_config_store,
-            rpc_client=self.in_process_rpc_client,
+            content_store=self.content_store,
             worker_cache=self.worker_cache,
             sentry_enabled=sentry_enabled,
             pause_workers=pause_workers
@@ -72,7 +68,7 @@ class Application(object):
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
-        self.boards_renderer = ModViewRenderer(self.in_process_rpc_client)
+        self.boards_renderer = ModViewRenderer(self.content_store)
         self.default_api_handler = None
 
         # Figure out path for static web artifact
@@ -225,7 +221,7 @@ class Application(object):
         result = self.default_api_handler.handle_request(
             path,
             request.args.to_dict(),
-            self.in_process_rpc_client
+            self.content_store
         )
         return jsonify(result), 200
 
