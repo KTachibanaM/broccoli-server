@@ -15,7 +15,7 @@ from broccoli_server.scheduler import Reconciler
 from broccoli_server.scheduler import Worker
 from broccoli_server.mod_view import ModViewStore
 from broccoli_server.mod_view import ModViewRenderer
-from broccoli_server.mod_view.objects import ModViewQuery
+from broccoli_server.mod_view import ModViewQuery
 from broccoli_server.scheduler import WorkerCache
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS

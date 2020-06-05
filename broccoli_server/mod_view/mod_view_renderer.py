@@ -3,7 +3,7 @@ from typing import Optional, Dict, List, Tuple, Callable
 from broccoli_server.content import ContentStore
 from broccoli_server.interface.mod_view import ModViewColumn
 from broccoli_server.interface.mod_view import ModViewColumnRender
-from .objects.mod_view_query import ModViewQuery, ModViewColumnConstruct
+from broccoli_server.mod_view.mod_view_query import ModViewQuery, ModViewColumnConstruct
 
 
 class ModViewRenderer(object):
