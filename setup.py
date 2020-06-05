@@ -21,7 +21,7 @@ install_requires = [
     'python-twitter==3.5'
 ]
 
-VERSION = "2.0.2"
+VERSION = "3.0.0"
 
 tests_require = [
     'mongomock==3.17.0',
@@ -59,8 +59,8 @@ class SdistCommand(sdist):
 setup(
     name='broccoli_server',
     version=VERSION,
-    description='The server component of a web content crawling and sorting framework',
-    url='http://github.com/KTachibanaM/broccoli-platform',
+    description='A web content crawling and sorting library',
+    url='http://github.com/k-t-corp/broccoli-server',
     author='KTachibanaM',
     author_email='whj19931115@gmail.com',
     license='WTFPL',
