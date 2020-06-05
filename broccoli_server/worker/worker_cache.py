@@ -1,5 +1,5 @@
 from typing import Dict, Tuple, Union, Callable
-from broccoli_server.interface.worker import Worker
+from .worker import Worker
 
 
 class WorkerCache(object):
