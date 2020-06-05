@@ -6,7 +6,7 @@ from .logging import logger
 from .worker_cache import WorkerCache
 from .worker import Worker
 from broccoli_server.content import ContentStore
-from broccoli_server.scheduler.worker_context import WorkContext
+from broccoli_server.scheduler import WorkContext
 
 
 class Reconciler(object):
