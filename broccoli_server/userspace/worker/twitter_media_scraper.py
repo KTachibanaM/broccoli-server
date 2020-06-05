@@ -6,7 +6,7 @@ from typing import List, Dict
 from abc import ABC, abstractmethod
 from .twitter_media import TwitterMedia
 from broccoli_server.interface.worker import Worker
-from broccoli_server.reconciler import WorkContext
+from broccoli_server.worker import WorkContext
 
 
 class TwitterMediaScraper(Worker, ABC):
