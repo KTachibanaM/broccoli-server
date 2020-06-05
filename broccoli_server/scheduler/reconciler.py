@@ -3,10 +3,10 @@ from apscheduler.schedulers.base import BaseScheduler
 from sentry_sdk import capture_exception
 from .worker_config_store import WorkerConfigStore
 from .logging import logger
-from .worker_context.work_context_impl import WorkContextImpl
 from .worker_cache import WorkerCache
 from .worker import Worker
 from broccoli_server.content import ContentStore
+from broccoli_server.scheduler.worker_context import WorkContext
 
 
 class Reconciler(object):
@@ -72,7 +72,7 @@ class Reconciler(object):
                 'message': worker_or_message
             })
             return
-        work_context = WorkContextImpl(added_job_id, self.content_store)
+        work_context = WorkContext(added_job_id, self.content_store)
         worker_or_message.pre_work(work_context)
 
         def work_wrap():

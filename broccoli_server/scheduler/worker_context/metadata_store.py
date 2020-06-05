@@ -1,8 +1,7 @@
 import pymongo
-from broccoli_server.interface.worker_manager import MetadataStore
 
 
-class MetadataStoreImpl(MetadataStore):
+class MetadataStore(object):
     def __init__(self, connection_string: str, db: str, worker_id: str):
         self.client = pymongo.MongoClient(connection_string)
         self.db = self.client[db]

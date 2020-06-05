@@ -1,20 +1,18 @@
 import logging
-from .metadata_store_impl import MetadataStoreImpl
+from .metadata_store import MetadataStore
 from broccoli_server.utils import DefaultHandler, get_logging_level
 from broccoli_server.utils.getenv_or_raise import getenv_or_raise
-from broccoli_server.interface.worker_manager import WorkContext
-from broccoli_server.interface.worker_manager import MetadataStore
 from broccoli_server.content import ContentStore
 
 
-class WorkContextImpl(WorkContext):
+class WorkContext(object):
     def __init__(self, worker_id: str, content_store: ContentStore):
         self._logger = logging.getLogger(worker_id)
         self._logger.setLevel(get_logging_level())
         self._logger.addHandler(DefaultHandler)
 
         self._content_store = content_store
-        self._metadata_store = MetadataStoreImpl(
+        self._metadata_store = MetadataStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB"),
             worker_id=worker_id
