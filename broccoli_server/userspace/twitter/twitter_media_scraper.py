@@ -5,7 +5,7 @@ import twitter.models
 from typing import List, Dict
 from abc import ABC, abstractmethod
 from .twitter_media import TwitterMedia
-from broccoli_server.interface.worker_manager import Worker
+from broccoli_server.interface.worker import Worker
 from broccoli_server.scheduler.worker_context import WorkContext
 
 
