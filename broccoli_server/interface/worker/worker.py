@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from broccoli_server.scheduler import WorkContext
+from broccoli_server.reconciler import WorkContext
 
 
 class Worker(metaclass=ABCMeta):
