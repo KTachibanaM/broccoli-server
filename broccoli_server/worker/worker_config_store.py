@@ -17,7 +17,7 @@ class WorkerConfigStore(object):
             = worker.module, worker.class_name, worker.args, worker.interval_seconds, worker.error_resiliency
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
         if not status:
-            logger.error("Fails to add worker", extra={
+            logger.error("Fails to load worker", extra={
                 'module': module,
                 'class_name': class_name,
                 'args': args,
@@ -27,8 +27,7 @@ class WorkerConfigStore(object):
         # not specifying type of broccoli_server.interface.worker.Worker because of circular dep
         worker = worker_or_message
         worker_id = f"broccoli.worker.{worker.get_id()}"
-        existing_doc_count = self.collection.count_documents({"worker_id": worker_id})
-        if existing_doc_count != 0:
+        if self._if_worker_exists(worker_id):
             return False, f"Worker with id {worker_id} already exists"
         # todo: insert fails?
         self.collection.insert({
@@ -61,14 +60,14 @@ class WorkerConfigStore(object):
         return self.collection.count_documents({"worker_id": worker_id}) != 0
 
     def remove(self, worker_id: str) -> Tuple[bool, str]:
-        if self._if_worker_exists(worker_id) == 0:
+        if not self._if_worker_exists(worker_id):
             return False, f"Worker with id {worker_id} does not exist"
         # todo: delete_one fails?
         self.collection.delete_one({"worker_id": worker_id})
         return True, ""
 
     def update_interval_seconds(self, worker_id: str, interval_seconds: int) -> Tuple[bool, str]:
-        if self._if_worker_exists(worker_id) == 0:
+        if not self._if_worker_exists(worker_id):
             return False, f"Worker with id {worker_id} does not exist"
         # todo: update_one fails
         self.collection.update_one(
@@ -84,7 +83,7 @@ class WorkerConfigStore(object):
         return True, ""
 
     def increment_error_count(self, worker_id: str) -> Tuple[bool, str]:
-        if self._if_worker_exists(worker_id) == 0:
+        if not self._if_worker_exists(worker_id):
             return False, f"Worker with id {worker_id} does not exist"
         self.collection.update_one(
             filter={
@@ -99,7 +98,7 @@ class WorkerConfigStore(object):
         return True, ""
 
     def reset_error_count(self, worker_id: str) -> Tuple[bool, str]:
-        if self._if_worker_exists(worker_id) == 0:
+        if not self._if_worker_exists(worker_id):
             return False, f"Worker with id {worker_id} does not exist"
         self.collection.update_one(
             filter={
