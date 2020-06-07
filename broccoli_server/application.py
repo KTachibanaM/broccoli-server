@@ -414,7 +414,8 @@ class Application(object):
             }
             raise RuntimeError(f"Fails to load worker, {json.dumps(extra)}")
         worker = worker_or_message  # type: Worker
-        work_context = WorkContext(worker.get_id(), self.content_store, self.metadata_store_factory)
+        worker_id = f"broccoli.worker.{worker.get_id()}"
+        work_context = WorkContext(worker_id, self.content_store, self.metadata_store_factory)
         worker.pre_work(work_context)
         work_wrap = self.reconciler.wrap_work(worker, work_context, worker_metadata.error_resiliency)
         work_wrap()

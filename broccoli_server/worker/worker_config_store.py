@@ -27,8 +27,7 @@ class WorkerConfigStore(object):
         # not specifying type of broccoli_server.interface.worker.Worker because of circular dep
         worker = worker_or_message
         worker_id = f"broccoli.worker.{worker.get_id()}"
-        existing_doc_count = self.collection.count_documents({"worker_id": worker_id})
-        if existing_doc_count != 0:
+        if self._if_worker_exists(worker_id):
             return False, f"Worker with id {worker_id} already exists"
         # todo: insert fails?
         self.collection.insert({

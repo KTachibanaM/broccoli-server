@@ -102,7 +102,7 @@ class Reconciler(object):
                 )
 
     def wrap_work(self, worker: Worker, work_context: WorkContext, error_resiliency: int) -> Callable:
-        worker_id = worker.get_id()
+        worker_id = f"broccoli.worker.{worker.get_id()}"
 
         def work_wrap():
             try:
