@@ -2,7 +2,7 @@ from typing import Set, Dict
 from .logging import logger
 from apscheduler.schedulers.base import BaseScheduler
 from sentry_sdk import capture_exception
-from broccoli_server.worker import WorkerCache, Worker, WorkerConfigStore, WorkContext
+from broccoli_server.worker import WorkerCache, Worker, WorkerConfigStore, WorkContext, MetadataStoreFactory
 from broccoli_server.content import ContentStore
 from broccoli_server.interface.worker import Worker as WorkerInterface
 
@@ -13,6 +13,7 @@ class Reconciler(object):
     def __init__(self,
                  worker_config_store: WorkerConfigStore,
                  content_store: ContentStore,
+                 metadata_store_factory: MetadataStoreFactory,
                  worker_cache: WorkerCache,
                  sentry_enabled: bool,
                  pause_workers: bool
@@ -20,6 +21,7 @@ class Reconciler(object):
         self.worker_config_store = worker_config_store
         self.scheduler = None
         self.content_store = content_store
+        self.metadata_store_factory = metadata_store_factory
         self.worker_cache = worker_cache
         self.sentry_enabled = sentry_enabled
         self.pause_workers = pause_workers
@@ -71,7 +73,7 @@ class Reconciler(object):
             })
             return
         worker = worker_or_message  # type: WorkerInterface
-        work_context = WorkContext(added_job_id, self.content_store)
+        work_context = WorkContext(added_job_id, self.content_store, self.metadata_store_factory)
         worker.pre_work(work_context)
 
         def work_wrap():

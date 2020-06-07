@@ -9,7 +9,7 @@ from broccoli_server.database import Migration
 from broccoli_server.utils import validate_schema_or_not, getenv_or_raise
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
-from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, Worker, WorkerCache
+from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, Worker, WorkerCache, MetadataStoreFactory
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore
 from broccoli_server.mod_view import ModViewRenderer
@@ -50,6 +50,10 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB"),
             worker_cache=self.worker_cache
         )
+        metadata_store_factory = MetadataStoreFactory(
+            connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
+            db=getenv_or_raise("MONGODB_DB"),
+        )
         self.global_metadata_store = GlobalMetadataStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
@@ -57,6 +61,7 @@ class Application(object):
         self.reconciler = Reconciler(
             worker_config_store=self.worker_config_store,
             content_store=self.content_store,
+            metadata_store_factory=metadata_store_factory,
             worker_cache=self.worker_cache,
             sentry_enabled=sentry_enabled,
             pause_workers=pause_workers
