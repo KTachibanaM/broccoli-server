@@ -9,7 +9,8 @@ from broccoli_server.database import Migration
 from broccoli_server.utils import validate_schema_or_not, getenv_or_raise
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
-from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, Worker, WorkerCache, MetadataStoreFactory
+from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, WorkerMetadata, WorkerCache, \
+    MetadataStoreFactory
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore
 from broccoli_server.mod_view import ModViewRenderer
@@ -236,7 +237,7 @@ class Application(object):
                 "message": message
             })
         status, message_or_worker_id = self.worker_config_store.add(
-            Worker(
+            WorkerMetadata(
                 module=body["module"],
                 class_name=body["class_name"],
                 args=body["args"],

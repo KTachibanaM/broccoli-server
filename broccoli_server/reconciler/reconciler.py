@@ -2,9 +2,9 @@ from typing import Set, Dict
 from .logging import logger
 from apscheduler.schedulers.base import BaseScheduler
 from sentry_sdk import capture_exception
-from broccoli_server.worker import WorkerCache, Worker, WorkerConfigStore, WorkContext, MetadataStoreFactory
+from broccoli_server.worker import WorkerCache, WorkerMetadata, WorkerConfigStore, WorkContext, MetadataStoreFactory
 from broccoli_server.content import ContentStore
-from broccoli_server.interface.worker import Worker as WorkerInterface
+from broccoli_server.interface.worker import Worker
 
 
 class Reconciler(object):
@@ -50,7 +50,7 @@ class Reconciler(object):
         for removed_job_id in removed_job_ids:
             self.scheduler.remove_job(job_id=removed_job_id)
 
-    def add_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs: Dict[str, Worker]):
+    def add_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs: Dict[str, WorkerMetadata]):
         added_job_ids = desired_job_ids - actual_job_ids
         if not added_job_ids:
             logger.debug(f"No job to add")
@@ -59,7 +59,7 @@ class Reconciler(object):
         for added_job_id in added_job_ids:
             self.add_job(added_job_id, desired_jobs)
 
-    def add_job(self, added_job_id: str, desired_jobs: Dict[str, Worker]):
+    def add_job(self, added_job_id: str, desired_jobs: Dict[str, WorkerMetadata]):
         worker_model = desired_jobs[added_job_id]
         module, class_name, args, error_resiliency \
             = worker_model.module, worker_model.class_name, worker_model.args, worker_model.error_resiliency
@@ -72,7 +72,7 @@ class Reconciler(object):
                 'message': worker_or_message
             })
             return
-        worker = worker_or_message  # type: WorkerInterface
+        worker = worker_or_message  # type: Worker
         work_context = WorkContext(added_job_id, self.content_store, self.metadata_store_factory)
         worker.pre_work(work_context)
 
@@ -133,7 +133,11 @@ class Reconciler(object):
             seconds=worker_model.interval_seconds
         )
 
-    def configure_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs: Dict[str, Worker]):
+    def configure_jobs(self,
+                       actual_job_ids: Set[str],
+                       desired_job_ids: Set[str],
+                       desired_jobs: Dict[str, WorkerMetadata]
+                       ):
         # todo: configure job if worker.work bytecode changes..?
         same_job_ids = actual_job_ids.intersection(desired_job_ids)
         for job_id in same_job_ids:

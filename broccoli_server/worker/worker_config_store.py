@@ -2,7 +2,7 @@ import pymongo
 from typing import Dict, Tuple
 from .logging import logger
 from .worker_cache import WorkerCache
-from .worker import Worker
+from .worker_metadata import WorkerMetadata
 
 
 class WorkerConfigStore(object):
@@ -12,7 +12,7 @@ class WorkerConfigStore(object):
         self.collection = self.db['workers']
         self.worker_cache = worker_cache
 
-    def add(self, worker: Worker) -> Tuple[bool, str]:
+    def add(self, worker: WorkerMetadata) -> Tuple[bool, str]:
         module, class_name, args, interval_seconds, error_resiliency \
             = worker.module, worker.class_name, worker.args, worker.interval_seconds, worker.error_resiliency
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
@@ -24,7 +24,9 @@ class WorkerConfigStore(object):
                 'message': worker_or_message
             })
             return False, worker_or_message
-        worker_id = f"broccoli.worker.{worker_or_message.get_id()}"
+        # not specifying type of broccoli_server.interface.worker.Worker because of circular dep
+        worker = worker_or_message
+        worker_id = f"broccoli.worker.{worker.get_id()}"
         existing_doc_count = self.collection.count_documents({"worker_id": worker_id})
         if existing_doc_count != 0:
             return False, f"Worker with id {worker_id} already exists"
@@ -42,11 +44,11 @@ class WorkerConfigStore(object):
         })
         return True, worker_id
 
-    def get_all(self) -> Dict[str, Worker]:
+    def get_all(self) -> Dict[str, WorkerMetadata]:
         res = {}
         # todo: find fails?
         for document in self.collection.find():
-            res[document["worker_id"]] = Worker(
+            res[document["worker_id"]] = WorkerMetadata(
                 module=document["module"],
                 class_name=document["class_name"],
                 args=document["args"],
