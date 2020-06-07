@@ -2,8 +2,9 @@ from typing import Set, Dict
 from .logging import logger
 from apscheduler.schedulers.base import BaseScheduler
 from sentry_sdk import capture_exception
-from broccoli_server.worker import WorkerCache, Worker, WorkerConfigStore, WorkContext
+from broccoli_server.worker import WorkerCache, WorkerMetadata, WorkerConfigStore, WorkContext, MetadataStoreFactory
 from broccoli_server.content import ContentStore
+from broccoli_server.interface.worker import Worker
 
 
 class Reconciler(object):
@@ -12,6 +13,7 @@ class Reconciler(object):
     def __init__(self,
                  worker_config_store: WorkerConfigStore,
                  content_store: ContentStore,
+                 metadata_store_factory: MetadataStoreFactory,
                  worker_cache: WorkerCache,
                  sentry_enabled: bool,
                  pause_workers: bool
@@ -19,6 +21,7 @@ class Reconciler(object):
         self.worker_config_store = worker_config_store
         self.scheduler = None
         self.content_store = content_store
+        self.metadata_store_factory = metadata_store_factory
         self.worker_cache = worker_cache
         self.sentry_enabled = sentry_enabled
         self.pause_workers = pause_workers
@@ -47,7 +50,7 @@ class Reconciler(object):
         for removed_job_id in removed_job_ids:
             self.scheduler.remove_job(job_id=removed_job_id)
 
-    def add_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs: Dict[str, Worker]):
+    def add_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs: Dict[str, WorkerMetadata]):
         added_job_ids = desired_job_ids - actual_job_ids
         if not added_job_ids:
             logger.debug(f"No job to add")
@@ -56,10 +59,10 @@ class Reconciler(object):
         for added_job_id in added_job_ids:
             self.add_job(added_job_id, desired_jobs)
 
-    def add_job(self, added_job_id: str, desired_jobs: Dict[str, Worker]):
-        worker = desired_jobs[added_job_id]
-        module, class_name, args, interval_seconds, error_resiliency \
-            = worker.module, worker.class_name, worker.args, worker.interval_seconds, worker.error_resiliency
+    def add_job(self, added_job_id: str, desired_jobs: Dict[str, WorkerMetadata]):
+        worker_model = desired_jobs[added_job_id]
+        module, class_name, args, error_resiliency \
+            = worker_model.module, worker_model.class_name, worker_model.args, worker_model.error_resiliency
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
         if not status:
             logger.error("Fails to add worker", extra={
@@ -69,8 +72,9 @@ class Reconciler(object):
                 'message': worker_or_message
             })
             return
-        work_context = WorkContext(added_job_id, self.content_store)
-        worker_or_message.pre_work(work_context)
+        worker = worker_or_message  # type: Worker
+        work_context = WorkContext(added_job_id, self.content_store, self.metadata_store_factory)
+        worker.pre_work(work_context)
 
         def work_wrap():
             try:
@@ -78,7 +82,7 @@ class Reconciler(object):
                     logger.info("Workers have been globally paused")
                     return
 
-                worker_or_message.work(work_context)
+                worker.work(work_context)
                 # always reset error count
                 ok, err = self.worker_config_store.reset_error_count(added_job_id)
                 if not ok:
@@ -126,10 +130,14 @@ class Reconciler(object):
             work_wrap,
             id=added_job_id,
             trigger='interval',
-            seconds=interval_seconds
+            seconds=worker_model.interval_seconds
         )
 
-    def configure_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs: Dict[str, Worker]):
+    def configure_jobs(self,
+                       actual_job_ids: Set[str],
+                       desired_job_ids: Set[str],
+                       desired_jobs: Dict[str, WorkerMetadata]
+                       ):
         # todo: configure job if worker.work bytecode changes..?
         same_job_ids = actual_job_ids.intersection(desired_job_ids)
         for job_id in same_job_ids:

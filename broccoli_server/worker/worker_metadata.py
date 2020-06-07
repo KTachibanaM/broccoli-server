@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Worker:
+class WorkerMetadata:
     module: str
     class_name: str
     args: Dict

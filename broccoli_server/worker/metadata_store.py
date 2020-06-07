@@ -34,3 +34,16 @@ class MetadataStore(object):
 
     def exists_in_another_worker(self, worker_id: str, key: str):
         return key in self._get_another_worker_state(worker_id)
+
+
+class MetadataStoreFactory(object):
+    def __init__(self, connection_string: str, db: str):
+        self.connection_string = connection_string
+        self.db = db
+
+    def build(self, worker_id: str):
+        return MetadataStore(
+            connection_string=self.connection_string,
+            db=self.db,
+            worker_id=worker_id
+        )
