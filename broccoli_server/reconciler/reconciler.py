@@ -4,6 +4,7 @@ from apscheduler.schedulers.base import BaseScheduler
 from sentry_sdk import capture_exception
 from broccoli_server.worker import WorkerCache, Worker, WorkerConfigStore, WorkContext
 from broccoli_server.content import ContentStore
+from broccoli_server.interface.worker import Worker as WorkerInterface
 
 
 class Reconciler(object):
@@ -57,9 +58,9 @@ class Reconciler(object):
             self.add_job(added_job_id, desired_jobs)
 
     def add_job(self, added_job_id: str, desired_jobs: Dict[str, Worker]):
-        worker = desired_jobs[added_job_id]
-        module, class_name, args, interval_seconds, error_resiliency \
-            = worker.module, worker.class_name, worker.args, worker.interval_seconds, worker.error_resiliency
+        worker_model = desired_jobs[added_job_id]
+        module, class_name, args, error_resiliency \
+            = worker_model.module, worker_model.class_name, worker_model.args, worker_model.error_resiliency
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
         if not status:
             logger.error("Fails to add worker", extra={
@@ -69,8 +70,9 @@ class Reconciler(object):
                 'message': worker_or_message
             })
             return
+        worker = worker_or_message  # type: WorkerInterface
         work_context = WorkContext(added_job_id, self.content_store)
-        worker_or_message.pre_work(work_context)
+        worker.pre_work(work_context)
 
         def work_wrap():
             try:
@@ -78,7 +80,7 @@ class Reconciler(object):
                     logger.info("Workers have been globally paused")
                     return
 
-                worker_or_message.work(work_context)
+                worker.work(work_context)
                 # always reset error count
                 ok, err = self.worker_config_store.reset_error_count(added_job_id)
                 if not ok:
@@ -126,7 +128,7 @@ class Reconciler(object):
             work_wrap,
             id=added_job_id,
             trigger='interval',
-            seconds=interval_seconds
+            seconds=worker_model.interval_seconds
         )
 
     def configure_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs: Dict[str, Worker]):
