@@ -1,4 +1,4 @@
-from typing import Set, Dict
+from typing import Set, Dict, Callable
 from .logging import logger
 from apscheduler.schedulers.base import BaseScheduler
 from sentry_sdk import capture_exception
@@ -60,12 +60,11 @@ class Reconciler(object):
             self.add_job(added_job_id, desired_jobs)
 
     def add_job(self, added_job_id: str, desired_jobs: Dict[str, WorkerMetadata]):
-        worker_model = desired_jobs[added_job_id]
-        module, class_name, args, error_resiliency \
-            = worker_model.module, worker_model.class_name, worker_model.args, worker_model.error_resiliency
+        worker_metadata = desired_jobs[added_job_id]
+        module, class_name, args = worker_metadata.module, worker_metadata.class_name, worker_metadata.args
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
         if not status:
-            logger.error("Fails to add worker", extra={
+            logger.error("Fails to load worker", extra={
                 'module': module,
                 'class_name': class_name,
                 'args': args,
@@ -75,62 +74,13 @@ class Reconciler(object):
         worker = worker_or_message  # type: Worker
         work_context = WorkContext(added_job_id, self.content_store, self.metadata_store_factory)
         worker.pre_work(work_context)
-
-        def work_wrap():
-            try:
-                if self.pause_workers:
-                    logger.info("Workers have been globally paused")
-                    return
-
-                worker.work(work_context)
-                # always reset error count
-                ok, err = self.worker_config_store.reset_error_count(added_job_id)
-                if not ok:
-                    logger.error("Fails to reset error count", extra={
-                        'worker_id': added_job_id,
-                        'reason': err
-                    })
-            except Exception as e:
-                report_ex = True
-                if error_resiliency != -1:
-                    ok, error_count, err = self.worker_config_store.get_error_count(added_job_id)
-                    if not ok:
-                        logger.error("Fails to get error count", extra={
-                            'worker_id': added_job_id,
-                            'reason': err
-                        })
-                    if error_count < error_resiliency:
-                        # only not to report exception when error resiliency is set and error count is below resiliency
-                        report_ex = False
-
-                if report_ex:
-                    if self.sentry_enabled:
-                        capture_exception(e)
-                    else:
-                        print(str(e))
-                        logger.exception("Fails to execute work", extra={
-                            'worker_id': added_job_id,
-                        })
-                else:
-                    print(str(e))
-                    logger.info("Not reporting exception because of error resiliency", extra={
-                        'worker_id': added_job_id
-                    })
-
-                if error_resiliency != -1:
-                    # only to touch error count if error resiliency is set
-                    ok, err = self.worker_config_store.increment_error_count(added_job_id)
-                    if not ok:
-                        logger.error('Fails to increment error count', extra={
-                            'worker_id': added_job_id,
-                            'reason': err
-                        })
+        work_wrap = self.wrap_work(worker, work_context, worker_metadata.error_resiliency)
 
         self.scheduler.add_job(
             work_wrap,
             id=added_job_id,
             trigger='interval',
-            seconds=worker_model.interval_seconds
+            seconds=worker_metadata.interval_seconds
         )
 
     def configure_jobs(self,
@@ -150,3 +100,58 @@ class Reconciler(object):
                     trigger='interval',
                     seconds=desired_interval_seconds
                 )
+
+    def wrap_work(self, worker: Worker, work_context: WorkContext, error_resiliency: int) -> Callable:
+        worker_id = worker.get_id()
+
+        def work_wrap():
+            try:
+                if self.pause_workers:
+                    logger.info("Workers have been globally paused")
+                    return
+
+                worker.work(work_context)
+                # always reset error count
+                ok, err = self.worker_config_store.reset_error_count(worker_id)
+                if not ok:
+                    logger.error("Fails to reset error count", extra={
+                        'worker_id': worker_id,
+                        'reason': err
+                    })
+            except Exception as e:
+                report_ex = True
+                if error_resiliency != -1:
+                    ok, error_count, err = self.worker_config_store.get_error_count(worker_id)
+                    if not ok:
+                        logger.error("Fails to get error count", extra={
+                            'worker_id': worker_id,
+                            'reason': err
+                        })
+                    if error_count < error_resiliency:
+                        # only not to report exception when error resiliency is set and error count is below resiliency
+                        report_ex = False
+
+                if report_ex:
+                    if self.sentry_enabled:
+                        capture_exception(e)
+                    else:
+                        print(str(e))
+                        logger.exception("Fails to execute work", extra={
+                            'worker_id': worker_id,
+                        })
+                else:
+                    print(str(e))
+                    logger.info("Not reporting exception because of error resiliency", extra={
+                        'worker_id': worker_id
+                    })
+
+                if error_resiliency != -1:
+                    # only to touch error count if error resiliency is set
+                    ok, err = self.worker_config_store.increment_error_count(worker_id)
+                    if not ok:
+                        logger.error('Fails to increment error count', extra={
+                            'worker_id': worker_id,
+                            'reason': err
+                        })
+
+        return work_wrap

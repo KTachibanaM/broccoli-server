@@ -17,7 +17,7 @@ class WorkerConfigStore(object):
             = worker.module, worker.class_name, worker.args, worker.interval_seconds, worker.error_resiliency
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
         if not status:
-            logger.error("Fails to add worker", extra={
+            logger.error("Fails to load worker", extra={
                 'module': module,
                 'class_name': class_name,
                 'args': args,
