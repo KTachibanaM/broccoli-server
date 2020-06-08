@@ -5,7 +5,7 @@ import datetime
 import json
 import base64
 import sentry_sdk
-from typing import Callable, Dict
+from typing import Callable, Dict, List, Tuple
 from broccoli_server.database import Migration
 from broccoli_server.utils import validate_schema_or_not, getenv_or_raise
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
@@ -67,7 +67,7 @@ class Application(object):
             sentry_enabled=sentry_enabled,
             pause_workers=pause_workers
         )
-        self.boards_store = ModViewStore(
+        self.mod_view_store = ModViewStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
@@ -182,6 +182,9 @@ class Application(object):
             class_name=class_name,
             constructor=constructor
         )
+
+    def declare_mod_views(self, mod_views:  List[Tuple[str, ModViewQuery]]):
+        self.mod_view_store.declare_mod_views(mod_views)
 
     @staticmethod
     def _before_request():
@@ -309,19 +312,19 @@ class Application(object):
     def _upsert_board(self, board_id: str):
         parsed_body = request.json
         parsed_body["q"] = json.dumps(parsed_body["q"])
-        self.boards_store.upsert(board_id, ModViewQuery(parsed_body))
+        self.mod_view_store.upsert(board_id, ModViewQuery(parsed_body))
         return jsonify({
             "status": "ok"
         }), 200
 
     def _get_board(self, board_id: str):
-        board_query = self.boards_store.get(board_id).to_dict()
+        board_query = self.mod_view_store.get(board_id).to_dict()
         board_query["q"] = json.loads(board_query["q"])
         return jsonify(board_query), 200
 
     def _get_boards(self):
         boards = []
-        for (board_id, board_query) in self.boards_store.get_all():
+        for (board_id, board_query) in self.mod_view_store.get_all():
             board_query = board_query.to_dict()
             board_query["q"] = json.loads(board_query["q"])
             boards.append({
@@ -331,19 +334,19 @@ class Application(object):
         return jsonify(boards), 200
 
     def _swap_boards(self, board_id: str, another_board_id: str):
-        self.boards_store.swap(board_id, another_board_id)
+        self.mod_view_store.swap(board_id, another_board_id)
         return jsonify({
             "status": "ok"
         }), 200
 
     def _remove_board(self, board_id: str):
-        self.boards_store.remove(board_id)
+        self.mod_view_store.remove(board_id)
         return jsonify({
             "status": "ok"
         }), 200
 
     def _render_board(self, board_id: str):
-        q = self.boards_store.get(board_id)
+        q = self.mod_view_store.get(board_id)
         return jsonify({
             "board_query": q.to_dict(),
             "payload": self.boards_renderer.render_as_dict(q),
