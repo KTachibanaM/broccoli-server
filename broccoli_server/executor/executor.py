@@ -1,9 +1,9 @@
 from typing import List
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from broccoli_server.worker import WorkerMetadata
 
 
-class Executor(metaclass=ABC):
+class Executor(metaclass=ABCMeta):
     @abstractmethod
     def add_job(self, job_id: str, worker_metadata: WorkerMetadata):
         pass
