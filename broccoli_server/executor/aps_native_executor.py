@@ -1,11 +1,15 @@
 from typing import List, Callable
 from .executor import Executor
 from broccoli_server.worker import WorkerMetadata, WorkContextFactory
-from apscheduler.schedulers.base import BaseScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class ApsNativeExecutor(Executor):
-    def __init(self, scheduler: BaseScheduler, wrap_work_func: Callable, work_context_factory: WorkContextFactory):
+    def __init__(self,
+                 scheduler: BackgroundScheduler,
+                 wrap_work_func: Callable,
+                 work_context_factory: WorkContextFactory
+                 ):
         self.scheduler = scheduler
         self.wrap_work_func = wrap_work_func
         self.work_context_factory = work_context_factory
@@ -32,7 +36,7 @@ class ApsNativeExecutor(Executor):
     def get_job_interval_seconds(self, job_id: str) -> int:
         return self.scheduler.get_job(job_id).trigger.interval.seconds
 
-    def reconfigure_job(self, job_id: str, desired_interval_seconds: int):
+    def set_job_interval_seconds(self, job_id: str, desired_interval_seconds: int):
         self.scheduler.reschedule_job(
             job_id=job_id,
             trigger='interval',

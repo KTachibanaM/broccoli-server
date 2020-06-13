@@ -1,11 +1,13 @@
-from typing import Set, Dict, Callable, Optional
+import logging
 from .logging import logger
-from apscheduler.schedulers.base import BaseScheduler
+from typing import Set, Dict, Callable, Optional
+from apscheduler.schedulers.background import BackgroundScheduler
 from sentry_sdk import capture_exception
 from broccoli_server.worker import WorkerCache, WorkerMetadata, WorkerConfigStore, MetadataStoreFactory, \
     WorkContextFactory
 from broccoli_server.content import ContentStore
 from broccoli_server.interface.worker import Worker
+from broccoli_server.executor import ApsNativeExecutor
 
 
 class Reconciler(object):
@@ -21,22 +23,40 @@ class Reconciler(object):
                  pause_workers: bool
                  ):
         self.worker_config_store = worker_config_store
-        self.scheduler = None
         self.content_store = content_store
         self.metadata_store_factory = metadata_store_factory
         self.work_context_factory = work_context_factory
         self.worker_cache = worker_cache
         self.sentry_enabled = sentry_enabled
         self.pause_workers = pause_workers
+        self.scheduler = BackgroundScheduler()
+        self.scheduler.add_job(
+            self.reconcile,
+            id=self.RECONCILE_JOB_ID,
+            trigger='interval',
+            seconds=10
+        )
+        self.aps_native_executor = ApsNativeExecutor(
+            self.scheduler,
+            self.wrap_work,
+            self.work_context_factory
+        )
 
-    def set_scheduler(self, scheduler: BaseScheduler):
-        self.scheduler = scheduler
+    def start(self):
+        # Less verbose logging from apscheduler
+        apscheduler_logger = logging.getLogger("apscheduler")
+        apscheduler_logger.setLevel(logging.ERROR)
+
+        self.scheduler.start()
+
+    def stop(self):
+        self.scheduler.shutdown(wait=False)
 
     def reconcile(self):
-        if not self.scheduler:
-            logger.error("Scheduler is not configured!")
+        if not self.aps_native_executor:
+            logger.error("ApsNativeExecutor is not set!")
             return
-        actual_job_ids = set(map(lambda j: j.id, self.scheduler.get_jobs())) - {self.RECONCILE_JOB_ID}  # type: Set[str]
+        actual_job_ids = set(self.aps_native_executor.get_job_ids()) - {self.RECONCILE_JOB_ID}  # type: Set[str]
         desired_jobs = self.worker_config_store.get_all()
         desired_job_ids = set(desired_jobs.keys())  # type: Set[str]
 
@@ -51,7 +71,7 @@ class Reconciler(object):
             return
         logger.info(f"Going to remove jobs with id {removed_job_ids}")
         for removed_job_id in removed_job_ids:
-            self.scheduler.remove_job(job_id=removed_job_id)
+            self.aps_native_executor.remove_job(removed_job_id)
 
     def add_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs: Dict[str, WorkerMetadata]):
         added_job_ids = desired_job_ids - actual_job_ids
@@ -64,14 +84,8 @@ class Reconciler(object):
 
     def add_job(self, added_job_id: str, desired_jobs: Dict[str, WorkerMetadata]):
         worker_metadata = desired_jobs[added_job_id]
-        work_wrap = self.wrap_work(worker_metadata, self.work_context_factory)
 
-        self.scheduler.add_job(
-            work_wrap,
-            id=added_job_id,
-            trigger='interval',
-            seconds=worker_metadata.interval_seconds
-        )
+        self.aps_native_executor.add_job(added_job_id, worker_metadata)
 
     def configure_jobs(self,
                        actual_job_ids: Set[str],
@@ -82,14 +96,10 @@ class Reconciler(object):
         same_job_ids = actual_job_ids.intersection(desired_job_ids)
         for job_id in same_job_ids:
             desired_interval_seconds = desired_jobs[job_id].interval_seconds
-            actual_interval_seconds = self.scheduler.get_job(job_id).trigger.interval.seconds
+            actual_interval_seconds = self.aps_native_executor.get_job_interval_seconds(job_id)
             if desired_interval_seconds != actual_interval_seconds:
                 logger.info(f"Going to reconfigure job interval with id {job_id} to {desired_interval_seconds} seconds")
-                self.scheduler.reschedule_job(
-                    job_id=job_id,
-                    trigger='interval',
-                    seconds=desired_interval_seconds
-                )
+                self.aps_native_executor.set_job_interval_seconds(job_id, desired_interval_seconds)
 
     def wrap_work(self, worker_metadata: WorkerMetadata, work_context_factory: WorkContextFactory) \
             -> Optional[Callable]:

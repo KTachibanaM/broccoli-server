@@ -17,5 +17,9 @@ class Executor(metaclass=ABC):
         pass
 
     @abstractmethod
-    def reconfigure_job(self, job_id: str, worker_metadata: WorkerMetadata):
+    def get_job_interval_seconds(self, job_id: str) -> int:
+        pass
+
+    @abstractmethod
+    def set_job_interval_seconds(self, job_id: str, desired_interval_seconds: int):
         pass

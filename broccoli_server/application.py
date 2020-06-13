@@ -17,7 +17,6 @@ from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
-from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class Application(object):
@@ -97,10 +96,6 @@ class Application(object):
         JWTManager(self.flask_app)
         self.admin_username = getenv_or_raise("ADMIN_USERNAME")
         self.admin_password = getenv_or_raise("ADMIN_PASSWORD")
-
-        # Less verbose logging from apscheduler
-        apscheduler_logger = logging.getLogger("apscheduler")
-        apscheduler_logger.setLevel(logging.ERROR)
 
         self.flask_app.before_request(self._before_request)
         self.flask_app.add_url_rule('/auth', view_func=self._auth, methods=['POST'])
@@ -373,25 +368,16 @@ class Application(object):
         # detect flask debug mode
         # https://stackoverflow.com/questions/14874782/apscheduler-in-flask-executes-twice
         if not self.flask_app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-            print("Not in debug mode, starting scheduler")
-            scheduler = BackgroundScheduler()
-            self.reconciler.set_scheduler(scheduler)
-            scheduler.add_job(
-                self.reconciler.reconcile,
-                id=self.reconciler.RECONCILE_JOB_ID,
-                trigger='interval',
-                seconds=10
-            )
-
+            print("Not in debug mode, starting reconciler")
             print(f"Press Ctrl+{'Break' if os.name == 'nt' else 'C'} to exit")
             try:
-                scheduler.start()
+                self.reconciler.start()
             except (KeyboardInterrupt, SystemExit):
-                print('Workers exit')
-                scheduler.shutdown(wait=False)
+                print('Reconciler stopping...')
+                self.reconciler.stop()
                 sys.exit(0)
         else:
-            print("In debug mode, not starting scheduler")
+            print("In debug mode, not starting reconciler")
 
         self.flask_app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5000)))
 
