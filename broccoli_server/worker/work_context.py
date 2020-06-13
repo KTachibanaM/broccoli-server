@@ -24,3 +24,16 @@ class WorkContext(object):
     @property
     def metadata_store(self) -> MetadataStore:
         return self._metadata_store
+
+
+class WorkContextFactory(object):
+    def __init__(self, content_store: ContentStore, metadata_store_factory: MetadataStoreFactory):
+        self.content_store = content_store
+        self.metadata_store_factory = metadata_store_factory
+        
+    def build(self, worker_id: str):
+        return WorkContext(
+            worker_id=worker_id,
+            content_store=self.content_store,
+            metadata_store_factory=self.metadata_store_factory
+        )

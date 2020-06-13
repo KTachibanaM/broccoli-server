@@ -11,14 +11,12 @@ from broccoli_server.utils import validate_schema_or_not, getenv_or_raise
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
 from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, WorkerMetadata, WorkerCache, \
-    MetadataStoreFactory, WorkContext
+    MetadataStoreFactory, WorkContextFactory
 from broccoli_server.reconciler import Reconciler
-from broccoli_server.interface.worker import Worker
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
-from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class Application(object):
@@ -59,10 +57,12 @@ class Application(object):
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
+        self.worker_context_factory = WorkContextFactory(self.content_store, self.metadata_store_factory)
         self.reconciler = Reconciler(
             worker_config_store=self.worker_config_store,
             content_store=self.content_store,
             metadata_store_factory=self.metadata_store_factory,
+            work_context_factory=self.worker_context_factory,
             worker_cache=self.worker_cache,
             sentry_enabled=sentry_enabled,
             pause_workers=pause_workers
@@ -96,10 +96,6 @@ class Application(object):
         JWTManager(self.flask_app)
         self.admin_username = getenv_or_raise("ADMIN_USERNAME")
         self.admin_password = getenv_or_raise("ADMIN_PASSWORD")
-
-        # Less verbose logging from apscheduler
-        apscheduler_logger = logging.getLogger("apscheduler")
-        apscheduler_logger.setLevel(logging.ERROR)
 
         self.flask_app.before_request(self._before_request)
         self.flask_app.add_url_rule('/auth', view_func=self._auth, methods=['POST'])
@@ -372,25 +368,16 @@ class Application(object):
         # detect flask debug mode
         # https://stackoverflow.com/questions/14874782/apscheduler-in-flask-executes-twice
         if not self.flask_app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-            print("Not in debug mode, starting scheduler")
-            scheduler = BackgroundScheduler()
-            self.reconciler.set_scheduler(scheduler)
-            scheduler.add_job(
-                self.reconciler.reconcile,
-                id=self.reconciler.RECONCILE_JOB_ID,
-                trigger='interval',
-                seconds=10
-            )
-
+            print("Not in debug mode, starting reconciler")
             print(f"Press Ctrl+{'Break' if os.name == 'nt' else 'C'} to exit")
             try:
-                scheduler.start()
+                self.reconciler.start()
             except (KeyboardInterrupt, SystemExit):
-                print('Workers exit')
-                scheduler.shutdown(wait=False)
+                print('Reconciler stopping...')
+                self.reconciler.stop()
                 sys.exit(0)
         else:
-            print("In debug mode, not starting scheduler")
+            print("In debug mode, not starting reconciler")
 
         self.flask_app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5000)))
 
@@ -402,23 +389,5 @@ class Application(object):
             interval_seconds=int(getenv_or_raise('WORKER_INTERVAL_SECONDS')),
             error_resiliency=int(getenv_or_raise('WORKER_ERROR_RESILIENCY')),
         )
-        # todo: kind of dup with Reconciler.add_job
-        status, worker_or_message = self.worker_cache.load(
-            worker_metadata.module,
-            worker_metadata.class_name,
-            worker_metadata.args,
-        )
-        if not status:
-            extra = {
-                'module': worker_metadata.module,
-                'class_name': worker_metadata.class_name,
-                'args': worker_metadata.args,
-                'message': worker_or_message
-            }
-            raise RuntimeError(f"Fails to load worker, {json.dumps(extra)}")
-        worker = worker_or_message  # type: Worker
-        worker_id = f"broccoli.worker.{worker.get_id()}"
-        work_context = WorkContext(worker_id, self.content_store, self.metadata_store_factory)
-        worker.pre_work(work_context)
-        work_wrap = self.reconciler.wrap_work(worker, work_context, worker_metadata.error_resiliency)
+        work_wrap = self.reconciler.wrap_work(worker_metadata, self.worker_context_factory)
         work_wrap()
