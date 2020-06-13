@@ -11,7 +11,7 @@ from broccoli_server.utils import validate_schema_or_not, getenv_or_raise
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
 from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, WorkerMetadata, WorkerCache, \
-    MetadataStoreFactory, WorkContext, WorkContextFactory
+    MetadataStoreFactory, WorkContextFactory
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
 from flask import Flask, request, jsonify, send_from_directory, redirect
