@@ -1,8 +1,9 @@
-from typing import Set, Dict, Callable
+from typing import Set, Dict, Callable, Optional
 from .logging import logger
 from apscheduler.schedulers.base import BaseScheduler
 from sentry_sdk import capture_exception
-from broccoli_server.worker import WorkerCache, WorkerMetadata, WorkerConfigStore, WorkContext, MetadataStoreFactory
+from broccoli_server.worker import WorkerCache, WorkerMetadata, WorkerConfigStore, MetadataStoreFactory, \
+    WorkContextFactory
 from broccoli_server.content import ContentStore
 from broccoli_server.interface.worker import Worker
 
@@ -14,6 +15,7 @@ class Reconciler(object):
                  worker_config_store: WorkerConfigStore,
                  content_store: ContentStore,
                  metadata_store_factory: MetadataStoreFactory,
+                 work_context_factory: WorkContextFactory,
                  worker_cache: WorkerCache,
                  sentry_enabled: bool,
                  pause_workers: bool
@@ -22,6 +24,7 @@ class Reconciler(object):
         self.scheduler = None
         self.content_store = content_store
         self.metadata_store_factory = metadata_store_factory
+        self.work_context_factory = work_context_factory
         self.worker_cache = worker_cache
         self.sentry_enabled = sentry_enabled
         self.pause_workers = pause_workers
@@ -61,20 +64,7 @@ class Reconciler(object):
 
     def add_job(self, added_job_id: str, desired_jobs: Dict[str, WorkerMetadata]):
         worker_metadata = desired_jobs[added_job_id]
-        module, class_name, args = worker_metadata.module, worker_metadata.class_name, worker_metadata.args
-        status, worker_or_message = self.worker_cache.load(module, class_name, args)
-        if not status:
-            logger.error("Fails to load worker", extra={
-                'module': module,
-                'class_name': class_name,
-                'args': args,
-                'message': worker_or_message
-            })
-            return
-        worker = worker_or_message  # type: Worker
-        work_context = WorkContext(added_job_id, self.content_store, self.metadata_store_factory)
-        worker.pre_work(work_context)
-        work_wrap = self.wrap_work(worker, work_context, worker_metadata.error_resiliency)
+        work_wrap = self.wrap_work(worker_metadata, self.work_context_factory)
 
         self.scheduler.add_job(
             work_wrap,
@@ -101,8 +91,23 @@ class Reconciler(object):
                     seconds=desired_interval_seconds
                 )
 
-    def wrap_work(self, worker: Worker, work_context: WorkContext, error_resiliency: int) -> Callable:
+    def wrap_work(self, worker_metadata: WorkerMetadata, work_context_factory: WorkContextFactory) \
+            -> Optional[Callable]:
+        module, class_name, args, error_resiliency = \
+            worker_metadata.module, worker_metadata.class_name, worker_metadata.args, worker_metadata.error_resiliency
+        status, worker_or_message = self.worker_cache.load(module, class_name, args)
+        if not status:
+            logger.error("Fails to load worker", extra={
+                'module': module,
+                'class_name': class_name,
+                'args': args,
+                'message': worker_or_message
+            })
+            return None
+        worker = worker_or_message  # type: Worker
         worker_id = f"broccoli.worker.{worker.get_id()}"
+        work_context = work_context_factory.build(worker_id)
+        worker.pre_work(work_context)
 
         def work_wrap():
             try:
