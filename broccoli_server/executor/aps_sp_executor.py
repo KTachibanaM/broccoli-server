@@ -9,9 +9,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class ApsSubprocessExecutor(ApsExecutor):
-    def __init__(self, scheduler: BackgroundScheduler, worker_invocation_py_path: str):
+    def __init__(self, scheduler: BackgroundScheduler, run_worker_invocation_py_path: str):
         super(ApsSubprocessExecutor, self).__init__(scheduler)
-        self.worker_invocation_py_path = worker_invocation_py_path
+        self.run_worker_invocation_py_path = run_worker_invocation_py_path
 
     def add_job(self, job_id: str, worker_metadata: WorkerMetadata):
         def sp_work_wrap():
@@ -25,7 +25,7 @@ class ApsSubprocessExecutor(ApsExecutor):
                 output = subprocess.check_output(
                     [
                         sys.executable,
-                        self.worker_invocation_py_path,
+                        self.run_worker_invocation_py_path,
                     ],
                     env=env,
                     stderr=subprocess.STDOUT
