@@ -79,6 +79,7 @@ class Application(object):
             pause_workers=pause_workers
         )
         if run_worker_invocation_py_path:
+            print("Solely using aps subprocess executor")
             executor = ApsSubprocessExecutor(
                 scheduler=root_scheduler,
                 run_worker_invocation_py_path=run_worker_invocation_py_path
@@ -403,10 +404,14 @@ class Application(object):
         self.flask_app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5000)))
 
     def run_worker(self):
+        args = getenv_or_raise('WORKER_ARGS_BASE64')
+        args = base64.b64decode(args)
+        args = json.loads(args)
+
         worker_metadata = WorkerMetadata(
             module=getenv_or_raise('WORKER_MODULE'),
             class_name=getenv_or_raise('WORKER_CLASS_NAME'),
-            args=json.loads(base64.b64decode(getenv_or_raise('WORKER_ARGS_BASE64'))),
+            args=args,
             interval_seconds=int(getenv_or_raise('WORKER_INTERVAL_SECONDS')),
             error_resiliency=int(getenv_or_raise('WORKER_ERROR_RESILIENCY')),
         )

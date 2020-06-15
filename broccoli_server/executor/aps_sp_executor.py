@@ -15,10 +15,16 @@ class ApsSubprocessExecutor(ApsExecutor):
 
     def add_job(self, job_id: str, worker_metadata: WorkerMetadata):
         def sp_work_wrap():
+            args = worker_metadata.args
+            args = json.dumps(args)
+            args = args.encode('utf-8')
+            args = base64.b64encode(args)
+            args = args.decode('utf-8')
+
             env = os.environ.copy()
             env['WORKER_MODULE'] = worker_metadata.module
             env['WORKER_CLASS_NAME'] = worker_metadata.class_name
-            env['WORKER_ARGS_BASE64'] = base64.b64encode(json.dumps(worker_metadata.args))
+            env['WORKER_ARGS_BASE64'] = args
             env['WORKER_INTERVAL_SECONDS'] = str(worker_metadata.interval_seconds)
             env['WORKER_ERROR_RESILIENCY'] = str(worker_metadata.error_resiliency)
             try:
