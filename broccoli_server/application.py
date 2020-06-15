@@ -5,7 +5,7 @@ import datetime
 import json
 import base64
 import sentry_sdk
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple, Optional
 from broccoli_server.database import Migration
 from broccoli_server.utils import validate_schema_or_not, getenv_or_raise
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
@@ -14,7 +14,7 @@ from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, Worke
     MetadataStoreFactory, WorkContextFactory, WorkWrapper
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
-from broccoli_server.executor import ApsNativeExecutor
+from broccoli_server.executor import ApsNativeExecutor, ApsSubprocessExecutor
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
@@ -22,7 +22,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class Application(object):
-    def __init__(self):
+    def __init__(self, run_worker_invocation_py_path: Optional[str] = None):
         # Environment
         if 'SENTRY_DSN' in os.environ:
             print("SENTRY_DSN environ found, settings up sentry")
@@ -78,15 +78,21 @@ class Application(object):
             sentry_enabled=sentry_enabled,
             pause_workers=pause_workers
         )
-        aps_native_executor = ApsNativeExecutor(
-            scheduler=root_scheduler,
-            work_wrapper=self.work_wrapper,
-            work_context_factory=worker_context_factory,
-        )
+        if run_worker_invocation_py_path:
+            executor = ApsSubprocessExecutor(
+                scheduler=root_scheduler,
+                run_worker_invocation_py_path=run_worker_invocation_py_path
+            )
+        else:
+            executor = ApsNativeExecutor(
+                scheduler=root_scheduler,
+                work_wrapper=self.work_wrapper,
+                work_context_factory=worker_context_factory,
+            )
         self.reconciler = Reconciler(
             worker_config_store=self.worker_config_store,
             root_scheduler=root_scheduler,
-            executor=aps_native_executor
+            executor=executor
         )
 
         # Figure out path for static web artifact
