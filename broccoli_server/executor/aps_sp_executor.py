@@ -36,7 +36,7 @@ class ApsSubprocessExecutor(ApsExecutor):
                     env=env,
                     stderr=subprocess.STDOUT
                 )
-                for line in str(output).split("\n"):
+                for line in output.decode('utf-8').split("\n"):
                     print(f"{job_id}: {line}")
             except subprocess.CalledProcessError as e:
                 print(f"{job_id} fails to execute, error {str(e)}")
