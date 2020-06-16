@@ -416,4 +416,7 @@ class Application(object):
             error_resiliency=int(getenv_or_raise('WORKER_ERROR_RESILIENCY')),
         )
         work_wrap = self.work_wrapper.wrap(worker_metadata)
+
+        print(f"Executing worker mode with worker metadata {str(worker_metadata)}")
         work_wrap()
+        print(f"Executed worker mode with worker metadata {str(worker_metadata)}")
