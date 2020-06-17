@@ -19,19 +19,19 @@ class Migration(object):
 
     def migrate(self):
         schema_version = self._get_schema_version()
-        print(f"current schema version is {schema_version}")
+        print(f"Current schema version is {schema_version}")
 
         if schema_version == self.latest_schema_version:
-            print(f"already on latest schema version {self.latest_schema_version}, yay!")
+            print(f"Already on latest schema version {self.latest_schema_version}, yay!")
             return
         if schema_version not in self.upgrade_map:
             raise RuntimeError(f"unknown schema version {schema_version}, :(")
 
         next_schema_version = schema_version + 1
-        print(f"performing schema migration {schema_version} to {next_schema_version}")
+        print(f"Performing schema migration {schema_version} to {next_schema_version}")
         self.upgrade_map[schema_version]()
         self._update_schema_version(next_schema_version)
-        print(f"performed schema migration {schema_version} to {next_schema_version}")
+        print(f"Performed schema migration {schema_version} to {next_schema_version}")
 
     def _version_0_to_1(self):
         try:

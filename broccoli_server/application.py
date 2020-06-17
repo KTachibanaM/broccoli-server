@@ -5,22 +5,25 @@ import datetime
 import json
 import base64
 import sentry_sdk
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple, Optional
 from broccoli_server.database import Migration
 from broccoli_server.utils import validate_schema_or_not, getenv_or_raise
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
 from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, WorkerMetadata, WorkerCache, \
-    MetadataStoreFactory, WorkContextFactory
+    MetadataStoreFactory, WorkContextFactory, WorkWrapper
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
+from broccoli_server.executor import ApsNativeExecutor, ApsSubprocessExecutor
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class Application(object):
-    def __init__(self):
+    def __init__(self, run_worker_invocation_py_path: Optional[str] = None):
+        # Environment
         if 'SENTRY_DSN' in os.environ:
             print("SENTRY_DSN environ found, settings up sentry")
             sentry_sdk.init(os.environ['SENTRY_DSN'])
@@ -34,11 +37,13 @@ class Application(object):
         else:
             pause_workers = False
 
+        # Database migration
         Migration(
             admin_connection_string=getenv_or_raise("MONGODB_ADMIN_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         ).migrate()
 
+        # Objects
         self.content_store = ContentStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
@@ -57,22 +62,39 @@ class Application(object):
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
-        self.worker_context_factory = WorkContextFactory(self.content_store, self.metadata_store_factory)
-        self.reconciler = Reconciler(
-            worker_config_store=self.worker_config_store,
-            content_store=self.content_store,
-            metadata_store_factory=self.metadata_store_factory,
-            work_context_factory=self.worker_context_factory,
-            worker_cache=self.worker_cache,
-            sentry_enabled=sentry_enabled,
-            pause_workers=pause_workers
-        )
         self.mod_view_store = ModViewStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
         self.boards_renderer = ModViewRenderer(self.content_store)
         self.default_api_handler = None
+
+        root_scheduler = BackgroundScheduler()
+        worker_context_factory = WorkContextFactory(self.content_store, self.metadata_store_factory)
+        self.work_wrapper = WorkWrapper(
+            work_context_factory=worker_context_factory,
+            worker_cache=self.worker_cache,
+            worker_config_store=self.worker_config_store,
+            sentry_enabled=sentry_enabled,
+            pause_workers=pause_workers
+        )
+        if run_worker_invocation_py_path:
+            print("Solely using aps subprocess executor")
+            executor = ApsSubprocessExecutor(
+                scheduler=root_scheduler,
+                run_worker_invocation_py_path=run_worker_invocation_py_path
+            )
+        else:
+            executor = ApsNativeExecutor(
+                scheduler=root_scheduler,
+                work_wrapper=self.work_wrapper,
+                work_context_factory=worker_context_factory,
+            )
+        self.reconciler = Reconciler(
+            worker_config_store=self.worker_config_store,
+            root_scheduler=root_scheduler,
+            executor=executor
+        )
 
         # Figure out path for static web artifact
         my_path = os.path.abspath(__file__)
@@ -382,12 +404,17 @@ class Application(object):
         self.flask_app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5000)))
 
     def run_worker(self):
+        args = getenv_or_raise('WORKER_ARGS_BASE64')
+        args = base64.b64decode(args)
+        args = json.loads(args)
+
         worker_metadata = WorkerMetadata(
             module=getenv_or_raise('WORKER_MODULE'),
             class_name=getenv_or_raise('WORKER_CLASS_NAME'),
-            args=json.loads(base64.b64decode(getenv_or_raise('WORKER_ARGS_BASE64'))),
+            args=args,
             interval_seconds=int(getenv_or_raise('WORKER_INTERVAL_SECONDS')),
             error_resiliency=int(getenv_or_raise('WORKER_ERROR_RESILIENCY')),
         )
-        work_wrap = self.reconciler.wrap_work(worker_metadata, self.worker_context_factory)
+        work_wrap = self.work_wrapper.wrap(worker_metadata)
         work_wrap()
+        print(f"Executed worker mode with worker metadata {str(worker_metadata)}")
