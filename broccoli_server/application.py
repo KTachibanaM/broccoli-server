@@ -32,7 +32,7 @@ class Application(object):
             print("Not setting up sentry")
             sentry_enabled = False
 
-        if 'PAUSE_WORKERS' in os.environ and os.environ['PAUSE_WORKERS'] == 'true':
+        if os.environ.get('PAUSE_WORKERS', 'false') == 'true':
             pause_workers = True
         else:
             pause_workers = False
@@ -43,21 +43,31 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         ).migrate()
 
-        # Objects
+        # Work wrapper
         self.content_store = ContentStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
+        metadata_store_factory = MetadataStoreFactory(
+            connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
+            db=getenv_or_raise("MONGODB_DB"),
+        )
+        worker_context_factory = WorkContextFactory(self.content_store, metadata_store_factory)
         self.worker_cache = WorkerCache()
         self.worker_config_store = WorkerConfigStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB"),
             worker_cache=self.worker_cache
         )
-        self.metadata_store_factory = MetadataStoreFactory(
-            connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
-            db=getenv_or_raise("MONGODB_DB"),
+        self.work_wrapper = WorkWrapper(
+            work_context_factory=worker_context_factory,
+            worker_cache=self.worker_cache,
+            worker_config_store=self.worker_config_store,
+            sentry_enabled=sentry_enabled,
+            pause_workers=pause_workers
         )
+
+        # Other objects
         self.global_metadata_store = GlobalMetadataStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
@@ -70,14 +80,7 @@ class Application(object):
         self.default_api_handler = None
 
         root_scheduler = BackgroundScheduler()
-        worker_context_factory = WorkContextFactory(self.content_store, self.metadata_store_factory)
-        self.work_wrapper = WorkWrapper(
-            work_context_factory=worker_context_factory,
-            worker_cache=self.worker_cache,
-            worker_config_store=self.worker_config_store,
-            sentry_enabled=sentry_enabled,
-            pause_workers=pause_workers
-        )
+
         if run_worker_invocation_py_path:
             print("Solely using aps subprocess executor")
             executor = ApsSubprocessExecutor(
