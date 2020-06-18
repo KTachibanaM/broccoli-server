@@ -1,11 +1,16 @@
 import logging
 import os
 
-root_handler = logging.StreamHandler()
-root_handler.setFormatter(logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s] %(message)s"))
-logger = logging.getLogger(__name__)
-logger.addHandler(root_handler)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(logging.Formatter("[%(asctime)s][%(name)s][%(levelname)s] %(message)s"))
+
+root_logger = logging.getLogger(__name__)
+root_logger.addHandler(stream_handler)
+worker_logger = logging.getLogger("broccoli")
+worker_logger.addHandler(stream_handler)
 if os.environ.get("LOGGING_DEBUG", "false") == "true":
-    logger.setLevel(logging.DEBUG)
+    root_logger.setLevel(logging.DEBUG)
+    worker_logger.setLevel(logging.DEBUG)
 else:
-    logger.setLevel(logging.INFO)
+    root_logger.setLevel(logging.INFO)
+    worker_logger.setLevel(logging.INFO)
