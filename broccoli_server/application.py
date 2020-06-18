@@ -284,7 +284,7 @@ class Application(object):
                 })
             return jsonify(boards), 200
 
-        @self.flask_app.add_url_rule(
+        @self.flask_app.route(
             '/apiInternal/boards/swap/<string:board_id>/<string:another_board_id>',
             methods=['POST']
         )
@@ -294,14 +294,14 @@ class Application(object):
                 "status": "ok"
             }), 200
 
-        @self.flask_app.add_url_rule('/apiInternal/board/<string:board_id>', methods=['DELETE'])
+        @self.flask_app.route('/apiInternal/board/<string:board_id>', methods=['DELETE'])
         def _remove_board(board_id: str):
             self.mod_view_store.remove(board_id)
             return jsonify({
                 "status": "ok"
             }), 200
 
-        @self.flask_app.add_url_rule('/apiInternal/renderBoard/<string:board_id>', methods=['GET'])
+        @self.flask_app.route('/apiInternal/renderBoard/<string:board_id>', methods=['GET'])
         def _render_board(board_id: str):
             q = self.mod_view_store.get(board_id)
             return jsonify({
@@ -310,7 +310,7 @@ class Application(object):
                 "count_without_limit": self.content_store.count(json.loads(q.q))
             }), 200
 
-        @self.flask_app.add_url_rule('/apiInternal/callbackBoard/<string:callback_id>', methods=['POST'])
+        @self.flask_app.route('/apiInternal/callbackBoard/<string:callback_id>', methods=['POST'])
         def _callback_board(callback_id: str):
             document = request.json  # type: Dict
             self.boards_renderer.callback(callback_id, document)
@@ -318,7 +318,7 @@ class Application(object):
                 "status": "ok"
             }), 200
 
-        @self.flask_app.add_url_rule('/web/<path:filename>', methods=['GET'])
+        @self.flask_app.route('/web/<path:filename>', methods=['GET'])
         def _web(filename=''):
             if filename == '':
                 return send_from_directory(self.web_root, "index.html")
