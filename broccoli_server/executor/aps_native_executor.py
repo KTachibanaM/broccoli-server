@@ -14,8 +14,12 @@ class ApsNativeExecutor(ApsExecutor):
         self.work_context_factory = work_context_factory
 
     def add_job(self, job_id: str, worker_metadata: WorkerMetadata):
-        work_wrap = self.work_wrapper.wrap(worker_metadata)
+        work_wrap_and_id = self.work_wrapper.wrap(worker_metadata)
+        if not work_wrap_and_id:
+            # TODO: log
+            return
 
+        work_wrap, _ = work_wrap_and_id
         self.scheduler.add_job(
             work_wrap,
             id=job_id,

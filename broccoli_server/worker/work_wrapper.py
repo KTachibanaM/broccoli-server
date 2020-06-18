@@ -1,4 +1,4 @@
-from typing import Optional, Callable
+from typing import Optional, Callable, Tuple
 from .logging import logger
 from .work_context import WorkContextFactory
 from .worker_metadata import WorkerMetadata
@@ -22,7 +22,7 @@ class WorkWrapper(object):
         self.sentry_enabled = sentry_enabled
         self.pause_workers = pause_workers
 
-    def wrap(self, worker_metadata: WorkerMetadata) -> Optional[Callable]:
+    def wrap(self, worker_metadata: WorkerMetadata) -> Optional[Tuple[Callable, str]]:
         module, class_name, args, error_resiliency = \
             worker_metadata.module, worker_metadata.class_name, worker_metadata.args, worker_metadata.error_resiliency
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
@@ -89,4 +89,4 @@ class WorkWrapper(object):
                             'reason': err
                         })
 
-        return wrapped_work_func
+        return wrapped_work_func, worker_id

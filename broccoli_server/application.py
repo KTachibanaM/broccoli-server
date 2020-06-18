@@ -378,6 +378,10 @@ class Application(object):
             interval_seconds=int(getenv_or_raise('WORKER_INTERVAL_SECONDS')),
             error_resiliency=int(getenv_or_raise('WORKER_ERROR_RESILIENCY')),
         )
-        work_wrap = self.work_wrapper.wrap(worker_metadata)
+        work_wrap_and_id = self.work_wrapper.wrap(worker_metadata)
+        if not work_wrap_and_id:
+            # todo: log
+            return
+        work_wrap, worker_id = work_wrap_and_id
         work_wrap()
-        print(f"Executed worker mode with worker metadata {str(worker_metadata)}")
+        print(f"Executed worker {worker_id}")
