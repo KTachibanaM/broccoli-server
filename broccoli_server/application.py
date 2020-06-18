@@ -161,6 +161,7 @@ class Application(object):
         def _index():
             return redirect('/web')
 
+        @self.flask_app.route('/api', methods=['GET'])
         @self.flask_app.route('/api/<path:path>', methods=['GET'])
         def _api(path=''):
             result = self.default_api_handler.handle_request(
@@ -318,6 +319,7 @@ class Application(object):
                 "status": "ok"
             }), 200
 
+        @self.flask_app.route('/web', methods=['GET'])
         @self.flask_app.route('/web/<path:filename>', methods=['GET'])
         def _web(filename=''):
             if filename == '':
