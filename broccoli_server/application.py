@@ -108,7 +108,7 @@ class Application(object):
         else:
             raise RuntimeError(f"Static web artifact is not found under {self.web_root}")
 
-        # Flask
+        # Configure Flask
         self.flask_app = Flask(__name__)
         CORS(self.flask_app)
 
@@ -122,70 +122,210 @@ class Application(object):
         self.admin_username = getenv_or_raise("ADMIN_USERNAME")
         self.admin_password = getenv_or_raise("ADMIN_PASSWORD")
 
-        self.flask_app.before_request(self._before_request)
-        self.flask_app.add_url_rule('/auth', view_func=self._auth, methods=['POST'])
-        self.flask_app.add_url_rule('/api', view_func=self._api, methods=['GET'])
-        self.flask_app.add_url_rule('/api/<path:path>', view_func=self._api, methods=['GET'])
-        self.flask_app.add_url_rule('/apiInternal/worker', view_func=self._add_worker, methods=['POST'])
-        self.flask_app.add_url_rule('/apiInternal/worker', view_func=self._get_workers, methods=['GET'])
-        self.flask_app.add_url_rule(
-            '/apiInternal/worker/<string:worker_id>',
-            view_func=self._remove_worker,
-            methods=['DELETE']
-        )
-        self.flask_app.add_url_rule(
+        # Configure Flask paths and handlers
+        def _before_request():
+            r_path = request.path
+            if r_path.startswith("/apiInternal"):
+                verify_jwt_in_request()
+        self.flask_app.before_request(_before_request)
+
+        @self.flask_app.route('/auth', methods=['POST'])
+        def _auth():
+            username = request.json.get('username', None)
+            password = request.json.get('password', None)
+            if not username:
+                return jsonify({
+                    "status": "error",
+                    "message": "Missing username"
+                }), 400
+            if not password:
+                return jsonify({
+                    "status": "error",
+                    "message": "Missing password"
+                }), 400
+            if username != self.admin_username or password != self.admin_password:
+                return jsonify({
+                    "status": "error",
+                    "message": "Wrong username/password"
+                }), 401
+            access_token = create_access_token(
+                identity=username,
+                expires_delta=datetime.timedelta(days=365)  # todo: just for now
+            )
+            return jsonify({
+                "status": "ok",
+                "access_token": access_token
+            }), 200
+
+        @self.flask_app.route('/', methods=['GET'])
+        def _index():
+            return redirect('/web')
+
+        @self.flask_app.route('/api/<path:path>', methods=['GET'])
+        def _api(path=''):
+            result = self.default_api_handler.handle_request(
+                path,
+                request.args.to_dict(),
+                self.content_store
+            )
+            return jsonify(result), 200
+
+        @self.flask_app.route('/apiInternal/worker', methods=['POST'])
+        def _add_worker():
+            body = request.json
+            success, message = validate_schema_or_not(instance=body, schema=ADD_WORKER_BODY_SCHEMA)
+            if not success:
+                return jsonify({
+                    "status": "error",
+                    "message": message
+                })
+            status, message_or_worker_id = self.worker_config_store.add(
+                WorkerMetadata(
+                    module=body["module"],
+                    class_name=body["class_name"],
+                    args=body["args"],
+                    interval_seconds=body["interval_seconds"],
+                    # TODO: allow changing when add
+                    error_resiliency=-1
+                )
+            )
+            if not status:
+                return jsonify({
+                    "status": "error",
+                    "message": message_or_worker_id
+                }), 400
+            else:
+                return jsonify({
+                    "status": "ok",
+                    "worker_id": message_or_worker_id
+                }), 200
+
+        @self.flask_app.route('/apiInternal/worker', methods=['GET'])
+        def _get_workers():
+            workers = []
+            for worker_id, worker in self.worker_config_store.get_all().items():
+                module, class_name, args, interval_seconds, error_resiliency \
+                    = worker.module, worker.class_name, worker.args, worker.interval_seconds, worker.error_resiliency
+                workers.append({
+                    "worker_id": worker_id,
+                    "module": module,
+                    "class_name": class_name,
+                    "args": args,
+                    "interval_seconds": interval_seconds,
+                    "error_resiliency": error_resiliency
+                })
+            return jsonify(workers), 200
+
+        @self.flask_app.route('/apiInternal/worker/<string:worker_id>', methods=['DELETE'])
+        def _remove_worker(worker_id: str):
+            status, message = self.worker_config_store.remove(worker_id)
+            if not status:
+                return jsonify({
+                    "status": "error",
+                    "message": message
+                }), 400
+            else:
+                return jsonify({
+                    "status": "ok"
+                }), 200
+
+        @self.flask_app.route(
             '/apiInternal/worker/<string:worker_id>/intervalSeconds/<int:interval_seconds>',
-            view_func=self._update_worker_interval_seconds,
             methods=['PUT']
         )
-        self.flask_app.add_url_rule(
-            '/apiInternal/worker/<string:worker_id>/metadata',
-            view_func=self._get_worker_metadata,
-            methods=['GET']
-        )
-        self.flask_app.add_url_rule(
-            '/apiInternal/worker/<string:worker_id>/metadata',
-            view_func=self._set_worker_metadata,
-            methods=['POST']
-        )
-        self.flask_app.add_url_rule(
-            '/apiInternal/board/<string:board_id>',
-            view_func=self._upsert_board,
-            methods=['POST']
-        )
-        self.flask_app.add_url_rule(
-            '/apiInternal/board/<string:board_id>',
-            view_func=self._get_board,
-            methods=['GET']
-        )
-        self.flask_app.add_url_rule(
-            '/apiInternal/boards',
-            view_func=self._get_boards,
-            methods=['GET']
-        )
-        self.flask_app.add_url_rule(
+        def _update_worker_interval_seconds(worker_id: str, interval_seconds: int):
+            status, message = self.worker_config_store.update_interval_seconds(worker_id, interval_seconds)
+            if not status:
+                return jsonify({
+                    "status": "error",
+                    "message": message
+                }), 400
+            else:
+                return jsonify({
+                    "status": "ok"
+                }), 200
+
+        @self.flask_app.route('/apiInternal/worker/<string:worker_id>/metadata', methods=['GET'])
+        def _get_worker_metadata(worker_id: str):
+            return jsonify(self.global_metadata_store.get_all(worker_id)), 200
+
+        @self.flask_app.route('/apiInternal/worker/<string:worker_id>/metadata', methods=['POST'])
+        def _set_worker_metadata(worker_id: str):
+            parsed_body = request.json
+            self.global_metadata_store.set_all(worker_id, parsed_body)
+            return jsonify({
+                "status": "ok"
+            }), 200
+
+        @self.flask_app.route('/apiInternal/board/<string:board_id>', methods=['POST'])
+        def _upsert_board(board_id: str):
+            parsed_body = request.json
+            parsed_body["q"] = json.dumps(parsed_body["q"])
+            self.mod_view_store.upsert(board_id, ModViewQuery(parsed_body))
+            return jsonify({
+                "status": "ok"
+            }), 200
+
+        @self.flask_app.route('/apiInternal/board/<string:board_id>', methods=['GET'])
+        def _get_board(board_id: str):
+            board_query = self.mod_view_store.get(board_id).to_dict()
+            board_query["q"] = json.loads(board_query["q"])
+            return jsonify(board_query), 200
+
+        @self.flask_app.route('/apiInternal/boards', methods=['GET'])
+        def _get_boards():
+            boards = []
+            for (board_id, board_query) in self.mod_view_store.get_all():
+                board_query = board_query.to_dict()
+                board_query["q"] = json.loads(board_query["q"])
+                boards.append({
+                    "board_id": board_id,
+                    "board_query": board_query
+                })
+            return jsonify(boards), 200
+
+        @self.flask_app.add_url_rule(
             '/apiInternal/boards/swap/<string:board_id>/<string:another_board_id>',
-            view_func=self._swap_boards,
             methods=['POST']
         )
-        self.flask_app.add_url_rule(
-            '/apiInternal/board/<string:board_id>',
-            view_func=self._remove_board,
-            methods=['DELETE']
-        )
-        self.flask_app.add_url_rule(
-            '/apiInternal/renderBoard/<string:board_id>',
-            view_func=self._render_board,
-            methods=['GET']
-        )
-        self.flask_app.add_url_rule(
-            '/apiInternal/callbackBoard/<string:callback_id>',
-            view_func=self._callback_board,
-            methods=['POST']
-        )
-        self.flask_app.add_url_rule('/web', view_func=self._web, methods=['GET'])
-        self.flask_app.add_url_rule('/web/<path:filename>', view_func=self._web, methods=['GET'])
-        self.flask_app.add_url_rule('/', view_func=self._index, methods=['GET'])
+        def _swap_boards(board_id: str, another_board_id: str):
+            self.mod_view_store.swap(board_id, another_board_id)
+            return jsonify({
+                "status": "ok"
+            }), 200
+
+        @self.flask_app.add_url_rule('/apiInternal/board/<string:board_id>', methods=['DELETE'])
+        def _remove_board(board_id: str):
+            self.mod_view_store.remove(board_id)
+            return jsonify({
+                "status": "ok"
+            }), 200
+
+        @self.flask_app.add_url_rule('/apiInternal/renderBoard/<string:board_id>', methods=['GET'])
+        def _render_board(board_id: str):
+            q = self.mod_view_store.get(board_id)
+            return jsonify({
+                "board_query": q.to_dict(),
+                "payload": self.boards_renderer.render_as_dict(q),
+                "count_without_limit": self.content_store.count(json.loads(q.q))
+            }), 200
+
+        @self.flask_app.add_url_rule('/apiInternal/callbackBoard/<string:callback_id>', methods=['POST'])
+        def _callback_board(callback_id: str):
+            document = request.json  # type: Dict
+            self.boards_renderer.callback(callback_id, document)
+            return jsonify({
+                "status": "ok"
+            }), 200
+
+        @self.flask_app.add_url_rule('/web/<path:filename>', methods=['GET'])
+        def _web(filename=''):
+            if filename == '':
+                return send_from_directory(self.web_root, "index.html")
+            elif os.path.exists(os.path.join(self.web_root, *filename.split("/"))):
+                return send_from_directory(self.web_root, filename)
+            else:
+                return send_from_directory(self.web_root, "index.html")
 
     def add_worker(self, module: str, class_name: str, constructor: Callable):
         self.worker_cache.add(
@@ -204,190 +344,8 @@ class Application(object):
             constructor=constructor
         )
 
-    def declare_mod_views(self, mod_views:  List[Tuple[str, ModViewQuery]]):
+    def declare_mod_views(self, mod_views: List[Tuple[str, ModViewQuery]]):
         self.mod_view_store.declare_mod_views(mod_views)
-
-    @staticmethod
-    def _before_request():
-        r_path = request.path
-        if r_path.startswith("/apiInternal"):
-            verify_jwt_in_request()
-
-    def _auth(self):
-        username = request.json.get('username', None)
-        password = request.json.get('password', None)
-        if not username:
-            return jsonify({
-                "status": "error",
-                "message": "Missing username"
-            }), 400
-        if not password:
-            return jsonify({
-                "status": "error",
-                "message": "Missing password"
-            }), 400
-        if username != self.admin_username or password != self.admin_password:
-            return jsonify({
-                "status": "error",
-                "message": "Wrong username/password"
-            }), 401
-        access_token = create_access_token(
-            identity=username,
-            expires_delta=datetime.timedelta(days=365)  # todo: just for now
-        )
-        return jsonify({
-            "status": "ok",
-            "access_token": access_token
-        }), 200
-
-    @staticmethod
-    def _index():
-        return redirect('/web')
-
-    def _api(self, path=''):
-        result = self.default_api_handler.handle_request(
-            path,
-            request.args.to_dict(),
-            self.content_store
-        )
-        return jsonify(result), 200
-
-    def _add_worker(self):
-        body = request.json
-        success, message = validate_schema_or_not(instance=body, schema=ADD_WORKER_BODY_SCHEMA)
-        if not success:
-            return jsonify({
-                "status": "error",
-                "message": message
-            })
-        status, message_or_worker_id = self.worker_config_store.add(
-            WorkerMetadata(
-                module=body["module"],
-                class_name=body["class_name"],
-                args=body["args"],
-                interval_seconds=body["interval_seconds"],
-                # TODO: allow changing when add
-                error_resiliency=-1
-            )
-        )
-        if not status:
-            return jsonify({
-                "status": "error",
-                "message": message_or_worker_id
-            }), 400
-        else:
-            return jsonify({
-                "status": "ok",
-                "worker_id": message_or_worker_id
-            }), 200
-
-    def _get_workers(self):
-        workers = []
-        for worker_id, worker in self.worker_config_store.get_all().items():
-            module, class_name, args, interval_seconds, error_resiliency \
-                = worker.module, worker.class_name, worker.args, worker.interval_seconds, worker.error_resiliency
-            workers.append({
-                "worker_id": worker_id,
-                "module": module,
-                "class_name": class_name,
-                "args": args,
-                "interval_seconds": interval_seconds,
-                "error_resiliency": error_resiliency
-            })
-        return jsonify(workers), 200
-
-    def _remove_worker(self, worker_id: str):
-        status, message = self.worker_config_store.remove(worker_id)
-        if not status:
-            return jsonify({
-                "status": "error",
-                "message": message
-            }), 400
-        else:
-            return jsonify({
-                "status": "ok"
-            }), 200
-
-    def _update_worker_interval_seconds(self, worker_id: str, interval_seconds: int):
-        status, message = self.worker_config_store.update_interval_seconds(worker_id, interval_seconds)
-        if not status:
-            return jsonify({
-                "status": "error",
-                "message": message
-            }), 400
-        else:
-            return jsonify({
-                "status": "ok"
-            }), 200
-
-    def _get_worker_metadata(self, worker_id: str):
-        return jsonify(self.global_metadata_store.get_all(worker_id)), 200
-
-    def _set_worker_metadata(self, worker_id: str):
-        parsed_body = request.json
-        self.global_metadata_store.set_all(worker_id, parsed_body)
-        return jsonify({
-            "status": "ok"
-        }), 200
-
-    def _upsert_board(self, board_id: str):
-        parsed_body = request.json
-        parsed_body["q"] = json.dumps(parsed_body["q"])
-        self.mod_view_store.upsert(board_id, ModViewQuery(parsed_body))
-        return jsonify({
-            "status": "ok"
-        }), 200
-
-    def _get_board(self, board_id: str):
-        board_query = self.mod_view_store.get(board_id).to_dict()
-        board_query["q"] = json.loads(board_query["q"])
-        return jsonify(board_query), 200
-
-    def _get_boards(self):
-        boards = []
-        for (board_id, board_query) in self.mod_view_store.get_all():
-            board_query = board_query.to_dict()
-            board_query["q"] = json.loads(board_query["q"])
-            boards.append({
-                "board_id": board_id,
-                "board_query": board_query
-            })
-        return jsonify(boards), 200
-
-    def _swap_boards(self, board_id: str, another_board_id: str):
-        self.mod_view_store.swap(board_id, another_board_id)
-        return jsonify({
-            "status": "ok"
-        }), 200
-
-    def _remove_board(self, board_id: str):
-        self.mod_view_store.remove(board_id)
-        return jsonify({
-            "status": "ok"
-        }), 200
-
-    def _render_board(self, board_id: str):
-        q = self.mod_view_store.get(board_id)
-        return jsonify({
-            "board_query": q.to_dict(),
-            "payload": self.boards_renderer.render_as_dict(q),
-            "count_without_limit": self.content_store.count(json.loads(q.q))
-        }), 200
-
-    def _callback_board(self, callback_id: str):
-        document = request.json  # type: Dict
-        self.boards_renderer.callback(callback_id, document)
-        return jsonify({
-            "status": "ok"
-        }), 200
-
-    def _web(self, filename=''):
-        if filename == '':
-            return send_from_directory(self.web_root, "index.html")
-        elif os.path.exists(os.path.join(self.web_root, *filename.split("/"))):
-            return send_from_directory(self.web_root, filename)
-        else:
-            return send_from_directory(self.web_root, "index.html")
 
     def start(self):
         # detect flask debug mode
