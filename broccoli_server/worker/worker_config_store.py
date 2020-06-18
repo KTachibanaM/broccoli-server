@@ -1,8 +1,10 @@
 import pymongo
+import logging
 from typing import Dict, Tuple
-from .logging import logger
 from .worker_cache import WorkerCache
 from .worker_metadata import WorkerMetadata
+
+logger = logging.getLogger(__name__)
 
 
 class WorkerConfigStore(object):

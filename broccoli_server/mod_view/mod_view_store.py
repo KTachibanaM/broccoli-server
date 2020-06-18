@@ -1,7 +1,9 @@
 import pymongo
-from .logging import logger
+import logging
 from broccoli_server.mod_view.mod_view_query import ModViewQuery
 from typing import List, Tuple, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class ModViewStore(object):

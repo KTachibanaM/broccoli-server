@@ -1,9 +1,10 @@
 import logging
-from .logging import logger
 from typing import Set, Dict
 from apscheduler.schedulers.background import BackgroundScheduler
 from broccoli_server.worker import WorkerMetadata, WorkerConfigStore
 from broccoli_server.executor import Executor
+
+logger = logging.getLogger(__name__)
 
 
 class Reconciler(object):

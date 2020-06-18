@@ -1,11 +1,13 @@
+import logging
 from typing import Optional, Callable, Tuple
-from .logging import logger
 from .work_context import WorkContextFactory
 from .worker_metadata import WorkerMetadata
 from .worker_cache import WorkerCache
 from .worker_config_store import WorkerConfigStore
 from sentry_sdk import capture_exception
 from broccoli_server.interface.worker import Worker
+
+logger = logging.getLogger(__name__)
 
 
 class WorkWrapper(object):
