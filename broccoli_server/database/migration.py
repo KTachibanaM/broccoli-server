@@ -22,7 +22,7 @@ class Migration(object):
         print(f"Current schema version is {schema_version}")
 
         if schema_version == self.latest_schema_version:
-            print(f"Already on latest schema version {self.latest_schema_version}, yay!")
+            print(f"Already on latest schema version {self.latest_schema_version}")
             return
         if schema_version not in self.upgrade_map:
             raise RuntimeError(f"unknown schema version {schema_version}, :(")

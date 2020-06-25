@@ -1,11 +1,13 @@
-from typing import Optional, Callable
-from .logging import logger
+import logging
+from typing import Optional, Callable, Tuple
 from .work_context import WorkContextFactory
 from .worker_metadata import WorkerMetadata
 from .worker_cache import WorkerCache
 from .worker_config_store import WorkerConfigStore
 from sentry_sdk import capture_exception
 from broccoli_server.interface.worker import Worker
+
+logger = logging.getLogger(__name__)
 
 
 class WorkWrapper(object):
@@ -22,7 +24,7 @@ class WorkWrapper(object):
         self.sentry_enabled = sentry_enabled
         self.pause_workers = pause_workers
 
-    def wrap(self, worker_metadata: WorkerMetadata) -> Optional[Callable]:
+    def wrap(self, worker_metadata: WorkerMetadata) -> Optional[Tuple[Callable, str]]:
         module, class_name, args, error_resiliency = \
             worker_metadata.module, worker_metadata.class_name, worker_metadata.args, worker_metadata.error_resiliency
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
@@ -89,4 +91,4 @@ class WorkWrapper(object):
                             'reason': err
                         })
 
-        return wrapped_work_func
+        return wrapped_work_func, worker_id

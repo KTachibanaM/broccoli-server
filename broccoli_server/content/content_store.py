@@ -2,10 +2,12 @@ import pymongo
 import datetime
 import random
 import heapq
+import logging
 from functools import total_ordering
 from typing import Dict, List, Optional
 from broccoli_server.utils import datetime_to_milliseconds, milliseconds_to_datetime
-from .logging import logger
+
+logger = logging.getLogger(__name__)
 
 
 @total_ordering
