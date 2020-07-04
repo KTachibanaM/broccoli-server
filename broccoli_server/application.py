@@ -187,6 +187,10 @@ class Application(object):
         def _index():
             return redirect('/web')
 
+        @flask_app.route('/health', methods=['GET'])
+        def _health():
+            return "OK", 200
+
         @flask_app.route('/api', methods=['GET'])
         @flask_app.route('/api/<path:path>', methods=['GET'])
         def _api(path=''):
