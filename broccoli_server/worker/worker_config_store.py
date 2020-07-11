@@ -54,8 +54,17 @@ class WorkerConfigStore(object):
                 class_name=document["class_name"],
                 args=document["args"],
                 interval_seconds=document["interval_seconds"],
-                error_resiliency=document.get('error_resiliency', -1)
+                error_resiliency=document.get('error_resiliency', -1),
+                # TODO: change
+                executor_slug="aps_native"
             )
+        return res
+
+    def get_all_by_executor_slug(self, executor_slug: str) -> Dict[str, WorkerMetadata]:
+        res = {}
+        for worker_id, worker_metadata in self.get_all().items():
+            if worker_metadata.executor_slug == executor_slug:
+                res[worker_id] = worker_metadata
         return res
 
     def _if_worker_exists(self, worker_id: str) -> bool:

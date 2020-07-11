@@ -1,5 +1,5 @@
 import logging
-from typing import Set, Dict
+from typing import Set, Dict, List
 from apscheduler.schedulers.background import BackgroundScheduler
 from broccoli_server.worker import WorkerMetadata, WorkerConfigStore
 from broccoli_server.executor import Executor
@@ -13,7 +13,7 @@ class Reconciler(object):
     def __init__(self,
                  worker_config_store: WorkerConfigStore,
                  root_scheduler: BackgroundScheduler,
-                 executor: Executor
+                 executors: List[Executor]
                  ):
         self.worker_config_store = worker_config_store
         self.root_scheduler = root_scheduler
@@ -23,7 +23,7 @@ class Reconciler(object):
             trigger='interval',
             seconds=10
         )
-        self.executor = executor
+        self.executors = executors  # type: List[Executor]
 
     def start(self):
         # Less verbose logging from apscheduler
@@ -36,47 +36,54 @@ class Reconciler(object):
         self.root_scheduler.shutdown(wait=False)
 
     def reconcile(self):
-        actual_job_ids = set(self.executor.get_job_ids()) - {self.RECONCILE_JOB_ID}  # type: Set[str]
-        desired_jobs = self.worker_config_store.get_all()
+        for e in self.executors:
+            self.reconcile_by_executor(e)
+
+    def reconcile_by_executor(self, executor: Executor):
+        actual_job_ids = set(executor.get_job_ids()) - {self.RECONCILE_JOB_ID}  # type: Set[str]
+        desired_jobs = self.worker_config_store.get_all_by_executor_slug(executor.get_slug())
         desired_job_ids = set(desired_jobs.keys())  # type: Set[str]
 
-        self.remove_jobs(actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids)
-        self.add_jobs(actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids, desired_jobs=desired_jobs)
-        self.configure_jobs(actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids, desired_jobs=desired_jobs)
+        Reconciler.remove_jobs(executor, actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids)
+        Reconciler.add_jobs(executor, actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids,
+                            desired_jobs=desired_jobs)
+        Reconciler.configure_jobs(executor, actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids,
+                                  desired_jobs=desired_jobs)
 
-    def remove_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str]):
+    @staticmethod
+    def remove_jobs(executor: Executor, actual_job_ids: Set[str], desired_job_ids: Set[str]):
         removed_job_ids = actual_job_ids - desired_job_ids
         if not removed_job_ids:
             logger.debug(f"No job to remove")
             return
         logger.info(f"Going to remove jobs with id {removed_job_ids}")
         for removed_job_id in removed_job_ids:
-            self.executor.remove_job(removed_job_id)
+            executor.remove_job(removed_job_id)
 
-    def add_jobs(self, actual_job_ids: Set[str], desired_job_ids: Set[str], desired_jobs: Dict[str, WorkerMetadata]):
+    @staticmethod
+    def add_jobs(executor: Executor, actual_job_ids: Set[str], desired_job_ids: Set[str],
+                 desired_jobs: Dict[str, WorkerMetadata]):
         added_job_ids = desired_job_ids - actual_job_ids
         if not added_job_ids:
             logger.debug(f"No job to add")
             return
         logger.info(f"Going to add jobs with id {added_job_ids}")
         for added_job_id in added_job_ids:
-            self.add_job(added_job_id, desired_jobs)
+            Reconciler.add_job(executor, added_job_id, desired_jobs)
 
-    def add_job(self, added_job_id: str, desired_jobs: Dict[str, WorkerMetadata]):
+    @staticmethod
+    def add_job(executor: Executor, added_job_id: str, desired_jobs: Dict[str, WorkerMetadata]):
         worker_metadata = desired_jobs[added_job_id]
+        executor.add_job(added_job_id, worker_metadata)
 
-        self.executor.add_job(added_job_id, worker_metadata)
-
-    def configure_jobs(self,
-                       actual_job_ids: Set[str],
-                       desired_job_ids: Set[str],
-                       desired_jobs: Dict[str, WorkerMetadata]
-                       ):
+    @staticmethod
+    def configure_jobs(executor: Executor, actual_job_ids: Set[str], desired_job_ids: Set[str],
+                       desired_jobs: Dict[str, WorkerMetadata]):
         # todo: configure job if worker.work bytecode changes..?
         same_job_ids = actual_job_ids.intersection(desired_job_ids)
         for job_id in same_job_ids:
             desired_interval_seconds = desired_jobs[job_id].interval_seconds
-            actual_interval_seconds = self.executor.get_job_interval_seconds(job_id)
+            actual_interval_seconds = executor.get_job_interval_seconds(job_id)
             if desired_interval_seconds != actual_interval_seconds:
                 logger.info(f"Going to reconfigure job interval with id {job_id} to {desired_interval_seconds} seconds")
-                self.executor.set_job_interval_seconds(job_id, desired_interval_seconds)
+                executor.set_job_interval_seconds(job_id, desired_interval_seconds)

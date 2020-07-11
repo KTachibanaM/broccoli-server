@@ -49,3 +49,6 @@ class ApsSubprocessExecutor(ApsExecutor):
             trigger='interval',
             seconds=worker_metadata.interval_seconds
         )
+
+    def get_slug(self):
+        return "aps_sp"
