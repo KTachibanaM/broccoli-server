@@ -6,8 +6,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class ApsExecutor(Executor, ABC):
-    def __init__(self, scheduler: BackgroundScheduler):
-        self.scheduler = scheduler
+    def __init__(self):
+        self.scheduler = BackgroundScheduler()
 
     @abstractmethod
     def add_job(self, job_id: str, worker_metadata: WorkerMetadata):

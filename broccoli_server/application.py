@@ -19,7 +19,6 @@ from broccoli_server.interface.api import ApiHandler
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
-from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class Application(object):
@@ -104,25 +103,13 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         )
 
-        root_scheduler = BackgroundScheduler()
-
+        executors = [ApsNativeExecutor(
+            work_wrapper=self.work_wrapper,
+            work_context_factory=self.worker_context_factory,
+        )]
         if self.run_worker_invocation_py_path:
-            print("Solely using aps subprocess executor")
-            executor = ApsSubprocessExecutor(
-                scheduler=root_scheduler,
-                run_worker_invocation_py_path=self.run_worker_invocation_py_path
-            )
-        else:
-            executor = ApsNativeExecutor(
-                scheduler=root_scheduler,
-                work_wrapper=self.work_wrapper,
-                work_context_factory=self.worker_context_factory,
-            )
-        reconciler = Reconciler(
-            worker_config_store=self.worker_config_store,
-            root_scheduler=root_scheduler,
-            executor=executor
-        )
+            executors.append(ApsSubprocessExecutor(run_worker_invocation_py_path=self.run_worker_invocation_py_path))
+        reconciler = Reconciler(worker_config_store=self.worker_config_store, executors=executors)
 
         # Figure out path for static web artifact
         my_path = os.path.abspath(__file__)
@@ -220,7 +207,9 @@ class Application(object):
                     args=body["args"],
                     interval_seconds=body["interval_seconds"],
                     # TODO: allow changing when add
-                    error_resiliency=-1
+                    error_resiliency=-1,
+                    # TODO: allow changing when add
+                    executor_slug="aps_native"
                 )
             )
             if not status:
@@ -389,6 +378,8 @@ class Application(object):
             args=args,
             interval_seconds=int(getenv_or_raise('WORKER_INTERVAL_SECONDS')),
             error_resiliency=int(getenv_or_raise('WORKER_ERROR_RESILIENCY')),
+            # TODO: doesn't really matter lol
+            executor_slug="aps_native"
         )
         work_wrap_and_id = self.work_wrapper.wrap(worker_metadata)
         if not work_wrap_and_id:

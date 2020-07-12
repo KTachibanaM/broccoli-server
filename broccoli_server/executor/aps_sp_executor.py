@@ -5,12 +5,11 @@ import json
 import base64
 from .aps_executor import ApsExecutor
 from broccoli_server.worker import WorkerMetadata
-from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class ApsSubprocessExecutor(ApsExecutor):
-    def __init__(self, scheduler: BackgroundScheduler, run_worker_invocation_py_path: str):
-        super(ApsSubprocessExecutor, self).__init__(scheduler)
+    def __init__(self, run_worker_invocation_py_path: str):
+        super(ApsSubprocessExecutor, self).__init__()
         self.run_worker_invocation_py_path = run_worker_invocation_py_path
 
     def add_job(self, job_id: str, worker_metadata: WorkerMetadata):
@@ -49,3 +48,6 @@ class ApsSubprocessExecutor(ApsExecutor):
             trigger='interval',
             seconds=worker_metadata.interval_seconds
         )
+
+    def get_slug(self):
+        return "aps_sp"

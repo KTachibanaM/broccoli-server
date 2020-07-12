@@ -23,3 +23,7 @@ class Executor(metaclass=ABCMeta):
     @abstractmethod
     def set_job_interval_seconds(self, job_id: str, desired_interval_seconds: int):
         pass
+
+    @abstractmethod
+    def get_slug(self):
+        pass
