@@ -14,6 +14,7 @@ class ApsExecutor(Executor, ABC):
         pass
 
     def _get_job_id(self, worker_id: str):
+        # prefix executor slug because different aps executors share the same aps_background_scheduler
         return f"{self.get_slug()}+{worker_id}"
 
     def add_worker(self, worker_id: str, worker_metadata: WorkerMetadata):

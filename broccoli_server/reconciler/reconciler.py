@@ -10,10 +10,11 @@ logger = logging.getLogger(__name__)
 class Reconciler(object):
     RECONCILE_JOB_ID = "broccoli.worker_reconcile"
 
-    def __init__(self, worker_config_store: WorkerConfigStore, executors: List[Executor]):
+    def __init__(self, aps_background_scheduler: BackgroundScheduler, worker_config_store: WorkerConfigStore,
+                 executors: List[Executor]):
         self.worker_config_store = worker_config_store
-        self.root_scheduler = BackgroundScheduler()
-        self.root_scheduler.add_job(
+        self.aps_background_scheduler = aps_background_scheduler
+        self.aps_background_scheduler.add_job(
             self.reconcile,
             id=self.RECONCILE_JOB_ID,
             trigger='interval',
@@ -26,10 +27,10 @@ class Reconciler(object):
         apscheduler_logger = logging.getLogger("apscheduler")
         apscheduler_logger.setLevel(logging.ERROR)
 
-        self.root_scheduler.start()
+        self.aps_background_scheduler.start()
 
     def stop(self):
-        self.root_scheduler.shutdown(wait=False)
+        self.aps_background_scheduler.shutdown(wait=False)
 
     def reconcile(self):
         for e in self.executors:

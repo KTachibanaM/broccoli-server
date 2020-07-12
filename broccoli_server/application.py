@@ -108,7 +108,7 @@ class Application(object):
         executors = [ApsNativeExecutor(aps_background_scheduler, self.work_wrapper, self.worker_context_factory)]
         if self.run_worker_invocation_py_path:
             executors.append(ApsSubprocessExecutor(aps_background_scheduler, self.run_worker_invocation_py_path))
-        reconciler = Reconciler(self.worker_config_store, executors)
+        reconciler = Reconciler(aps_background_scheduler, self.worker_config_store, executors)
 
         # Figure out path for static web artifact
         my_path = os.path.abspath(__file__)
