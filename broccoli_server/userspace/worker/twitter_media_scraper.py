@@ -48,7 +48,7 @@ class TwitterMediaScraper(Worker, ABC):
             context.logger.info("since_id is not set, getting it")
             init_tweets = self.twitter_api.GetUserTimeline(screen_name=self.screen_name, count=1)
             if not init_tweets:
-                raise Exception(f"Cannot obtain the initial tweets in order to get the initial since_id")
+                raise RuntimeError(f"Cannot obtain the initial tweets in order to get the initial since_id")
             init_since_id = max(init_tweets, key=lambda t: t.id).id
             context.metadata_store.set(TwitterMediaScraper.SINCE_ID_KEY, str(init_since_id))
 

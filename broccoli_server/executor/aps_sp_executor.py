@@ -3,16 +3,18 @@ import sys
 import os
 import json
 import base64
+from typing import Callable
+from apscheduler.schedulers.background import BackgroundScheduler
 from .aps_executor import ApsExecutor
 from broccoli_server.worker import WorkerMetadata
 
 
 class ApsSubprocessExecutor(ApsExecutor):
-    def __init__(self, run_worker_invocation_py_path: str):
-        super(ApsSubprocessExecutor, self).__init__()
+    def __init__(self, aps_background_scheduler: BackgroundScheduler, run_worker_invocation_py_path: str):
+        super(ApsSubprocessExecutor, self).__init__(aps_background_scheduler)
         self.run_worker_invocation_py_path = run_worker_invocation_py_path
 
-    def add_job(self, job_id: str, worker_metadata: WorkerMetadata):
+    def get_worker_func(self, worker_id: str, worker_metadata: WorkerMetadata) -> Callable:
         def sp_work_wrap():
             args = worker_metadata.args
             args = json.dumps(args)
@@ -38,16 +40,11 @@ class ApsSubprocessExecutor(ApsExecutor):
                 for line in output.decode('utf-8').split("\n"):
                     line = line.strip()
                     if line:
-                        print(f"{job_id}: {line}")
+                        print(f"{worker_id}: {line}")
             except subprocess.CalledProcessError as e:
-                print(f"{job_id} fails to execute, error {str(e)}")
+                print(f"{worker_id} fails to execute, error {str(e)}")
 
-        self.scheduler.add_job(
-            sp_work_wrap,
-            id=job_id,
-            trigger='interval',
-            seconds=worker_metadata.interval_seconds
-        )
+        return sp_work_wrap
 
     def get_slug(self):
         return "aps_sp"
