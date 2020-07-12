@@ -10,13 +10,9 @@ logger = logging.getLogger(__name__)
 class Reconciler(object):
     RECONCILE_JOB_ID = "broccoli.worker_reconcile"
 
-    def __init__(self,
-                 worker_config_store: WorkerConfigStore,
-                 root_scheduler: BackgroundScheduler,
-                 executors: List[Executor]
-                 ):
+    def __init__(self, worker_config_store: WorkerConfigStore, executors: List[Executor]):
         self.worker_config_store = worker_config_store
-        self.root_scheduler = root_scheduler
+        self.root_scheduler = BackgroundScheduler()
         self.root_scheduler.add_job(
             self.reconcile,
             id=self.RECONCILE_JOB_ID,

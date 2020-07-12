@@ -19,7 +19,6 @@ from broccoli_server.interface.api import ApiHandler
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
-from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class Application(object):
@@ -104,23 +103,13 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         )
 
-        root_scheduler = BackgroundScheduler()
-
         executors = [ApsNativeExecutor(
-            scheduler=root_scheduler,
             work_wrapper=self.work_wrapper,
             work_context_factory=self.worker_context_factory,
         )]
         if self.run_worker_invocation_py_path:
-            executors.append(ApsSubprocessExecutor(
-                scheduler=root_scheduler,
-                run_worker_invocation_py_path=self.run_worker_invocation_py_path
-            ))
-        reconciler = Reconciler(
-            worker_config_store=self.worker_config_store,
-            root_scheduler=root_scheduler,
-            executors=executors
-        )
+            executors.append(ApsSubprocessExecutor(run_worker_invocation_py_path=self.run_worker_invocation_py_path))
+        reconciler = Reconciler(worker_config_store=self.worker_config_store, executors=executors)
 
         # Figure out path for static web artifact
         my_path = os.path.abspath(__file__)
