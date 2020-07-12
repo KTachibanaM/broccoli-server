@@ -18,7 +18,7 @@ class ApsExecutor(Executor, ABC):
 
     def add_worker(self, worker_id: str, worker_metadata: WorkerMetadata):
         self.aps_background_scheduler.add_job(
-            self.get_worker_func(worker_metadata),
+            self.get_worker_func(worker_id, worker_metadata),
             id=self._get_job_id(worker_id),
             trigger='interval',
             seconds=worker_metadata.interval_seconds
