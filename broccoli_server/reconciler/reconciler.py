@@ -36,51 +36,51 @@ class Reconciler(object):
             self.reconcile_by_executor(e)
 
     def reconcile_by_executor(self, executor: Executor):
-        actual_job_ids = set(executor.get_job_ids()) - {self.RECONCILE_JOB_ID}  # type: Set[str]
-        desired_jobs = self.worker_config_store.get_all_by_executor_slug(executor.get_slug())
-        desired_job_ids = set(desired_jobs.keys())  # type: Set[str]
+        actual_worker_ids = set(executor.get_worker_ids()) - {self.RECONCILE_JOB_ID}  # type: Set[str]
+        desired_workers = self.worker_config_store.get_all_by_executor_slug(executor.get_slug())
+        desired_worker_ids = set(desired_workers.keys())  # type: Set[str]
 
-        Reconciler.remove_jobs(executor, actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids)
-        Reconciler.add_jobs(executor, actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids,
-                            desired_jobs=desired_jobs)
-        Reconciler.configure_jobs(executor, actual_job_ids=actual_job_ids, desired_job_ids=desired_job_ids,
-                                  desired_jobs=desired_jobs)
+        Reconciler.remove_workers(executor, actual_worker_ids=actual_worker_ids, desired_worker_ids=desired_worker_ids)
+        Reconciler.add_workers(executor, actual_worker_ids=actual_worker_ids, desired_worker_ids=desired_worker_ids,
+                               desired_workers=desired_workers)
+        Reconciler.configure_workers(executor, actual_worker_ids=actual_worker_ids, desired_worker_ids=desired_worker_ids,
+                                     desired_workers=desired_workers)
 
     @staticmethod
-    def remove_jobs(executor: Executor, actual_job_ids: Set[str], desired_job_ids: Set[str]):
-        removed_job_ids = actual_job_ids - desired_job_ids
-        if not removed_job_ids:
-            logger.debug(f"No job to remove")
+    def remove_workers(executor: Executor, actual_worker_ids: Set[str], desired_worker_ids: Set[str]):
+        removed_worker_ids = actual_worker_ids - desired_worker_ids
+        if not removed_worker_ids:
+            logger.debug(f"No worker to remove")
             return
-        logger.info(f"Going to remove jobs with id {removed_job_ids} in executor {executor.get_slug()}")
-        for removed_job_id in removed_job_ids:
-            executor.remove_job(removed_job_id)
+        logger.info(f"Going to remove workers with id {removed_worker_ids} in executor {executor.get_slug()}")
+        for removed_worker_id in removed_worker_ids:
+            executor.remove_worker(removed_worker_id)
 
     @staticmethod
-    def add_jobs(executor: Executor, actual_job_ids: Set[str], desired_job_ids: Set[str],
-                 desired_jobs: Dict[str, WorkerMetadata]):
-        added_job_ids = desired_job_ids - actual_job_ids
-        if not added_job_ids:
-            logger.debug(f"No job to add")
+    def add_workers(executor: Executor, actual_worker_ids: Set[str], desired_worker_ids: Set[str],
+                    desired_workers: Dict[str, WorkerMetadata]):
+        added_worker_ids = desired_worker_ids - actual_worker_ids
+        if not added_worker_ids:
+            logger.debug(f"No workers to add")
             return
-        logger.info(f"Going to add jobs with id {added_job_ids} in executor {executor.get_slug()}")
-        for added_job_id in added_job_ids:
-            Reconciler.add_job(executor, added_job_id, desired_jobs)
+        logger.info(f"Going to add workers with id {added_worker_ids} in executor {executor.get_slug()}")
+        for added_worker_id in added_worker_ids:
+            Reconciler.add_worker(executor, added_worker_id, desired_workers)
 
     @staticmethod
-    def add_job(executor: Executor, added_job_id: str, desired_jobs: Dict[str, WorkerMetadata]):
-        worker_metadata = desired_jobs[added_job_id]
-        executor.add_job(added_job_id, worker_metadata)
+    def add_worker(executor: Executor, added_worker_id: str, desired_workers: Dict[str, WorkerMetadata]):
+        worker_metadata = desired_workers[added_worker_id]
+        executor.add_worker(added_worker_id, worker_metadata)
 
     @staticmethod
-    def configure_jobs(executor: Executor, actual_job_ids: Set[str], desired_job_ids: Set[str],
-                       desired_jobs: Dict[str, WorkerMetadata]):
-        # todo: configure job if worker.work bytecode changes..?
-        same_job_ids = actual_job_ids.intersection(desired_job_ids)
-        for job_id in same_job_ids:
-            desired_interval_seconds = desired_jobs[job_id].interval_seconds
-            actual_interval_seconds = executor.get_job_interval_seconds(job_id)
+    def configure_workers(executor: Executor, actual_worker_ids: Set[str], desired_worker_ids: Set[str],
+                          desired_workers: Dict[str, WorkerMetadata]):
+        # todo: configure worker if worker bytecode changes..?
+        same_worker_ids = actual_worker_ids.intersection(desired_worker_ids)
+        for worker_id in same_worker_ids:
+            desired_interval_seconds = desired_workers[worker_id].interval_seconds
+            actual_interval_seconds = executor.get_worker_interval_seconds(worker_id)
             if desired_interval_seconds != actual_interval_seconds:
-                logger.info(f"Going to reconfigure job interval with id {job_id} to {desired_interval_seconds} seconds "
+                logger.info(f"Going to reconfigure worker interval with id {worker_id} to {desired_interval_seconds} seconds "
                             f"in executor {executor.get_slug()}")
-                executor.set_job_interval_seconds(job_id, desired_interval_seconds)
+                executor.set_worker_interval_seconds(worker_id, desired_interval_seconds)

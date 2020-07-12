@@ -5,23 +5,23 @@ from broccoli_server.worker import WorkerMetadata
 
 class Executor(metaclass=ABCMeta):
     @abstractmethod
-    def add_job(self, job_id: str, worker_metadata: WorkerMetadata):
+    def add_worker(self, worker_id: str, worker_metadata: WorkerMetadata):
         pass
 
     @abstractmethod
-    def get_job_ids(self) -> List[str]:
+    def get_worker_ids(self) -> List[str]:
         pass
 
     @abstractmethod
-    def remove_job(self, job_id: str):
+    def remove_worker(self, worker_id: str):
         pass
 
     @abstractmethod
-    def get_job_interval_seconds(self, job_id: str) -> int:
+    def get_worker_interval_seconds(self, worker_id: str) -> int:
         pass
 
     @abstractmethod
-    def set_job_interval_seconds(self, job_id: str, desired_interval_seconds: int):
+    def set_worker_interval_seconds(self, worker_id: str, desired_interval_seconds: int):
         pass
 
     @abstractmethod
