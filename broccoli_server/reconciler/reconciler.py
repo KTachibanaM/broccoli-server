@@ -56,7 +56,7 @@ class Reconciler(object):
         if not removed_job_ids:
             logger.debug(f"No job to remove")
             return
-        logger.info(f"Going to remove jobs with id {removed_job_ids}")
+        logger.info(f"Going to remove jobs with id {removed_job_ids} in executor {executor.get_slug()}")
         for removed_job_id in removed_job_ids:
             executor.remove_job(removed_job_id)
 
@@ -67,7 +67,7 @@ class Reconciler(object):
         if not added_job_ids:
             logger.debug(f"No job to add")
             return
-        logger.info(f"Going to add jobs with id {added_job_ids}")
+        logger.info(f"Going to add jobs with id {added_job_ids} in executor {executor.get_slug()}")
         for added_job_id in added_job_ids:
             Reconciler.add_job(executor, added_job_id, desired_jobs)
 
@@ -85,5 +85,6 @@ class Reconciler(object):
             desired_interval_seconds = desired_jobs[job_id].interval_seconds
             actual_interval_seconds = executor.get_job_interval_seconds(job_id)
             if desired_interval_seconds != actual_interval_seconds:
-                logger.info(f"Going to reconfigure job interval with id {job_id} to {desired_interval_seconds} seconds")
+                logger.info(f"Going to reconfigure job interval with id {job_id} to {desired_interval_seconds} seconds "
+                            f"in executor {executor.get_slug()}")
                 executor.set_job_interval_seconds(job_id, desired_interval_seconds)
