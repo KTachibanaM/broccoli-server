@@ -226,15 +226,14 @@ class Application(object):
         def _get_workers():
             workers = []
             for worker_id, worker in self.worker_config_store.get_all().items():
-                module, class_name, args, interval_seconds, error_resiliency \
-                    = worker.module, worker.class_name, worker.args, worker.interval_seconds, worker.error_resiliency
                 workers.append({
                     "worker_id": worker_id,
-                    "module": module,
-                    "class_name": class_name,
-                    "args": args,
-                    "interval_seconds": interval_seconds,
-                    "error_resiliency": error_resiliency
+                    "module": worker.module,
+                    "class_name": worker.class_name,
+                    "args": worker.args,
+                    "interval_seconds": worker.interval_seconds,
+                    "error_resiliency": worker.error_resiliency,
+                    "executor_slug": worker.executor_slug
                 })
             return jsonify(workers), 200
 

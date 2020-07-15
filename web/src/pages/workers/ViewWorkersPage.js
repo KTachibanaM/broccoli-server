@@ -92,6 +92,8 @@ export default class ViewWorkersPage extends Component {
           <th>Class Name</th>
           <th>Args</th>
           <th>Interval (seconds)</th>
+          <th>Error Resiliency</th>
+          <th>Executor Slug</th>
           <th>Operations</th>
         </tr>
         </thead>
@@ -103,7 +105,9 @@ export default class ViewWorkersPage extends Component {
               module,
               "class_name": className,
               args,
-              "interval_seconds": intervalSeconds
+              "interval_seconds": intervalSeconds,
+              "error_resiliency": errorResiliency,
+              "executor_slug": executorSlug
             } = worker;
             return (
               <tr key={workerId}>
@@ -129,6 +133,8 @@ export default class ViewWorkersPage extends Component {
                   }}/>
                   <button onClick={e => {this.onUpdateIntervalSeconds(e, workerId, intervalSeconds)}}>Update</button>
                 </td>
+                <td>{errorResiliency !== -1 ? errorResiliency : 'N/A'}</td>
+                <td>{executorSlug}</td>
                 <td>
                   <button onClick={e => this.onReplicate(e, module, className, args, intervalSeconds)}>Create from</button>
                   <button onClick={e => this.onRemove(e, workerId)}>x</button>
