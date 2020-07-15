@@ -6,7 +6,6 @@ import json
 import base64
 import sentry_sdk
 from typing import Callable, Dict, List, Tuple, Optional
-from apscheduler.schedulers.background import BackgroundScheduler
 from broccoli_server.database import Migration
 from broccoli_server.utils import validate_schema_or_not, getenv_or_raise
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
@@ -104,11 +103,10 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         )
 
-        aps_background_scheduler = BackgroundScheduler()
-        executors = [ApsNativeExecutor(aps_background_scheduler, self.work_wrapper, self.worker_context_factory)]
+        executors = [ApsNativeExecutor(self.work_wrapper, self.worker_context_factory)]
         if self.run_worker_invocation_py_path:
-            executors.append(ApsSubprocessExecutor(aps_background_scheduler, self.run_worker_invocation_py_path))
-        reconciler = Reconciler(aps_background_scheduler, self.worker_config_store, executors)
+            executors.append(ApsSubprocessExecutor(self.run_worker_invocation_py_path))
+        reconciler = Reconciler(self.worker_config_store, executors)
 
         # Figure out path for static web artifact
         my_path = os.path.abspath(__file__)

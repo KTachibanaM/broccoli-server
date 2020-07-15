@@ -1,15 +1,13 @@
 import logging
 from .aps_executor import ApsExecutor
 from broccoli_server.worker import WorkerMetadata, WorkContextFactory, WorkWrapper
-from apscheduler.schedulers.background import BackgroundScheduler
 
 logger = logging.getLogger(__name__)
 
 
 class ApsNativeExecutor(ApsExecutor):
-    def __init__(self, aps_background_scheduler: BackgroundScheduler, work_wrapper: WorkWrapper,
-                 work_context_factory: WorkContextFactory):
-        super(ApsNativeExecutor, self).__init__(aps_background_scheduler)
+    def __init__(self, work_wrapper: WorkWrapper, work_context_factory: WorkContextFactory):
+        super(ApsNativeExecutor, self).__init__()
         self.work_wrapper = work_wrapper
         self.work_context_factory = work_context_factory
 
