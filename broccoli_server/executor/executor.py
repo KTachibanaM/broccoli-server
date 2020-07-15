@@ -5,6 +5,14 @@ from broccoli_server.worker import WorkerMetadata
 
 class Executor(metaclass=ABCMeta):
     @abstractmethod
+    def start(self):
+        pass
+
+    @abstractmethod
+    def stop(self):
+        pass
+
+    @abstractmethod
     def add_worker(self, worker_id: str, worker_metadata: WorkerMetadata):
         pass
 

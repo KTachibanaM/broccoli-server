@@ -10,11 +10,11 @@ logger = logging.getLogger(__name__)
 class Reconciler(object):
     RECONCILE_JOB_ID = "broccoli.worker_reconcile"
 
-    def __init__(self, aps_background_scheduler: BackgroundScheduler, worker_config_store: WorkerConfigStore,
+    def __init__(self, worker_config_store: WorkerConfigStore,
                  executors: List[Executor]):
         self.worker_config_store = worker_config_store
-        self.aps_background_scheduler = aps_background_scheduler
-        self.aps_background_scheduler.add_job(
+        self.scheduler = BackgroundScheduler()
+        self.scheduler.add_job(
             self.reconcile,
             id=self.RECONCILE_JOB_ID,
             trigger='interval',
@@ -27,10 +27,15 @@ class Reconciler(object):
         apscheduler_logger = logging.getLogger("apscheduler")
         apscheduler_logger.setLevel(logging.ERROR)
 
-        self.aps_background_scheduler.start()
+        # starting executors before master scheduler otherwise workers might not be actually added
+        for e in self.executors:
+            e.start()
+        self.scheduler.start()
 
     def stop(self):
-        self.aps_background_scheduler.shutdown(wait=False)
+        for e in self.executors:
+            e.stop()
+        self.scheduler.shutdown(wait=False)
 
     def reconcile(self):
         for e in self.executors:
@@ -44,8 +49,8 @@ class Reconciler(object):
         Reconciler.remove_workers(executor, actual_worker_ids=actual_worker_ids, desired_worker_ids=desired_worker_ids)
         Reconciler.add_workers(executor, actual_worker_ids=actual_worker_ids, desired_worker_ids=desired_worker_ids,
                                desired_workers=desired_workers)
-        Reconciler.configure_workers(executor, actual_worker_ids=actual_worker_ids, desired_worker_ids=desired_worker_ids,
-                                     desired_workers=desired_workers)
+        Reconciler.configure_workers(executor, actual_worker_ids=actual_worker_ids,
+                                     desired_worker_ids=desired_worker_ids, desired_workers=desired_workers)
 
     @staticmethod
     def remove_workers(executor: Executor, actual_worker_ids: Set[str], desired_worker_ids: Set[str]):
@@ -82,6 +87,6 @@ class Reconciler(object):
             desired_interval_seconds = desired_workers[worker_id].interval_seconds
             actual_interval_seconds = executor.get_worker_interval_seconds(worker_id)
             if desired_interval_seconds != actual_interval_seconds:
-                logger.info(f"Going to reconfigure worker interval with id {worker_id} to {desired_interval_seconds} seconds "
-                            f"in executor {executor.get_slug()}")
+                logger.info(f"Going to reconfigure worker interval with id {worker_id} to {desired_interval_seconds} "
+                            f"seconds in executor {executor.get_slug()}")
                 executor.set_worker_interval_seconds(worker_id, desired_interval_seconds)

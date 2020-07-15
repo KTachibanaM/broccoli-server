@@ -4,14 +4,13 @@ import os
 import json
 import base64
 from typing import Callable
-from apscheduler.schedulers.background import BackgroundScheduler
 from .aps_executor import ApsExecutor
 from broccoli_server.worker import WorkerMetadata
 
 
 class ApsSubprocessExecutor(ApsExecutor):
-    def __init__(self, aps_background_scheduler: BackgroundScheduler, run_worker_invocation_py_path: str):
-        super(ApsSubprocessExecutor, self).__init__(aps_background_scheduler)
+    def __init__(self, run_worker_invocation_py_path: str):
+        super(ApsSubprocessExecutor, self).__init__()
         self.run_worker_invocation_py_path = run_worker_invocation_py_path
 
     def get_worker_func(self, worker_id: str, worker_metadata: WorkerMetadata) -> Callable:
