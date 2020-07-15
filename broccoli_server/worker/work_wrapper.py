@@ -57,7 +57,7 @@ class WorkWrapper(object):
                     })
             except Exception as e:
                 report_ex = True
-                if error_resiliency != -1:
+                if error_resiliency > 0:
                     ok, error_count, err = self.worker_config_store.get_error_count(worker_id)
                     if not ok:
                         logger.error("Fails to get error count", extra={
@@ -82,7 +82,7 @@ class WorkWrapper(object):
                         'worker_id': worker_id
                     })
 
-                if error_resiliency != -1:
+                if error_resiliency > 0:
                     # only to touch error count if error resiliency is set
                     ok, err = self.worker_config_store.increment_error_count(worker_id)
                     if not ok:

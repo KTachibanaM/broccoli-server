@@ -80,7 +80,7 @@ export default class ViewWorkersPage extends Component {
         <tr>
           <th>ID</th>
           <th>Interval (seconds)</th>
-          <th>Error Resiliency (-1 is none)</th>
+          <th>Error Resiliency (non-positive is none)</th>
           <th>Executor Slug</th>
           <th>Operations</th>
         </tr>

@@ -15,6 +15,7 @@ from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
 from broccoli_server.executor import ApsNativeExecutor, ApsSubprocessExecutor
 from broccoli_server.interface.api import ApiHandler
+from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
@@ -119,6 +120,11 @@ class Application(object):
         # Configure Flask
         flask_app = Flask(__name__)
         CORS(flask_app)
+
+        # copy-pasta from https://github.com/pallets/flask/issues/2643
+        class SignedIntConverter(IntegerConverter):
+            regex = r'-?\d+'
+        flask_app.url_map.converters['signed_int'] = SignedIntConverter
 
         # Less verbose logging from Flask
         werkzeug_logger = logging.getLogger('werkzeug')
@@ -264,7 +270,7 @@ class Application(object):
                 }), 200
 
         @flask_app.route(
-            '/apiInternal/worker/<string:worker_id>/errorResiliency/<int:error_resiliency>',
+            '/apiInternal/worker/<string:worker_id>/errorResiliency/<signed_int:error_resiliency>',
             methods=['PUT']
         )
         def _update_worker_error_resiliency(worker_id: str, error_resiliency: int):
