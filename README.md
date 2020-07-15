@@ -1,5 +1,5 @@
 # broccoli-server
-[![Build Status](https://travis-ci.org/KTachibanaM/broccoli-server.svg?branch=master)](https://travis-ci.org/KTachibanaM/broccoli-server.svg?branch=master)
+[![Build Status](https://travis-ci.org/k-t-corp/broccoli-server.svg?branch=master)](https://travis-ci.org/k-t-corp/broccoli-server)
 [![PyPI version](https://badge.fury.io/py/broccoli-server.svg)](https://badge.fury.io/py/broccoli-server)
 
 A web content crawling and sorting library
