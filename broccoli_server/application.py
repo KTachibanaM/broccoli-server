@@ -263,6 +263,22 @@ class Application(object):
                     "status": "ok"
                 }), 200
 
+        @flask_app.route(
+            '/apiInternal/worker/<string:worker_id>/errorResiliency/<int:error_resiliency>',
+            methods=['PUT']
+        )
+        def _update_worker_error_resiliency(worker_id: str, error_resiliency: int):
+            status, message = self.worker_config_store.update_error_resiliency(worker_id, error_resiliency)
+            if not status:
+                return jsonify({
+                    "status": "error",
+                    "message": message
+                }), 400
+            else:
+                return jsonify({
+                    "status": "ok"
+                }), 200
+
         @flask_app.route('/apiInternal/worker/<string:worker_id>/metadata', methods=['GET'])
         def _get_worker_metadata(worker_id: str):
             return jsonify(global_metadata_store.get_all(worker_id)), 200

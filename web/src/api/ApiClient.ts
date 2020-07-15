@@ -113,6 +113,10 @@ export default class ApiClient {
     return this.axios.put(`${this.endpoint}/apiInternal/worker/${workerId}/intervalSeconds/${intervalSeconds}`);
   }
 
+  public async updateWorkerErrorResiliency(workerId: string, errorResiliency: number) {
+    return this.axios.put(`${this.endpoint}/apiInternal/worker/${workerId}/errorResiliency/${errorResiliency}`)
+  }
+
   public async getWorkerMetadata(workerId) {
     return this.axios.get(`${this.endpoint}/apiInternal/worker/${workerId}/metadata`);
   }
