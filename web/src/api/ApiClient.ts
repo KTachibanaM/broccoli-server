@@ -93,7 +93,7 @@ export default class ApiClient {
   }
 
   public async getWorkers() {
-    return this.axios.get(`${this.endpoint}/apiInternal/worker`);
+    return this.axios.get(`${this.endpoint}/apiInternal/worker`).then(response => response.data)
   }
 
   public async addWorker(module, className, args, intervalSeconds) {
@@ -114,7 +114,11 @@ export default class ApiClient {
   }
 
   public async updateWorkerErrorResiliency(workerId: string, errorResiliency: number) {
-    return this.axios.put(`${this.endpoint}/apiInternal/worker/${workerId}/errorResiliency/${errorResiliency}`)
+    return this.axios.put(`${this.endpoint}/apiInternal/worker/${workerId}/errorResiliency/${errorResiliency}`);
+  }
+
+  public async getExecutors(): Promise<string[]>{
+    return this.axios.get(`${this.endpoint}/apiInternal/executor`).then(response => response.data)
   }
 
   public async getWorkerMetadata(workerId) {

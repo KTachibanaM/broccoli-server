@@ -7,25 +7,17 @@ export default class ViewWorkersPage extends Component {
     this.state = {
       "loading": true,
       "workers": [],
+      "executors": []
     };
   }
 
   componentDidMount() {
-    this.props.apiClient.getWorkers()
-      .then(response => {
-        const workers = response.data;
-        this.setState({
-          "loading": false,
-          "workers": workers.map(worker => {
-            return {
-              ...worker,
-              "state": "Loading...",
-              "lastSeen": 0,
-              "metadata": ""
-            }
-          })
-        })
-      })
+    Promise.all([
+      this.props.apiClient.getWorkers(),
+      this.props.apiClient.getExecutors()
+    ])
+      .then(([workers, executors]) => this.setState({workers, executors}))
+      .finally(() => this.setState({loading: false}))
   }
 
   onReplicate = (module, className, args, intervalSeconds) => {
@@ -142,7 +134,13 @@ export default class ViewWorkersPage extends Component {
                     this.onUpdateErrorResiliency(workerId, errorResiliency)}
                   }>Update</button>
                 </td>
-                <td>{executorSlug}</td>
+                <td>
+                  <select value={executorSlug}>
+                    {this.state.executors.map((executor, i) =>
+                      <option key={i} value={executor}>{executor}</option>
+                    )}
+                  </select>
+                </td>
                 <td>
                   <button onClick={e => {
                     e.preventDefault();

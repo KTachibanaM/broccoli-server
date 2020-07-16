@@ -208,9 +208,7 @@ class Application(object):
                     class_name=body["class_name"],
                     args=body["args"],
                     interval_seconds=body["interval_seconds"],
-                    # TODO: allow changing when add
                     error_resiliency=-1,
-                    # TODO: allow changing when add
                     executor_slug="aps_native"
                 )
             )
@@ -284,6 +282,10 @@ class Application(object):
                 return jsonify({
                     "status": "ok"
                 }), 200
+
+        @flask_app.route('/apiInternal/executor', methods=['GET'])
+        def _get_executors():
+            return jsonify(list(map(lambda e: e.get_slug(), executors)))
 
         @flask_app.route('/apiInternal/worker/<string:worker_id>/metadata', methods=['GET'])
         def _get_worker_metadata(worker_id: str):
