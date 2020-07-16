@@ -40,4 +40,4 @@ class ApsExecutor(Executor, ABC):
         return self.scheduler.get_job(worker_id).trigger.interval.seconds
 
     def set_worker_interval_seconds(self, worker_id: str, desired_interval_seconds: int):
-        self.scheduler.reschedule_job(worker_id, 'interval', desired_interval_seconds)
+        self.scheduler.reschedule_job(job_id=worker_id, trigger='interval', seconds=desired_interval_seconds)

@@ -7,48 +7,26 @@ export default class ViewWorkersPage extends Component {
     this.state = {
       "loading": true,
       "workers": [],
+      "executors": []
     };
-
-    this.onReplicate = this.onReplicate.bind(this);
-    this.onRemove = this.onRemove.bind(this);
-    this.onUpdateIntervalSeconds = this.onUpdateIntervalSeconds.bind(this)
   }
 
   componentDidMount() {
-    this.props.apiClient.getWorkers()
-      .then(response => {
-        const workers = response.data;
-        this.setState({
-          "loading": false,
-          "workers": workers.map(worker => {
-            return {
-              ...worker,
-              "state": "Loading...",
-              "lastSeen": 0,
-              "metadata": ""
-            }
-          })
-        })
-      })
+    Promise.all([
+      this.props.apiClient.getWorkers(),
+      this.props.apiClient.getExecutors()
+    ])
+      .then(([workers, executors]) => this.setState({workers, executors}))
+      .finally(() => this.setState({loading: false}))
   }
 
-  onReplicate(e, module, className, args, intervalSeconds) {
-    this.replicate(module, className, args, intervalSeconds);
-    e.preventDefault()
-  }
-
-  replicate(module, className, args, intervalSeconds) {
+  onReplicate = (module, className, args, intervalSeconds) => {
     this.props.redirectTo(
       `/workers/create?module=${module}&class_name=${className}&args=${encodeURIComponent(JSON.stringify(args))}&interval_seconds=${intervalSeconds}`
     )
   }
 
-  onRemove(e, workerId) {
-    this.remove(workerId);
-    e.preventDefault()
-  }
-
-  remove(workerId) {
+  onRemove = workerId => {
     if (window.confirm(`Are you sure you want to remove worker ${workerId}`)) {
       this.props.apiClient.removeWorker(workerId)
         .then(() => {
@@ -65,16 +43,32 @@ export default class ViewWorkersPage extends Component {
     }
   }
 
-  onUpdateIntervalSeconds(e, workerId, intervalSeconds) {
-    this.updateIntervalSeconds(workerId, intervalSeconds);
-    e.preventDefault()
-  }
-
-  updateIntervalSeconds(workerId, intervalSeconds) {
+  onUpdateIntervalSeconds = (workerId, intervalSeconds) => {
     this.props.apiClient.updateWorkerIntervalSeconds(workerId, intervalSeconds)
       .then(() => {
-
         this.props.showOkMessage(`Updated worker ${workerId} with interval seconds ${intervalSeconds}`)
+      })
+      .catch(error => {
+        console.error(error.response.data);
+        this.props.showErrorMessage(JSON.stringify(error.response.data))
+      });
+  }
+
+  onUpdateErrorResiliency = (workerId, errorResiliency) => {
+    this.props.apiClient.updateWorkerErrorResiliency(workerId, errorResiliency)
+      .then(() => {
+        this.props.showOkMessage(`Updated worker ${workerId} with error resiliency ${errorResiliency}`)
+      })
+      .catch(error => {
+        console.error(error.response.data);
+        this.props.showErrorMessage(JSON.stringify(error.response.data))
+      });
+  }
+
+  onUpdateExecutor = (workerId, executor) => {
+    this.props.apiClient.updateWorkerExecutor(workerId, executor)
+      .then(() => {
+        this.props.showOkMessage(`Updated worker ${workerId} with executor ${executor}`)
       })
       .catch(error => {
         console.error(error.response.data);
@@ -88,12 +82,9 @@ export default class ViewWorkersPage extends Component {
         <thead>
         <tr>
           <th>ID</th>
-          <th>Module</th>
-          <th>Class Name</th>
-          <th>Args</th>
           <th>Interval (seconds)</th>
-          <th>Error Resiliency</th>
-          <th>Executor Slug</th>
+          <th>Error Resiliency (non-positive is none)</th>
+          <th>Executor</th>
           <th>Operations</th>
         </tr>
         </thead>
@@ -107,18 +98,16 @@ export default class ViewWorkersPage extends Component {
               args,
               "interval_seconds": intervalSeconds,
               "error_resiliency": errorResiliency,
-              "executor_slug": executorSlug
+              "executor_slug": executor
             } = worker;
             return (
               <tr key={workerId}>
                 <td>
                   <Link to={`/worker/${workerId}`}>{workerId}</Link>
                 </td>
-                <td>{module}</td>
-                <td>{className}</td>
-                <td>{JSON.stringify(args)}</td>
                 <td>
                   <input type="number" value={intervalSeconds} onChange={e => {
+                    e.preventDefault();
                     this.setState({
                       "workers": this.state.workers.map(worker => {
                         if (worker["worker_id"] !== workerId) {
@@ -131,13 +120,64 @@ export default class ViewWorkersPage extends Component {
                       })
                     })
                   }}/>
-                  <button onClick={e => {this.onUpdateIntervalSeconds(e, workerId, intervalSeconds)}}>Update</button>
+                  <button onClick={e => {
+                    e.preventDefault()
+                    this.onUpdateIntervalSeconds(workerId, intervalSeconds)}
+                  }>Update</button>
                 </td>
-                <td>{errorResiliency !== -1 ? errorResiliency : 'N/A'}</td>
-                <td>{executorSlug}</td>
                 <td>
-                  <button onClick={e => this.onReplicate(e, module, className, args, intervalSeconds)}>Create from</button>
-                  <button onClick={e => this.onRemove(e, workerId)}>x</button>
+                  <input type="number" min={-1} value={errorResiliency} onChange={e => {
+                    e.preventDefault();
+                    this.setState({
+                      "workers": this.state.workers.map(worker => {
+                        if (worker["worker_id"] !== workerId) {
+                          return worker
+                        }
+                        return {
+                          ...worker,
+                          "error_resiliency": parseInt(e.target.value)
+                        }
+                      })
+                    })
+                  }}/>
+                  <button onClick={e => {
+                    e.preventDefault()
+                    this.onUpdateErrorResiliency(workerId, errorResiliency)}
+                  }>Update</button>
+                </td>
+                <td>
+                  <select value={executor} onChange={e => {
+                    e.preventDefault();
+                    this.setState({
+                      "workers": this.state.workers.map(worker => {
+                        if (worker["worker_id"] !== workerId) {
+                          return worker
+                        }
+                        return {
+                          ...worker,
+                          "executor_slug": e.target.value
+                        }
+                      })
+                    })
+                  }}>
+                    {this.state.executors.map((executor, i) =>
+                      <option key={i} value={executor}>{executor}</option>
+                    )}
+                  </select>
+                  <button onClick={e => {
+                    e.preventDefault()
+                    this.onUpdateExecutor(workerId, executor)}
+                  }>Update</button>
+                </td>
+                <td>
+                  <button onClick={e => {
+                    e.preventDefault();
+                    this.onReplicate(module, className, args, intervalSeconds)
+                  }}>Create from</button>
+                  <button onClick={e => {
+                    e.preventDefault();
+                    this.onRemove(workerId)
+                  }}>x</button>
                 </td>
               </tr>
             )

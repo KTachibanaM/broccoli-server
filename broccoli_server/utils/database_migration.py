@@ -1,13 +1,13 @@
 import pymongo
 
 
-class Migration(object):
+class DatabaseMigration(object):
     SCHEMA_VERSION_COLLECTION_NAME = "schema_version"
 
     def __init__(self, admin_connection_string: str, db: str):
         self.client = pymongo.MongoClient(admin_connection_string)
         self.db = self.client[db]
-        self.schema_version_collection = self.db[Migration.SCHEMA_VERSION_COLLECTION_NAME]
+        self.schema_version_collection = self.db[DatabaseMigration.SCHEMA_VERSION_COLLECTION_NAME]
         self.upgrade_map = {
             0: self._version_0_to_1,
             1: self._version_1_to_2,
@@ -86,7 +86,7 @@ class Migration(object):
         except Exception as e:
             print(f"fail to get collection names, {e}")
             raise e
-        if Migration.SCHEMA_VERSION_COLLECTION_NAME not in collection_names:
+        if DatabaseMigration.SCHEMA_VERSION_COLLECTION_NAME not in collection_names:
             if "broccoli.server" in collection_names:
                 return 0
             else:
@@ -95,7 +95,8 @@ class Migration(object):
             v = self.schema_version_collection.find_one({"v": {"$exists": True}})
             return v["v"]
         except Exception as e:
-            print(f"fail to get {Migration.SCHEMA_VERSION_COLLECTION_NAME} collection or retrieve schema version, {e}")
+            print(f"fail to get {DatabaseMigration.SCHEMA_VERSION_COLLECTION_NAME} "
+                  f"collection or retrieve schema version, {e}")
             raise e
 
     def _update_schema_version(self, new_version: int):

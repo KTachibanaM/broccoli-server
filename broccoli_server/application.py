@@ -6,8 +6,7 @@ import json
 import base64
 import sentry_sdk
 from typing import Callable, Dict, List, Tuple, Optional
-from broccoli_server.database import Migration
-from broccoli_server.utils import validate_schema_or_not, getenv_or_raise
+from broccoli_server.utils import validate_schema_or_not, getenv_or_raise, DatabaseMigration
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
 from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, WorkerMetadata, WorkerCache, \
@@ -16,6 +15,7 @@ from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
 from broccoli_server.executor import ApsNativeExecutor, ApsSubprocessExecutor
 from broccoli_server.interface.api import ApiHandler
+from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_request
@@ -40,7 +40,7 @@ class Application(object):
             pause_workers = False
 
         # Database migration
-        Migration(
+        DatabaseMigration(
             admin_connection_string=getenv_or_raise("MONGODB_ADMIN_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         ).migrate()
@@ -120,6 +120,11 @@ class Application(object):
         # Configure Flask
         flask_app = Flask(__name__)
         CORS(flask_app)
+
+        # copy-pasta from https://github.com/pallets/flask/issues/2643
+        class SignedIntConverter(IntegerConverter):
+            regex = r'-?\d+'
+        flask_app.url_map.converters['signed_int'] = SignedIntConverter
 
         # Less verbose logging from Flask
         werkzeug_logger = logging.getLogger('werkzeug')
@@ -203,9 +208,7 @@ class Application(object):
                     class_name=body["class_name"],
                     args=body["args"],
                     interval_seconds=body["interval_seconds"],
-                    # TODO: allow changing when add
                     error_resiliency=-1,
-                    # TODO: allow changing when add
                     executor_slug="aps_native"
                 )
             )
@@ -254,6 +257,42 @@ class Application(object):
         )
         def _update_worker_interval_seconds(worker_id: str, interval_seconds: int):
             status, message = self.worker_config_store.update_interval_seconds(worker_id, interval_seconds)
+            if not status:
+                return jsonify({
+                    "status": "error",
+                    "message": message
+                }), 400
+            else:
+                return jsonify({
+                    "status": "ok"
+                }), 200
+
+        @flask_app.route(
+            '/apiInternal/worker/<string:worker_id>/errorResiliency/<signed_int:error_resiliency>',
+            methods=['PUT']
+        )
+        def _update_worker_error_resiliency(worker_id: str, error_resiliency: int):
+            status, message = self.worker_config_store.update_error_resiliency(worker_id, error_resiliency)
+            if not status:
+                return jsonify({
+                    "status": "error",
+                    "message": message
+                }), 400
+            else:
+                return jsonify({
+                    "status": "ok"
+                }), 200
+
+        @flask_app.route('/apiInternal/executor', methods=['GET'])
+        def _get_executors():
+            return jsonify(list(map(lambda e: e.get_slug(), executors)))
+
+        @flask_app.route(
+            '/apiInternal/worker/<string:worker_id>/executor/<string:executor_slug>',
+            methods=['PUT']
+        )
+        def _update_worker_executor_slug(worker_id: str, executor_slug: str):
+            status, message = self.worker_config_store.update_executor_slug(worker_id, executor_slug)
             if not status:
                 return jsonify({
                     "status": "error",
