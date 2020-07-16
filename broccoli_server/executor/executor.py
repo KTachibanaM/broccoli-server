@@ -33,5 +33,5 @@ class Executor(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_slug(self):
+    def get_slug(self) -> str:
         pass

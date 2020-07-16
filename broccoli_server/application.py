@@ -13,7 +13,7 @@ from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, Worke
     MetadataStoreFactory, WorkContextFactory, WorkWrapper
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
-from broccoli_server.executor import ApsNativeExecutor, ApsSubprocessExecutor
+from broccoli_server.executor import ApsNativeExecutor, ApsSubprocessExecutor, ApsReducedExecutor
 from broccoli_server.interface.api import ApiHandler
 from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
@@ -103,7 +103,10 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         )
 
-        executors = [ApsNativeExecutor(self.work_wrapper, self.worker_context_factory)]
+        executors = [
+            ApsNativeExecutor(self.work_wrapper, self.worker_context_factory),
+            ApsReducedExecutor(self.work_wrapper, self.worker_context_factory)
+        ]
         if self.run_worker_invocation_py_path:
             executors.append(ApsSubprocessExecutor(self.run_worker_invocation_py_path))
         reconciler = Reconciler(self.worker_config_store, executors)
