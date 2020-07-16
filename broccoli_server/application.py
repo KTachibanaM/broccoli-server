@@ -287,6 +287,22 @@ class Application(object):
         def _get_executors():
             return jsonify(list(map(lambda e: e.get_slug(), executors)))
 
+        @flask_app.route(
+            '/apiInternal/worker/<string:worker_id>/executor/<string:executor_slug>',
+            methods=['PUT']
+        )
+        def _update_worker_executor_slug(worker_id: str, executor_slug: str):
+            status, message = self.worker_config_store.update_executor_slug(worker_id, executor_slug)
+            if not status:
+                return jsonify({
+                    "status": "error",
+                    "message": message
+                }), 400
+            else:
+                return jsonify({
+                    "status": "ok"
+                }), 200
+
         @flask_app.route('/apiInternal/worker/<string:worker_id>/metadata', methods=['GET'])
         def _get_worker_metadata(worker_id: str):
             return jsonify(global_metadata_store.get_all(worker_id)), 200

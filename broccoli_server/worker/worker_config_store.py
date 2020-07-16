@@ -108,6 +108,22 @@ class WorkerConfigStore(object):
         )
         return True, ""
 
+    def update_executor_slug(self, worker_id: str, executor_slug: str) -> Tuple[bool, str]:
+        if not self._if_worker_exists(worker_id):
+            return False, f"Worker with id {worker_id} does not exist"
+        # todo: update_one fails
+        self.collection.update_one(
+            filter={
+                "worker_id": worker_id
+            },
+            update={
+                "$set": {
+                    "executor_slug": executor_slug
+                }
+            }
+        )
+        return True, ""
+
     def increment_error_count(self, worker_id: str) -> Tuple[bool, str]:
         if not self._if_worker_exists(worker_id):
             return False, f"Worker with id {worker_id} does not exist"

@@ -65,6 +65,17 @@ export default class ViewWorkersPage extends Component {
       });
   }
 
+  onUpdateExecutor = (workerId, executor) => {
+    this.props.apiClient.updateWorkerExecutor(workerId, executor)
+      .then(() => {
+        this.props.showOkMessage(`Updated worker ${workerId} with executor ${executor}`)
+      })
+      .catch(error => {
+        console.error(error.response.data);
+        this.props.showErrorMessage(JSON.stringify(error.response.data))
+      });
+  }
+
   renderWorkersTable(workers) {
     return (
       <table>
@@ -73,7 +84,7 @@ export default class ViewWorkersPage extends Component {
           <th>ID</th>
           <th>Interval (seconds)</th>
           <th>Error Resiliency (non-positive is none)</th>
-          <th>Executor Slug</th>
+          <th>Executor</th>
           <th>Operations</th>
         </tr>
         </thead>
@@ -87,7 +98,7 @@ export default class ViewWorkersPage extends Component {
               args,
               "interval_seconds": intervalSeconds,
               "error_resiliency": errorResiliency,
-              "executor_slug": executorSlug
+              "executor_slug": executor
             } = worker;
             return (
               <tr key={workerId}>
@@ -135,11 +146,28 @@ export default class ViewWorkersPage extends Component {
                   }>Update</button>
                 </td>
                 <td>
-                  <select value={executorSlug}>
+                  <select value={executor} onChange={e => {
+                    e.preventDefault();
+                    this.setState({
+                      "workers": this.state.workers.map(worker => {
+                        if (worker["worker_id"] !== workerId) {
+                          return worker
+                        }
+                        return {
+                          ...worker,
+                          "executor_slug": e.target.value
+                        }
+                      })
+                    })
+                  }}>
                     {this.state.executors.map((executor, i) =>
                       <option key={i} value={executor}>{executor}</option>
                     )}
                   </select>
+                  <button onClick={e => {
+                    e.preventDefault()
+                    this.onUpdateExecutor(workerId, executor)}
+                  }>Update</button>
                 </td>
                 <td>
                   <button onClick={e => {
