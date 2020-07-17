@@ -13,7 +13,7 @@ from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, Worke
     MetadataStoreFactory, WorkContextFactory, WorkWrapper
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
-from broccoli_server.executor import ApsNativeExecutor, ApsSubprocessExecutor
+from broccoli_server.executor import ApsNativeExecutor, ApsSubprocessExecutor, ApsReducedExecutor
 from broccoli_server.interface.api import ApiHandler
 from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
@@ -38,6 +38,11 @@ class Application(object):
             pause_workers = True
         else:
             pause_workers = False
+
+        if 'APS_REDUCED_MAX_JOBS' in os.environ:
+            self.aps_reduced_max_jobs = int(os.environ['APS_REDUCED_MAX_JOBS'])
+        else:
+            self.aps_reduced_max_jobs = -1
 
         # Database migration
         DatabaseMigration(
@@ -104,6 +109,12 @@ class Application(object):
         )
 
         executors = [ApsNativeExecutor(self.work_wrapper, self.worker_context_factory)]
+        if self.aps_reduced_max_jobs != -1:
+            executors.append(ApsReducedExecutor(
+                self.work_wrapper,
+                self.worker_context_factory,
+                self.aps_reduced_max_jobs
+            ))
         if self.run_worker_invocation_py_path:
             executors.append(ApsSubprocessExecutor(self.run_worker_invocation_py_path))
         reconciler = Reconciler(self.worker_config_store, executors)

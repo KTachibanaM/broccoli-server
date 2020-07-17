@@ -14,8 +14,8 @@ class WorkerConfigStore(object):
         self.collection = self.db['workers']
         self.worker_cache = worker_cache
 
-    def add(self, worker: WorkerMetadata) -> Tuple[bool, str]:
-        module, class_name, args  = worker.module, worker.class_name, worker.args
+    def add(self, worker_metadata: WorkerMetadata) -> Tuple[bool, str]:
+        module, class_name, args = worker_metadata.module, worker_metadata.class_name, worker_metadata.args
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
         if not status:
             logger.error("Fails to load worker", extra={
@@ -36,9 +36,9 @@ class WorkerConfigStore(object):
             "module": module,
             "class_name": class_name,
             "args": args,
-            "interval_seconds": worker.interval_seconds,
-            'error_resiliency': worker.error_resiliency,
-            'executor_slug': worker.executor_slug,
+            "interval_seconds": worker_metadata.interval_seconds,
+            'error_resiliency': worker_metadata.error_resiliency,
+            'executor_slug': worker_metadata.executor_slug,
             # those two fields are for runtime
             'error_count': 0,
             "state": {}

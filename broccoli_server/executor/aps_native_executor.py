@@ -21,5 +21,5 @@ class ApsNativeExecutor(ApsExecutor):
         work_wrap, _ = work_wrap_and_id
         return work_wrap
 
-    def get_slug(self):
+    def get_slug(self) -> str:
         return "aps_native"

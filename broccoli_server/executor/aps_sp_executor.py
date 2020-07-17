@@ -45,5 +45,5 @@ class ApsSubprocessExecutor(ApsExecutor):
 
         return sp_work_wrap
 
-    def get_slug(self):
+    def get_slug(self) -> str:
         return "aps_sp"
