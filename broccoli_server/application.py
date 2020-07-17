@@ -39,6 +39,11 @@ class Application(object):
         else:
             pause_workers = False
 
+        if 'APS_REDUCED_MAX_JOBS' in os.environ:
+            self.aps_reduced_max_jobs = int(os.environ['APS_REDUCED_MAX_JOBS'])
+        else:
+            self.aps_reduced_max_jobs = -1
+
         # Database migration
         DatabaseMigration(
             admin_connection_string=getenv_or_raise("MONGODB_ADMIN_CONNECTION_STRING"),
@@ -103,10 +108,13 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         )
 
-        executors = [
-            ApsNativeExecutor(self.work_wrapper, self.worker_context_factory),
-            ApsReducedExecutor(self.work_wrapper, self.worker_context_factory)
-        ]
+        executors = [ApsNativeExecutor(self.work_wrapper, self.worker_context_factory)]
+        if self.aps_reduced_max_jobs != -1:
+            executors.append(ApsReducedExecutor(
+                self.work_wrapper,
+                self.worker_context_factory,
+                self.aps_reduced_max_jobs
+            ))
         if self.run_worker_invocation_py_path:
             executors.append(ApsSubprocessExecutor(self.run_worker_invocation_py_path))
         reconciler = Reconciler(self.worker_config_store, executors)
