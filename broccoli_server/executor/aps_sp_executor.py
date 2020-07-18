@@ -14,7 +14,7 @@ class ApsSubprocessExecutor(ApsExecutor):
         self.run_worker_invocation_py_path = run_worker_invocation_py_path
 
     def get_worker_func(self, worker_id: str, worker_metadata: WorkerMetadata) -> Callable:
-        def sp_work_wrap():
+        def sp_work_func():
             args = worker_metadata.args
             args = json.dumps(args)
             args = args.encode('utf-8')
@@ -43,7 +43,7 @@ class ApsSubprocessExecutor(ApsExecutor):
             except subprocess.CalledProcessError as e:
                 print(f"{worker_id} fails to execute, error {str(e)}")
 
-        return sp_work_wrap
+        return sp_work_func
 
     def get_slug(self) -> str:
         return "aps_sp"

@@ -10,7 +10,7 @@ from broccoli_server.interface.worker import Worker
 logger = logging.getLogger(__name__)
 
 
-class WorkWrapper(object):
+class WorkFactory(object):
     def __init__(self,
                  work_context_factory: WorkContextFactory,
                  worker_cache: WorkerCache,
@@ -24,7 +24,7 @@ class WorkWrapper(object):
         self.sentry_enabled = sentry_enabled
         self.pause_workers = pause_workers
 
-    def wrap(self, worker_metadata: WorkerMetadata) -> Optional[Tuple[Callable, str]]:
+    def get_work_func(self, worker_metadata: WorkerMetadata) -> Optional[Tuple[Callable, str]]:
         module, class_name, args, error_resiliency = \
             worker_metadata.module, worker_metadata.class_name, worker_metadata.args, worker_metadata.error_resiliency
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
@@ -41,7 +41,7 @@ class WorkWrapper(object):
         work_context = self.work_context_factory.build(worker_id)
         worker.pre_work(work_context)
 
-        def wrapped_work_func():
+        def work_func():
             try:
                 if self.pause_workers:
                     logger.info("Workers have been globally paused")
@@ -91,4 +91,4 @@ class WorkWrapper(object):
                             'reason': err
                         })
 
-        return wrapped_work_func, worker_id
+        return work_func, worker_id

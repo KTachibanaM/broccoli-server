@@ -10,7 +10,7 @@ from broccoli_server.utils import validate_schema_or_not, getenv_or_raise, Datab
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
 from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, WorkerMetadata, WorkerCache, \
-    MetadataStoreFactory, WorkContextFactory, WorkWrapper
+    MetadataStoreFactory, WorkContextFactory, WorkFactory
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
 from broccoli_server.executor import ApsNativeExecutor, ApsSubprocessExecutor, ApsReducedExecutor
@@ -50,7 +50,7 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         ).migrate()
 
-        # Work wrapper
+        # Work factory
         self.content_store = ContentStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
@@ -66,7 +66,7 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB"),
             worker_cache=self.worker_cache
         )
-        self.work_wrapper = WorkWrapper(
+        self.work_factory = WorkFactory(
             work_context_factory=self.worker_context_factory,
             worker_cache=self.worker_cache,
             worker_config_store=self.worker_config_store,
@@ -108,10 +108,10 @@ class Application(object):
             db=getenv_or_raise("MONGODB_DB")
         )
 
-        executors = [ApsNativeExecutor(self.work_wrapper, self.worker_context_factory)]
+        executors = [ApsNativeExecutor(self.work_factory, self.worker_context_factory)]
         if self.aps_reduced_max_jobs != -1:
             executors.append(ApsReducedExecutor(
-                self.work_wrapper,
+                self.work_factory,
                 self.worker_context_factory,
                 self.aps_reduced_max_jobs
             ))
@@ -427,10 +427,10 @@ class Application(object):
             # TODO: doesn't really matter lol
             executor_slug="aps_native"
         )
-        work_wrap_and_id = self.work_wrapper.wrap(worker_metadata)
-        if not work_wrap_and_id:
+        work_func_and_id = self.work_factory.get_work_func(worker_metadata)
+        if not work_func_and_id:
             # todo: log
             return
-        work_wrap, worker_id = work_wrap_and_id
-        work_wrap()
+        work_func, worker_id = work_func_and_id
+        work_func()
         print(f"Executed worker {worker_id}")

@@ -4,7 +4,7 @@ from typing import List, Callable, Tuple, Optional
 from dataclasses import dataclass
 from apscheduler.schedulers.background import BackgroundScheduler
 from .executor import Executor
-from broccoli_server.worker import WorkerMetadata, WorkContextFactory, WorkWrapper
+from broccoli_server.worker import WorkerMetadata, WorkContextFactory, WorkFactory
 from broccoli_server.utils import gcd_multiple
 
 logger = logging.getLogger(__name__)
@@ -14,14 +14,14 @@ logger = logging.getLogger(__name__)
 class _Worker:
     worker_id: str
     worker_metadata: WorkerMetadata
-    work_wrap: Callable
+    work_func: Callable
     last_executed_seconds: int
 
 
 class ApsReducedExecutor(Executor):
-    def __init__(self, work_wrapper: WorkWrapper, work_context_factory: WorkContextFactory, max_jobs: int):
+    def __init__(self, work_factory: WorkFactory, work_context_factory: WorkContextFactory, max_jobs: int):
         self.scheduler = BackgroundScheduler()
-        self.work_wrapper = work_wrapper
+        self.work_factory = work_factory
         self.work_context_factory = work_context_factory
         self.max_jobs = max_jobs
         self.job_index_to_workers = []  # type: List[List[_Worker]]
@@ -33,18 +33,18 @@ class ApsReducedExecutor(Executor):
         self.scheduler.shutdown(wait=False)
 
     def add_worker(self, worker_id: str, worker_metadata: WorkerMetadata):
-        work_wrap_and_id = self.work_wrapper.wrap(worker_metadata)
-        if not work_wrap_and_id:
-            logger.error("Cannot wrap work", extra={
+        work_func_and_id = self.work_factory.get_work_func(worker_metadata)
+        if not work_func_and_id:
+            logger.error("Cannot get work function", extra={
                 "worker_metadata": worker_metadata
             })
-            raise RuntimeError("Cannot wrap work")
-        work_wrap, _ = work_wrap_and_id
+            raise RuntimeError("Cannot get work function")
+        work_func, _ = work_func_and_id
 
         if len(self.job_index_to_workers) < self.max_jobs:
             job_id = len(self.job_index_to_workers)
             interval_seconds = worker_metadata.interval_seconds
-            self.job_index_to_workers.append([_Worker(worker_id, worker_metadata, work_wrap, 0)])
+            self.job_index_to_workers.append([_Worker(worker_id, worker_metadata, work_func, 0)])
             self.scheduler.add_job(
                 self._get_job_func(job_id),
                 id=str(job_id),
@@ -62,7 +62,7 @@ class ApsReducedExecutor(Executor):
                 list(map(lambda w: w.worker_metadata.interval_seconds, self.job_index_to_workers[attaching_job_id]))
                 + [worker_metadata.interval_seconds]
             )
-            self.job_index_to_workers[attaching_job_id].append(_Worker(worker_id, worker_metadata, work_wrap, 0))
+            self.job_index_to_workers[attaching_job_id].append(_Worker(worker_id, worker_metadata, work_func, 0))
             self.scheduler.reschedule_job(
                 job_id=str(attaching_job_id),
                 trigger='interval',
@@ -76,7 +76,7 @@ class ApsReducedExecutor(Executor):
             now_seconds = int(time.time())
             for i, worker in enumerate(self.job_index_to_workers[job_id]):
                 if now_seconds - worker.last_executed_seconds > worker.worker_metadata.interval_seconds - 1:
-                    worker.work_wrap()
+                    worker.work_func()
                     self.job_index_to_workers[job_id][i].last_executed_seconds = now_seconds
 
         return _f
