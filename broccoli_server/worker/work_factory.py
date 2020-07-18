@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Optional, Callable, Tuple
 from .work_context import WorkContextFactory
 from .worker_metadata import WorkerMetadata
@@ -42,11 +43,11 @@ class WorkFactory(object):
         worker.pre_work(work_context)
 
         def work_func():
-            try:
-                if self.pause_workers:
-                    logger.info("Workers have been globally paused")
-                    return
+            if self.pause_workers:
+                logger.info("Workers have been globally paused")
+                return
 
+            try:
                 worker.work(work_context)
                 # always reset error count
                 ok, err = self.worker_config_store.reset_error_count(worker_id)
@@ -90,5 +91,7 @@ class WorkFactory(object):
                             'worker_id': worker_id,
                             'reason': err
                         })
+
+            self.worker_config_store.set_last_executed_seconds(worker_id, int(time.time()))
 
         return work_func, worker_id

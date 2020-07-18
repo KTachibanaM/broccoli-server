@@ -245,7 +245,8 @@ class Application(object):
                     "args": worker.args,
                     "interval_seconds": worker.interval_seconds,
                     "error_resiliency": worker.error_resiliency,
-                    "executor_slug": worker.executor_slug
+                    "executor_slug": worker.executor_slug,
+                    "last_executed_seconds": self.worker_config_store.get_last_executed_seconds(worker_id)
                 })
             return jsonify(workers), 200
 
