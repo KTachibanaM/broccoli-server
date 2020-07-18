@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Optional, Callable, Tuple
 from .work_context import WorkContextFactory
 from .worker_metadata import WorkerMetadata
@@ -10,7 +11,7 @@ from broccoli_server.interface.worker import Worker
 logger = logging.getLogger(__name__)
 
 
-class WorkWrapper(object):
+class WorkFactory(object):
     def __init__(self,
                  work_context_factory: WorkContextFactory,
                  worker_cache: WorkerCache,
@@ -24,7 +25,7 @@ class WorkWrapper(object):
         self.sentry_enabled = sentry_enabled
         self.pause_workers = pause_workers
 
-    def wrap(self, worker_metadata: WorkerMetadata) -> Optional[Tuple[Callable, str]]:
+    def get_work_func(self, worker_metadata: WorkerMetadata) -> Optional[Tuple[Callable, str]]:
         module, class_name, args, error_resiliency = \
             worker_metadata.module, worker_metadata.class_name, worker_metadata.args, worker_metadata.error_resiliency
         status, worker_or_message = self.worker_cache.load(module, class_name, args)
@@ -41,12 +42,12 @@ class WorkWrapper(object):
         work_context = self.work_context_factory.build(worker_id)
         worker.pre_work(work_context)
 
-        def wrapped_work_func():
-            try:
-                if self.pause_workers:
-                    logger.info("Workers have been globally paused")
-                    return
+        def work_func():
+            if self.pause_workers:
+                logger.info("Workers have been globally paused")
+                return
 
+            try:
                 worker.work(work_context)
                 # always reset error count
                 ok, err = self.worker_config_store.reset_error_count(worker_id)
@@ -91,4 +92,6 @@ class WorkWrapper(object):
                             'reason': err
                         })
 
-        return wrapped_work_func, worker_id
+            self.worker_config_store.set_last_executed_seconds(worker_id, int(time.time()))
+
+        return work_func, worker_id

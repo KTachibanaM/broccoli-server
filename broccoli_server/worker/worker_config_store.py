@@ -13,6 +13,7 @@ class WorkerConfigStore(object):
         self.db = self.client[db]
         self.collection = self.db['workers']
         self.worker_cache = worker_cache
+        self.worker_last_executed_seconds = {}
 
     def add(self, worker_metadata: WorkerMetadata) -> Tuple[bool, str]:
         module, class_name, args = worker_metadata.module, worker_metadata.class_name, worker_metadata.args
@@ -163,3 +164,9 @@ class WorkerConfigStore(object):
         if not document:
             return False, -1, f"Worker with id {worker_id} does not exist"
         return True, document.get("error_count", 0), ""
+
+    def get_last_executed_seconds(self, worker_id: str) -> int:
+        return self.worker_last_executed_seconds.get(worker_id, -1)
+
+    def set_last_executed_seconds(self, worker_id: str, last_executed_seconds: int):
+        self.worker_last_executed_seconds[worker_id] = last_executed_seconds

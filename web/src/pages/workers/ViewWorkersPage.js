@@ -77,6 +77,7 @@ export default class ViewWorkersPage extends Component {
   }
 
   renderWorkersTable(workers) {
+    const nowSeconds = Math.floor(Date.now() / 1000)
     return (
       <table>
         <thead>
@@ -85,6 +86,7 @@ export default class ViewWorkersPage extends Component {
           <th>Interval (seconds)</th>
           <th>Error Resiliency (non-positive is none)</th>
           <th>Executor</th>
+          <th>Executed minutes ago</th>
           <th>Operations</th>
         </tr>
         </thead>
@@ -98,7 +100,8 @@ export default class ViewWorkersPage extends Component {
               args,
               "interval_seconds": intervalSeconds,
               "error_resiliency": errorResiliency,
-              "executor_slug": executor
+              "executor_slug": executor,
+              "last_executed_seconds": lastExecutedSeconds
             } = worker;
             return (
               <tr key={workerId}>
@@ -169,6 +172,7 @@ export default class ViewWorkersPage extends Component {
                     this.onUpdateExecutor(workerId, executor)}
                   }>Update</button>
                 </td>
+                <td>{lastExecutedSeconds !== -1 ? Math.floor((nowSeconds - lastExecutedSeconds) / 60) : 'N/A'}</td>
                 <td>
                   <button onClick={e => {
                     e.preventDefault();
