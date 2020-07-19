@@ -132,4 +132,8 @@ export default class ApiClient {
   public async setWorkerMetadata(workerId, metadata) {
     return this.axios.post(`${this.endpoint}/apiInternal/worker/${workerId}/metadata`, metadata);
   }
+
+  public async getThreadCount(): Promise<number> {
+    return this.axios.get(`${this.endpoint}/debug/threadCount`).then(response => response.data['thread_count'])
+  }
 }

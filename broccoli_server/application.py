@@ -4,6 +4,7 @@ import sys
 import datetime
 import json
 import base64
+import threading
 import sentry_sdk
 from typing import Callable, Dict, List, Tuple, Optional
 from broccoli_server.utils import validate_schema_or_not, getenv_or_raise, DatabaseMigration
@@ -397,6 +398,12 @@ class Application(object):
                 return send_from_directory(web_root, filename)
             else:
                 return send_from_directory(web_root, "index.html")
+
+        @flask_app.route('/debug/threadCount', methods=['GET'])
+        def _thread_count():
+            return jsonify({
+                'thread_count': threading.active_count()
+            }), 200
 
         # detect flask debug mode
         # https://stackoverflow.com/questions/14874782/apscheduler-in-flask-executes-twice

@@ -25,6 +25,16 @@ export default class App extends Component {
   constructor(props) {
     super(props);
     this.apiClient = new ApiClient()
+    this.state = {
+      threadCount: -1
+    }
+  }
+
+  componentDidMount() {
+    this.apiClient.getThreadCount()
+      .then(threadCount => {
+        this.setState({ threadCount })
+      })
   }
 
   render() {
@@ -42,9 +52,11 @@ export default class App extends Component {
           { ' | ' }
           <Link to="/workers/create">Create new worker</Link>
           { ' | ' }
+          { `Thread count: ${this.state.threadCount}` }
+          { ' | ' }
           <button onClick={e => {
-            this.apiClient.unsetAuth();
             e.preventDefault()
+            this.apiClient.unsetAuth();
           }}>Logout</button>
         </div>
         <Switch>
