@@ -20,11 +20,15 @@ const isValidUrl = (str: string) => {
 
 const Text: React.FunctionComponent<Props> = (props: Props) => {
   const { data } = props;
-  const { text } = data;
+  let { text } = data;
+  if (text.startsWith('"') && text.endsWith('"')) {
+    // double-quotes on both ends are indication that it's a raw string from mongodb, ignore them
+    text = text.substring(1, text.length - 1)
+  }
 
   if (isValidUrl(text)) {
     return (
-      <a href={text}>{text}</a>
+      <a href={text} target="_blank">{text}</a>
     );
   } else {
     return (
