@@ -43,14 +43,10 @@ class Board extends React.Component<Props, State> {
     this.state = Board.InitialState;
   }
 
-  public loadQuery = () => {
+  loadQuery = () => {
     this.setState(Board.InitialState);
     this.props.apiClient.renderBoard(this.boardId)
-      .then((data) => {
-        this.setState({
-          boardRender: data,
-        });
-      })
+      .then(boardRender => this.setState({ boardRender }))
       .catch((error) => {
         this.props.showErrorMessage(
           new Error(`Fail to load mod view, error ${error.toString()}`),
@@ -322,7 +318,7 @@ class Board extends React.Component<Props, State> {
     return (
       <div>
         <b>Mod view "{this.boardId}"</b>
-        <div>Query: {boardRender.board_query.q}</div>
+        <div>Query: {JSON.stringify(boardRender.board_query.q)}</div>
         <div>Limit: {boardRender.board_query.limit ? boardRender.board_query.limit : "N/A"}</div>
         <div>Sort: {boardRender.board_query.sort ? JSON.stringify(boardRender.board_query.sort) : "N/A"}</div>
         {this.renderPayload()}

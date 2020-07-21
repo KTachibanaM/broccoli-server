@@ -65,7 +65,7 @@ export default class ViewBoardsPage extends Component {
           {this.state.boards.map((board, index) => {
             const {boardId, boardQuery: { q, limit, sort, projections }} = board;
             return (
-              <tr key={boardId}>
+              <tr key={index}>
                 <td>
                   <Link to={`/board/${encodeURIComponent(boardId)}`}>{boardId}</Link>
                 </td>

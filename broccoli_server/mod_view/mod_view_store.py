@@ -18,5 +18,5 @@ class ModViewStore(object):
                 return q
         return None
 
-    def declare_mod_views(self, mod_views: List[Tuple[str, ModViewQuery]]):
-        self.mod_views = mod_views
+    def add_mod_view(self, name: str, mod_view: ModViewQuery):
+        self.mod_views.append((name, mod_view))

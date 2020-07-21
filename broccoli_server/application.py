@@ -6,7 +6,7 @@ import json
 import base64
 import threading
 import sentry_sdk
-from typing import Callable, Dict, List, Tuple, Optional
+from typing import Callable, Dict, Optional
 from broccoli_server.utils import validate_schema_or_not, getenv_or_raise, DatabaseMigration
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
@@ -89,15 +89,8 @@ class Application(object):
     def set_default_api_handler(self, constructor: Callable):
         self.default_api_handler = constructor()
 
-    def add_column(self, module: str, class_name: str, constructor: Callable):
-        self.boards_renderer.add_column(
-            module=module,
-            class_name=class_name,
-            constructor=constructor
-        )
-
-    def declare_mod_views(self, mod_views: List[Tuple[str, ModViewQuery]]):
-        self.mod_view_store.declare_mod_views(mod_views)
+    def add_mod_view(self, name: str, mod_view: ModViewQuery):
+        self.mod_view_store.add_mod_view(name, mod_view)
 
     def start(self):
         # Other objects
@@ -325,31 +318,23 @@ class Application(object):
                 "status": "ok"
             }), 200
 
-        @flask_app.route('/apiInternal/board/<string:board_id>', methods=['GET'])
-        def _get_board(board_id: str):
-            board_query = self.mod_view_store.get(board_id).to_dict()
-            board_query["q"] = json.loads(board_query["q"])
-            return jsonify(board_query), 200
-
         @flask_app.route('/apiInternal/boards', methods=['GET'])
         def _get_boards():
             boards = []
             for (board_id, board_query) in self.mod_view_store.get_all():
-                board_query = board_query.to_dict()
-                board_query["q"] = json.loads(board_query["q"])
                 boards.append({
                     "board_id": board_id,
-                    "board_query": board_query
+                    "board_query": board_query.to_dict()
                 })
             return jsonify(boards), 200
 
         @flask_app.route('/apiInternal/renderBoard/<string:board_id>', methods=['GET'])
         def _render_board(board_id: str):
-            q = self.mod_view_store.get(board_id)
+            board_query = self.mod_view_store.get(board_id)
             return jsonify({
-                "board_query": q.to_dict(),
-                "payload": self.boards_renderer.render_as_dict(q),
-                "count_without_limit": self.content_store.count(json.loads(q.q))
+                "board_query": board_query.to_dict(),
+                "payload": self.boards_renderer.render_as_dict(board_query),
+                "count_without_limit": self.content_store.count(board_query.query)
             }), 200
 
         @flask_app.route('/apiInternal/callbackBoard/<string:callback_id>', methods=['POST'])
