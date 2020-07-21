@@ -13,25 +13,31 @@ class DatabaseMigration(object):
             1: self._version_1_to_2,
             2: self._version_2_to_3,
             3: self._version_3_to_4,
-            4: self._version_4_to_5
+            4: self._version_4_to_5,
+            5: self._version_5_to_6,
+            6: self._version_6_to_7,
         }
         self.latest_schema_version = max(self.upgrade_map.keys()) + 1
 
     def migrate(self):
-        schema_version = self._get_schema_version()
-        print(f"Current schema version is {schema_version}")
+        current_schema_version = self._get_schema_version()
+        print(f"Current schema version is {current_schema_version}")
 
-        if schema_version == self.latest_schema_version:
+        if current_schema_version == self.latest_schema_version:
             print(f"Already on latest schema version {self.latest_schema_version}")
             return
-        if schema_version not in self.upgrade_map:
-            raise RuntimeError(f"unknown schema version {schema_version}, :(")
 
-        next_schema_version = schema_version + 1
-        print(f"Performing schema migration {schema_version} to {next_schema_version}")
-        self.upgrade_map[schema_version]()
-        self._update_schema_version(next_schema_version)
-        print(f"Performed schema migration {schema_version} to {next_schema_version}")
+        upgrade_from_versions = [v for v in range(current_schema_version, self.latest_schema_version)]
+        for schema_version in upgrade_from_versions:
+            if schema_version not in self.upgrade_map:
+                raise RuntimeError(f"Schema upgrade undefined for version {schema_version}, :(")
+
+        for schema_version in upgrade_from_versions:
+            next_schema_version = schema_version + 1
+            print(f"Performing schema migration {schema_version} to {next_schema_version}")
+            self.upgrade_map[schema_version]()
+            self._update_schema_version(next_schema_version)
+            print(f"Performed schema migration {schema_version} to {next_schema_version}")
 
     def _version_0_to_1(self):
         try:
@@ -80,6 +86,30 @@ class DatabaseMigration(object):
             print(f"fail to drop individual broccoli.worker.* collections")
             raise e
 
+    def _version_5_to_6(self):
+        try:
+            old_prefix = 'broccoli.worker.'
+            workers_collection = self.db['workers']
+            for d in workers_collection.find():
+                old_worker_id = d['worker_id']
+                new_worker_id = old_worker_id
+                if new_worker_id.startswith(old_prefix):
+                    new_worker_id = new_worker_id[len(old_prefix):]
+                workers_collection.update_one(
+                    filter={'worker_id': old_worker_id},
+                    update={"$set": {"worker_id": new_worker_id}}
+                )
+        except Exception as e:
+            print("fail to remove broccoli.worker. prefix for workers")
+            raise e
+
+    def _version_6_to_7(self):
+        try:
+            self.db['boards'].drop()
+        except Exception as e:
+            print("fail to drop boards collection")
+            raise e
+
     def _get_schema_version(self):
         try:
             collection_names = self.db.list_collection_names()
@@ -87,10 +117,8 @@ class DatabaseMigration(object):
             print(f"fail to get collection names, {e}")
             raise e
         if DatabaseMigration.SCHEMA_VERSION_COLLECTION_NAME not in collection_names:
-            if "broccoli.server" in collection_names:
-                return 0
-            else:
-                return self.latest_schema_version
+            raise RuntimeError(f"schema version collection {DatabaseMigration.SCHEMA_VERSION_COLLECTION_NAME} "
+                               f"is not found. Please create one with self.latest_schema_version")
         try:
             v = self.schema_version_collection.find_one({"v": {"$exists": True}})
             return v["v"]

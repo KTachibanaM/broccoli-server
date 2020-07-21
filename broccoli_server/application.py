@@ -6,7 +6,7 @@ import json
 import base64
 import threading
 import sentry_sdk
-from typing import Callable, Dict, List, Tuple, Optional
+from typing import Callable, Dict, Optional
 from broccoli_server.utils import validate_schema_or_not, getenv_or_raise, DatabaseMigration
 from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
 from broccoli_server.content import ContentStore
@@ -14,7 +14,7 @@ from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, Worke
     MetadataStoreFactory, WorkContextFactory, WorkFactory
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
-from broccoli_server.executor import ApsNativeExecutor, ApsSubprocessExecutor, ApsReducedExecutor
+from broccoli_server.executor import ApsNativeExecutor, ApsReducedExecutor
 from broccoli_server.interface.api import ApiHandler
 from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
@@ -23,9 +23,7 @@ from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_re
 
 
 class Application(object):
-    def __init__(self, run_worker_invocation_py_path: Optional[str] = None):
-        self.run_worker_invocation_py_path = run_worker_invocation_py_path  # type: Optional[str]
-
+    def __init__(self):
         # Environment
         if 'SENTRY_DSN' in os.environ:
             print("SENTRY_DSN environ found, settings up sentry")
@@ -76,10 +74,7 @@ class Application(object):
         )
 
         self.default_api_handler = None  # type: Optional[ApiHandler]
-        self.mod_view_store = ModViewStore(
-            connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
-            db=getenv_or_raise("MONGODB_DB")
-        )
+        self.mod_view_store = ModViewStore()
         self.boards_renderer = ModViewRenderer(self.content_store)
 
     def add_worker(self, module: str, class_name: str, constructor: Callable):
@@ -92,15 +87,8 @@ class Application(object):
     def set_default_api_handler(self, constructor: Callable):
         self.default_api_handler = constructor()
 
-    def add_column(self, module: str, class_name: str, constructor: Callable):
-        self.boards_renderer.add_column(
-            module=module,
-            class_name=class_name,
-            constructor=constructor
-        )
-
-    def declare_mod_views(self, mod_views: List[Tuple[str, ModViewQuery]]):
-        self.mod_view_store.declare_mod_views(mod_views)
+    def add_mod_view(self, name: str, mod_view: ModViewQuery):
+        self.mod_view_store.add_mod_view(name, mod_view)
 
     def start(self):
         # Other objects
@@ -116,8 +104,6 @@ class Application(object):
                 self.worker_context_factory,
                 self.aps_reduced_max_jobs
             ))
-        if self.run_worker_invocation_py_path:
-            executors.append(ApsSubprocessExecutor(self.run_worker_invocation_py_path))
         reconciler = Reconciler(self.worker_config_store, executors)
 
         # Figure out path for static web artifact
@@ -328,57 +314,23 @@ class Application(object):
                 "status": "ok"
             }), 200
 
-        @flask_app.route('/apiInternal/board/<string:board_id>', methods=['POST'])
-        def _upsert_board(board_id: str):
-            parsed_body = request.json
-            parsed_body["q"] = json.dumps(parsed_body["q"])
-            self.mod_view_store.upsert(board_id, ModViewQuery(parsed_body))
-            return jsonify({
-                "status": "ok"
-            }), 200
-
-        @flask_app.route('/apiInternal/board/<string:board_id>', methods=['GET'])
-        def _get_board(board_id: str):
-            board_query = self.mod_view_store.get(board_id).to_dict()
-            board_query["q"] = json.loads(board_query["q"])
-            return jsonify(board_query), 200
-
         @flask_app.route('/apiInternal/boards', methods=['GET'])
         def _get_boards():
             boards = []
             for (board_id, board_query) in self.mod_view_store.get_all():
-                board_query = board_query.to_dict()
-                board_query["q"] = json.loads(board_query["q"])
                 boards.append({
                     "board_id": board_id,
-                    "board_query": board_query
+                    "board_query": board_query.to_dict()
                 })
             return jsonify(boards), 200
 
-        @flask_app.route(
-            '/apiInternal/boards/swap/<string:board_id>/<string:another_board_id>',
-            methods=['POST']
-        )
-        def _swap_boards(board_id: str, another_board_id: str):
-            self.mod_view_store.swap(board_id, another_board_id)
-            return jsonify({
-                "status": "ok"
-            }), 200
-
-        @flask_app.route('/apiInternal/board/<string:board_id>', methods=['DELETE'])
-        def _remove_board(board_id: str):
-            self.mod_view_store.remove(board_id)
-            return jsonify({
-                "status": "ok"
-            }), 200
-
         @flask_app.route('/apiInternal/renderBoard/<string:board_id>', methods=['GET'])
         def _render_board(board_id: str):
-            q = self.mod_view_store.get(board_id)
+            board_query = self.mod_view_store.get(board_id)
             return jsonify({
-                "board_query": q.to_dict(),
-                "payload": self.boards_renderer.render_as_dict(q),
-                "count_without_limit": self.content_store.count(json.loads(q.q))
+                "board_query": board_query.to_dict(),
+                "payload": self.boards_renderer.render_as_dict(board_query),
+                "count_without_limit": self.content_store.count(board_query.query)
             }), 200
 
         @flask_app.route('/apiInternal/callbackBoard/<string:callback_id>', methods=['POST'])

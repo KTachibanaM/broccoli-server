@@ -9,7 +9,7 @@ class UpdateOneButton(ModViewColumn):
                  text: str,
                  callback_id: str,
                  filter_q_key: str,
-                 update_set_doc: str,
+                 update_set_doc: Dict,
                  allow_many: bool = False
                  ):
         self.text = text
