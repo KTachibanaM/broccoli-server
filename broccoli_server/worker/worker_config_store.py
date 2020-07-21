@@ -3,6 +3,7 @@ import logging
 from typing import Dict, Tuple
 from .worker_cache import WorkerCache
 from .worker_metadata import WorkerMetadata
+from broccoli_server.interface.worker import Worker
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,7 @@ class WorkerConfigStore(object):
                 'message': worker_or_message
             })
             return False, worker_or_message
-        # not specifying type of broccoli_server.interface.worker.Worker because of circular dep
-        worker = worker_or_message
+        worker = worker_or_message  # type: Worker
         worker_id = f"broccoli.worker.{worker.get_id()}"
         if self._if_worker_exists(worker_id):
             return False, f"Worker with id {worker_id} already exists"
