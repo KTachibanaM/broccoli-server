@@ -20,20 +20,24 @@ class DatabaseMigration(object):
         self.latest_schema_version = max(self.upgrade_map.keys()) + 1
 
     def migrate(self):
-        schema_version = self._get_schema_version()
-        print(f"Current schema version is {schema_version}")
+        current_schema_version = self._get_schema_version()
+        print(f"Current schema version is {current_schema_version}")
 
-        if schema_version == self.latest_schema_version:
+        if current_schema_version == self.latest_schema_version:
             print(f"Already on latest schema version {self.latest_schema_version}")
             return
-        if schema_version not in self.upgrade_map:
-            raise RuntimeError(f"unknown schema version {schema_version}, :(")
 
-        next_schema_version = schema_version + 1
-        print(f"Performing schema migration {schema_version} to {next_schema_version}")
-        self.upgrade_map[schema_version]()
-        self._update_schema_version(next_schema_version)
-        print(f"Performed schema migration {schema_version} to {next_schema_version}")
+        upgrade_from_versions = [v for v in range(current_schema_version, self.latest_schema_version)]
+        for schema_version in upgrade_from_versions:
+            if schema_version not in self.upgrade_map:
+                raise RuntimeError(f"Schema upgrade undefined for version {schema_version}, :(")
+
+        for schema_version in upgrade_from_versions:
+            next_schema_version = schema_version + 1
+            print(f"Performing schema migration {schema_version} to {next_schema_version}")
+            self.upgrade_map[schema_version]()
+            self._update_schema_version(next_schema_version)
+            print(f"Performed schema migration {schema_version} to {next_schema_version}")
 
     def _version_0_to_1(self):
         try:
