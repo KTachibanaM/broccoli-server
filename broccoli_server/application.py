@@ -14,7 +14,7 @@ from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, Worke
     MetadataStoreFactory, WorkContextFactory, WorkFactory
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
-from broccoli_server.executor import ApsNativeExecutor, ApsSubprocessExecutor, ApsReducedExecutor
+from broccoli_server.executor import ApsNativeExecutor, ApsReducedExecutor
 from broccoli_server.interface.api import ApiHandler
 from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
@@ -23,9 +23,7 @@ from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_re
 
 
 class Application(object):
-    def __init__(self, run_worker_invocation_py_path: Optional[str] = None):
-        self.run_worker_invocation_py_path = run_worker_invocation_py_path  # type: Optional[str]
-
+    def __init__(self):
         # Environment
         if 'SENTRY_DSN' in os.environ:
             print("SENTRY_DSN environ found, settings up sentry")
@@ -106,8 +104,6 @@ class Application(object):
                 self.worker_context_factory,
                 self.aps_reduced_max_jobs
             ))
-        if self.run_worker_invocation_py_path:
-            executors.append(ApsSubprocessExecutor(self.run_worker_invocation_py_path))
         reconciler = Reconciler(self.worker_config_store, executors)
 
         # Figure out path for static web artifact
