@@ -15,6 +15,7 @@ class DatabaseMigration(object):
             3: self._version_3_to_4,
             4: self._version_4_to_5,
             5: self._version_5_to_6,
+            6: self._version_6_to_7,
         }
         self.latest_schema_version = max(self.upgrade_map.keys()) + 1
 
@@ -96,6 +97,13 @@ class DatabaseMigration(object):
                 )
         except Exception as e:
             print("fail to remove broccoli.worker. prefix for workers")
+            raise e
+
+    def _version_6_to_7(self):
+        try:
+            self.db['boards'].drop()
+        except Exception as e:
+            print("fail to drop boards collection")
             raise e
 
     def _get_schema_version(self):
