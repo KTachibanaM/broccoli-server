@@ -5,7 +5,6 @@ import Icon from "./icon.png"
 import ViewWorkersPage from "./pages/workers/ViewWorkersPage"
 import CreateWorkerPage from "./pages/workers/CreateWorkerPage"
 import ViewBoardsPage from "./pages/boards/ViewBoardsPage"
-import UpsertBoardPage from "./pages/boards/UpsertBoardPage"
 import Board from "./pages/boards/Board"
 import Worker from "./pages/workers/Worker"
 import ApiClient from "./api/ApiClient";
@@ -46,8 +45,6 @@ export default class App extends Component {
           { ' | ' }
           <Link to="/boards/view">View mod views</Link>
           { ' | ' }
-          <Link to="/boards/upsert">Create new mod view</Link>
-          { ' | ' }
           <Link to="/workers/view">View workers</Link>
           { ' | ' }
           <Link to="/workers/create">Create new worker</Link>
@@ -72,11 +69,6 @@ export default class App extends Component {
               const EnhancedPage = applyHoc(ViewBoardsPage, withMessage, withRouting, withAuth);
               return (<EnhancedPage />)
             }}
-          />
-          <Route
-            exact
-            path="/boards/upsert"
-            component={UpsertBoardPage}
           />
           <Route
             exact

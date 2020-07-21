@@ -1,6 +1,5 @@
 import axios, { AxiosInstance } from "axios";
 import Board from "./Board";
-import BoardProjection from "./BoardProjection";
 import BoardRender from "./BoardRender";
 
 export default class ApiClient {
@@ -51,37 +50,12 @@ export default class ApiClient {
     return this.isAuth;
   }
 
-  public async upsertBoard(
-    boardId: string,
-    q: object,
-    limit: number | undefined,
-    sort: object | undefined,
-    projections: BoardProjection[],
-  ): Promise<any> {
-    const data: Board = {q, projections};
-    if (limit) {
-      data.limit = limit;
-    }
-    if (sort) {
-      data.sort = sort;
-    }
-    return this.axios.post(`${this.endpoint}/apiInternal/board/${boardId}`, data);
-  }
-
   public async getBoards(): Promise<Board[]> {
     return this.axios.get(`${this.endpoint}/apiInternal/boards`).then((response) => response.data);
   }
 
   public async getBoard(boardId: string): Promise<Board> {
     return this.axios.get(`${this.endpoint}/apiInternal/board/${boardId}`).then((response) => response.data);
-  }
-
-  public async swapBoards(boardId: string, anotherBoardId: string): Promise<any> {
-    return this.axios.post(`${this.endpoint}/apiInternal/boards/swap/${boardId}/${anotherBoardId}`);
-  }
-
-  public async removeBoard(boardId: string): Promise<any> {
-    return this.axios.delete(`${this.endpoint}/apiInternal/board/${boardId}`);
   }
 
   public async renderBoard(boardId: string): Promise<BoardRender> {

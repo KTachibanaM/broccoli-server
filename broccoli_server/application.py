@@ -76,10 +76,7 @@ class Application(object):
         )
 
         self.default_api_handler = None  # type: Optional[ApiHandler]
-        self.mod_view_store = ModViewStore(
-            connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
-            db=getenv_or_raise("MONGODB_DB")
-        )
+        self.mod_view_store = ModViewStore()
         self.boards_renderer = ModViewRenderer(self.content_store)
 
     def add_worker(self, module: str, class_name: str, constructor: Callable):
@@ -328,15 +325,6 @@ class Application(object):
                 "status": "ok"
             }), 200
 
-        @flask_app.route('/apiInternal/board/<string:board_id>', methods=['POST'])
-        def _upsert_board(board_id: str):
-            parsed_body = request.json
-            parsed_body["q"] = json.dumps(parsed_body["q"])
-            self.mod_view_store.upsert(board_id, ModViewQuery(parsed_body))
-            return jsonify({
-                "status": "ok"
-            }), 200
-
         @flask_app.route('/apiInternal/board/<string:board_id>', methods=['GET'])
         def _get_board(board_id: str):
             board_query = self.mod_view_store.get(board_id).to_dict()
@@ -354,23 +342,6 @@ class Application(object):
                     "board_query": board_query
                 })
             return jsonify(boards), 200
-
-        @flask_app.route(
-            '/apiInternal/boards/swap/<string:board_id>/<string:another_board_id>',
-            methods=['POST']
-        )
-        def _swap_boards(board_id: str, another_board_id: str):
-            self.mod_view_store.swap(board_id, another_board_id)
-            return jsonify({
-                "status": "ok"
-            }), 200
-
-        @flask_app.route('/apiInternal/board/<string:board_id>', methods=['DELETE'])
-        def _remove_board(board_id: str):
-            self.mod_view_store.remove(board_id)
-            return jsonify({
-                "status": "ok"
-            }), 200
 
         @flask_app.route('/apiInternal/renderBoard/<string:board_id>', methods=['GET'])
         def _render_board(board_id: str):
