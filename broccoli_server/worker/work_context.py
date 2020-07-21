@@ -6,7 +6,8 @@ from broccoli_server.content import ContentStore
 
 class WorkContextImpl(WorkContext):
     def __init__(self, worker_id: str, content_store: ContentStore, metadata_store_factory: MetadataStoreFactory):
-        self._logger = logging.getLogger(worker_id)
+        # still need the prefix to globally configure logging for all broccoli workers
+        self._logger = logging.getLogger(f"broccoli.worker.{worker_id}")
         self._content_store = content_store
         self._metadata_store = metadata_store_factory.build(worker_id)
 

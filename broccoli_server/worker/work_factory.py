@@ -38,7 +38,7 @@ class WorkFactory(object):
             })
             return None
         worker = worker_or_message  # type: Worker
-        worker_id = f"broccoli.worker.{worker.get_id()}"
+        worker_id = worker.get_id()
         work_context = self.work_context_factory.build(worker_id)
         worker.pre_work(work_context)
 

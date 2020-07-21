@@ -4,8 +4,6 @@ from .work_context import WorkContext
 
 class Worker(metaclass=ABCMeta):
     @abstractmethod
-    # WARNING: actual worker_id's persisted in mongodb start with "broccoli.worker."
-    # check all usages of this func
     def get_id(self) -> str:
         pass
 

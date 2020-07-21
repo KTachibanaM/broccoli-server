@@ -28,7 +28,7 @@ class WorkerConfigStore(object):
             })
             return False, worker_or_message
         worker = worker_or_message  # type: Worker
-        worker_id = f"broccoli.worker.{worker.get_id()}"
+        worker_id = worker.get_id()
         if self._if_worker_exists(worker_id):
             return False, f"Worker with id {worker_id} already exists"
         # todo: insert fails?
