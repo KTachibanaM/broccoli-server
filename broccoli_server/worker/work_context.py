@@ -11,15 +11,12 @@ class WorkContextImpl(WorkContext):
         self._content_store = content_store
         self._metadata_store = metadata_store_factory.build(worker_id)
 
-    @property
     def logger(self) -> logging.Logger:
         return self._logger
 
-    @property
     def content_store(self) -> ContentStore:
         return self._content_store
 
-    @property
     def metadata_store(self) -> MetadataStore:
         return self._metadata_store
 

@@ -123,12 +123,16 @@ class ContentStore(object):
     def update_one(self, filter_q: Dict, update_doc: Dict, allow_many: bool = False):
         existing_doc_count = self.collection.count_documents(filter_q)
         if existing_doc_count == 0:
-            logger.info(f"Document with query {filter_q} does not exist")
+            logger.error(f"Document does not exist", extra={
+                "query": filter_q
+            })
             return
 
         more_than_one = existing_doc_count > 1
         if more_than_one and not allow_many:
-            logger.info(f"More than one document with query {filter_q} exists")
+            logger.error(f"More than one documents exist", extra={
+                "query": filter_q
+            })
             return
 
         if not more_than_one:
@@ -144,7 +148,9 @@ class ContentStore(object):
     def update_many(self, filter_q: Dict, update_doc: Dict):
         existing_doc_count = self.collection.count_documents(filter_q)
         if existing_doc_count == 0:
-            logger.info(f"Document with query {filter_q} does not exist")
+            logger.error(f"Document does not exist", extra={
+                "query": filter_q
+            })
             return
 
         # todo: update_many fails
@@ -152,7 +158,9 @@ class ContentStore(object):
 
     def update_one_binary_string(self, filter_q: Dict, key: str, binary_string: str):
         if not ContentStore._check_if_string_is_binary(binary_string):
-            logger.info(f"from_binary_string {binary_string} is not a 01 string")
+            logger.error(f"binary_string is not a 01 string", extra={
+                "value": binary_string
+            })
             return
         self.update_one(filter_q, {
             "$set": {
@@ -180,7 +188,9 @@ class ContentStore(object):
                                           pick_n: int) -> List[Dict]:
         # todo: use a metric tree
         if not ContentStore._check_if_string_is_binary(from_binary_string):
-            logger.info(f"from_binary_string {from_binary_string} is not a 01 string")
+            logger.error(f"from_binary_string is not a 01 string", extra={
+                "value": from_binary_string
+            })
             return []
         q_results = self.query(q, limit=None)
         if len(q_results) < pick_n:
@@ -200,19 +210,15 @@ class ContentStore(object):
     @staticmethod
     def _check_if_string_is_binary(string: str) -> bool:
         if not (set(string) <= set("01")):
-            logger.info(f"{string} is not a 01 string")
             return False
         return True
 
     @staticmethod
     def _check_if_q_result_has_valid_binary(q_result: Dict, binary_string_key: str, from_binary_string: str) -> bool:
         if binary_string_key not in q_result:
-            logger.info(f"Document {q_result} does not have field {binary_string_key}")
             return False
         q_binary_string = q_result[binary_string_key]
         if len(q_binary_string) != len(from_binary_string):
-            logger.info(f"Document {q_result} does not have string '{binary_string_key}' of the queried length "
-                        f"{len(q_binary_string)}")
             return False
         if not ContentStore._check_if_string_is_binary(q_binary_string):
             return False
