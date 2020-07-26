@@ -16,7 +16,9 @@ A web content crawling and sorting library
 
 ## Solution
 This is a Python library that generalizes the crawling, processing, sorting and publishing of Internet content
+
 It offers Python interfaces that you will plug in and register implementation that fulfills your individual use cases
+
 The library exposes a web server and this server will be started within your own implementation, e.g. a different repo than this one that imports this library
 
 ## Concepts and Pluggability
@@ -37,6 +39,8 @@ The library exposes a web server and this server will be started within your own
     * A one off job is the same as a worker except that it only runs once at user's discretion at runtime through UI and API
 
 ## Usage
+In your implementation, do
+
 ```bash
 pip install broccoli-server
 ```
@@ -45,6 +49,7 @@ pip install broccoli-server
 
 ### MongoDB
 You need a MongoDB database with two users, one for regular data operations (e.g. reading/writing the content repository), another for database schema migrations
+
 We will call the former `rw`, and the later `ddl`
 
 You need to create a collection named `schema_version` in the database. The collection should have one document
@@ -61,11 +66,13 @@ You need to create a collection named `schema_version` in the database. The coll
 3. Find the key with max value
 4. Increment that max value by one, and the incremented value is `<schema_version>`
 
-#### Local development
+#### MongoDB for local development
 You need to give your implementation a name. We will call it `foo_bar`
 
 If you have an "OS-default" version of MongoDB installed, you likely will have an unauthenticated MongoDB running locally on `localhost:27017`
+
 If that's the case, you can use a convenient dev script `./dev/create_mongodb.sh` to create both the MongoDB database and users
+
 Run `./dev/create_mongodb.sh <foo_bar> <schema_version>` to create the appropriate MongoDB database and users for local development
 
 ### Environment variables
