@@ -16,6 +16,7 @@ from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
 from broccoli_server.executor import ApsNativeExecutor, ApsReducedExecutor
 from broccoli_server.interface.api import ApiHandler
+from broccoli_server.one_off_job import OneOffJobExecutor
 from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
@@ -76,6 +77,7 @@ class Application(object):
         self.default_api_handler = None  # type: Optional[ApiHandler]
         self.mod_view_store = ModViewStore()
         self.boards_renderer = ModViewRenderer(self.content_store)
+        self.one_off_job_executor = OneOffJobExecutor(self.content_store)
 
     def add_worker(self, module: str, class_name: str, constructor: Callable):
         self.worker_cache.add(
@@ -83,6 +85,9 @@ class Application(object):
             class_name=class_name,
             constructor=constructor
         )
+
+    def register_one_off_job_module(self, module_name: str, constructor: Callable):
+        self.one_off_job_executor.register_job_module(module_name, constructor)
 
     def set_default_api_handler(self, constructor: Callable):
         self.default_api_handler = constructor()
@@ -313,6 +318,25 @@ class Application(object):
             return jsonify({
                 "status": "ok"
             }), 200
+
+        @flask_app.route('/apiInternal/oneOffJob/modules', methods=['GET'])
+        def _get_one_off_job_modules():
+            return jsonify(self.one_off_job_executor.get_job_modules()), 200
+
+        @flask_app.route('/apiInternal/oneOffJob/run', methods=['POST'])
+        def _run_one_off_job():
+            r = request.json
+            self.one_off_job_executor.run_job(
+                module_name=r['module_name'],
+                args=r['args']
+            )
+            return jsonify({
+                'status': 'ok'
+            }), 200
+
+        @flask_app.route('/apiInternal/oneOffJob/run', methods=['GET'])
+        def _get_one_off_job_runs():
+            return jsonify(list(map(lambda r: r.to_json(), self.one_off_job_executor.get_job_runs()))), 200
 
         @flask_app.route('/apiInternal/boards', methods=['GET'])
         def _get_boards():
