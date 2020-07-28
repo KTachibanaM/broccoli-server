@@ -4,11 +4,11 @@ import BoardRender, {ActionableRenderTypes, RenderDataTypes, RenderTypes, Row} f
 import { InjectedAuthProps } from "../../hoc/withAuth";
 import { InjectedMessageProps } from "../../hoc/withMessage";
 import { InjectedRoutingProps } from "../../hoc/withRouting";
-import Button from "../modView/columnRenders/Button";
-import Image from "../modView/columnRenders/Image";
-import ImageList from "../modView/columnRenders/ImageList";
-import Text from "../modView/columnRenders/Text";
-import Video from "../modView/columnRenders/Video";
+import Button from "./columnRenders/Button";
+import Image from "./columnRenders/Image";
+import ImageList from "./columnRenders/ImageList";
+import Text from "./columnRenders/Text";
+import Video from "./columnRenders/Video";
 import {DivTable, DivTableCell, DivTableHeaderCell, DivTableRow} from "./DivTable";
 
 interface Params {

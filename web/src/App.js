@@ -4,8 +4,8 @@ import Icon from "./icon.png"
 
 import ViewWorkersPage from "./pages/workers/ViewWorkersPage"
 import CreateWorkerPage from "./pages/workers/CreateWorkerPage"
-import ViewBoardsPage from "./pages/boards/ViewBoardsPage"
-import Board from "./pages/boards/Board"
+import ViewBoardsPage from "./pages/modView/ViewBoardsPage"
+import Board from "./pages/modView/Board"
 import Worker from "./pages/workers/Worker"
 import ApiClient from "./api/ApiClient";
 
@@ -43,11 +43,13 @@ export default class App extends Component {
           <img src={Icon} alt="Broccoli logo" height="16" width="16"/>
           { ' Broccoli' }
           { ' | ' }
-          <Link to="/boards/view">View mod views</Link>
+          <Link to="/boards/view">Mod views</Link>
           { ' | ' }
-          <Link to="/workers/view">View workers</Link>
+          <Link to="/workers/view">Workers</Link>
           { ' | ' }
           <Link to="/workers/create">Create new worker</Link>
+          { ' | ' }
+          <Link to="/oneOffJobs/view">One off jobs</Link>
           { ' | ' }
           { `Thread count: ${this.state.threadCount}` }
           { ' | ' }
