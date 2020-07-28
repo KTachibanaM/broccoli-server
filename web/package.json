@@ -23,6 +23,7 @@
     "utility-types": "^3.10.0"
   },
   "scripts": {
+    "start": "REACT_APP_ENDPOINT=http://localhost:5000 react-scripts start",
     "build": "react-scripts build"
   },
   "eslintConfig": {

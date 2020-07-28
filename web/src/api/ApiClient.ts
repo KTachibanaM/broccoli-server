@@ -5,12 +5,16 @@ import OneOffJobRun from "./OneOffJobRun";
 
 export default class ApiClient {
   private TokenLocalStorageKey = "accessToken";
-  private endpoint: string;
+  private readonly endpoint: string;
   private axios: AxiosInstance;
   private isAuth: boolean;
 
   constructor() {
-    this.endpoint = "";
+    if (process.env.REACT_APP_ENDPOINT) {
+      this.endpoint = process.env.REACT_APP_ENDPOINT;
+    } else {
+      this.endpoint = "";
+    }
     this.axios = axios.create();
     this.isAuth = false;
     const token = localStorage.getItem(this.TokenLocalStorageKey);
