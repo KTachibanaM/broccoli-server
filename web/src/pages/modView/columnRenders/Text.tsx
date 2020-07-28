@@ -28,7 +28,7 @@ const Text: React.FunctionComponent<Props> = (props: Props) => {
 
   if (isValidUrl(text)) {
     return (
-      <a href={text} target="_blank">{text}</a>
+      <a href={text} target="_blank" rel="noopener noreferrer">{text}</a>
     );
   } else {
     return (
