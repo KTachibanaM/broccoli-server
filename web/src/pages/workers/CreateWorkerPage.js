@@ -9,8 +9,7 @@ class CreateWorkerPage extends Component {
     super(props);
     const query = qs.parse(this.props.location.search);
     this.state = {
-      "module": query["module"] || "",
-      "className": query["class_name"] || "",
+      "moduleName": query["module_name"] || "",
       "args": parseJsonOrObject(query["args"]),
       "intervalSeconds": parseInt(query["interval_seconds"]) || 60,
       "modalIsOpen": false
@@ -25,8 +24,8 @@ class CreateWorkerPage extends Component {
   }
 
   submit() {
-    const {module, className, args, intervalSeconds} = this.state;
-    this.props.apiClient.addWorker(module, className, args, intervalSeconds)
+    const {moduleName, args, intervalSeconds} = this.state;
+    this.props.apiClient.addWorker(moduleName, args, intervalSeconds)
       .then(() => {
         this.props.redirectTo("/workers/view");
       })
@@ -41,18 +40,12 @@ class CreateWorkerPage extends Component {
       <div>
         <b>Create new worker</b>
         <div>
-          Module:<br/>
+          Module name:<br/>
           <input
             type="text"
             size={63}
-            value={this.state.module}
-            onChange={e => {this.setState({"module": e.target.value})}}
-          /><br/>
-          Class name:<br/>
-          <input
-            type="text"
-            value={this.state.className}
-            onChange={e => {this.setState({"className": e.target.value})}}
+            value={this.state.moduleName}
+            onChange={e => {this.setState({"moduleName": e.target.value})}}
           /><br/>
           Args:<br/>
           <button onClick={() => {

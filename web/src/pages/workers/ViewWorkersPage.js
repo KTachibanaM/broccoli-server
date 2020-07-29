@@ -20,9 +20,9 @@ export default class ViewWorkersPage extends Component {
       .finally(() => this.setState({loading: false}))
   }
 
-  onReplicate = (module, className, args, intervalSeconds) => {
+  onReplicate = (moduleName, args, intervalSeconds) => {
     this.props.redirectTo(
-      `/workers/create?module=${module}&class_name=${className}&args=${encodeURIComponent(JSON.stringify(args))}&interval_seconds=${intervalSeconds}`
+      `/workers/create?module_name=${moduleName}&args=${encodeURIComponent(JSON.stringify(args))}&interval_seconds=${intervalSeconds}`
     )
   }
 
@@ -95,8 +95,7 @@ export default class ViewWorkersPage extends Component {
           workers.map(worker => {
             const {
               "worker_id": workerId,
-              module,
-              "class_name": className,
+              "module_name": moduleName,
               args,
               "interval_seconds": intervalSeconds,
               "error_resiliency": errorResiliency,
@@ -176,7 +175,7 @@ export default class ViewWorkersPage extends Component {
                 <td>
                   <button onClick={e => {
                     e.preventDefault();
-                    this.onReplicate(module, className, args, intervalSeconds)
+                    this.onReplicate(moduleName, args, intervalSeconds)
                   }}>Create from</button>
                   <button onClick={e => {
                     e.preventDefault();
