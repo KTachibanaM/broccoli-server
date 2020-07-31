@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import { Route, Link, Switch, Redirect } from "react-router-dom"
-import Icon from "./icon.png"
+import { Route, Switch, Redirect } from "react-router-dom"
+import { MuiThemeProvider, Container } from "@material-ui/core";
+import {AppNav} from "@k-t-corp/frontend-lib"
 
 import ViewWorkersPage from "./pages/workers/ViewWorkersPage"
 import CreateWorkerPage from "./pages/workers/CreateWorkerPage"
@@ -38,26 +39,49 @@ export default class App extends Component {
 
   render() {
     return (
-      <div>
-        <div>
-          <img src={Icon} alt="Broccoli logo" height="16" width="16"/>
-          { ' Broccoli' }
-          { ' | ' }
-          <Link to="/boards/view">Mod views</Link>
-          { ' | ' }
-          <Link to="/workers/view">Workers</Link>
-          { ' | ' }
-          <Link to="/workers/create">Create new worker</Link>
-          { ' | ' }
-          <Link to="/oneOffJobs/view">One off jobs</Link>
-          { ' | ' }
-          { `Thread count: ${this.state.threadCount}` }
-          { ' | ' }
-          <button onClick={e => {
-            e.preventDefault()
-            this.apiClient.unsetAuth();
-          }}>Logout</button>
-        </div>
+      <MuiThemeProvider>
+        <AppNav
+          title='Broccoli'
+          items={[
+            {
+              text: 'Mod Views',
+              action: () => {
+                window.location.replace("/boards/view")
+              }
+            },
+            {
+              text: 'Workers',
+              action: () => {
+                window.location.replace("/workers/view")
+              }
+            },
+            {
+              text: 'Create worker',
+              action: () => {
+                window.location.replace("/workers/create")
+              }
+            },
+            {
+              text: 'Jobs',
+              action: () => {
+                window.location.replace("/oneOffJobs/view")
+              }
+            },
+            {
+              text: `Thread count: ${this.state.threadCount}`,
+              action: () => {}
+            },
+          ]}
+          rightMostItem={{
+            text: "Logout",
+            action: () => {
+              this.apiClient.unsetAuth();
+            }
+          }}
+        />
+        <Container>
+
+        </Container>
         <Switch>
           <Redirect
             exact
@@ -105,7 +129,7 @@ export default class App extends Component {
             }}
           />
         </Switch>
-      </div>
+      </MuiThemeProvider>
     );
   }
 }
