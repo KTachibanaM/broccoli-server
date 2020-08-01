@@ -7,7 +7,7 @@ import ViewWorkersPage from "./pages/workers/ViewWorkersPage"
 import CreateWorkerPage from "./pages/workers/CreateWorkerPage"
 import ViewBoardsPage from "./pages/modView/ViewBoardsPage"
 import Board from "./pages/modView/ViewBoard"
-import Worker from "./pages/workers/Worker"
+import Worker from "./pages/workers/ViewWorker"
 import ApiClient from "./api/ApiClient";
 
 import withMessage from "./hoc/withMessage"
@@ -79,12 +79,6 @@ class App extends Component {
               text: 'Workers',
               action: () => {
                 window.location.replace("/workers/view")
-              }
-            },
-            {
-              text: 'Create worker',
-              action: () => {
-                window.location.replace("/workers/create")
               }
             },
             {
