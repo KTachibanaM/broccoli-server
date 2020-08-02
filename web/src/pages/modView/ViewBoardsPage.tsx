@@ -94,9 +94,17 @@ export default class ViewBoardsPage extends React.Component<Props, State> {
                 <TableCell>
                   <Link to={`/board/${encodeURIComponent(boardId)}`}>{boardId}</Link>
                 </TableCell>
-                <TableCell>{JSON.stringify(q)}</TableCell>
+                <TableCell>
+                  <p style={{fontFamily: 'monospace'}}>
+                    {JSON.stringify(q)}
+                  </p>
+                </TableCell>
                 <TableCell>{limit ? limit : "N/A"}</TableCell>
-                <TableCell>{sort ? JSON.stringify(sort) : "N/A"}</TableCell>
+                <TableCell>
+                  {sort ? <p style={{fontFamily: 'monospace'}}>
+                    {JSON.stringify(sort)}
+                  </p> : "N/A"}
+                </TableCell>
                 <TableCell>{projections.map(p => p["name"]).join(", ")}</TableCell>
               </TableRow>
             )
