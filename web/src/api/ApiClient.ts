@@ -71,6 +71,10 @@ export default class ApiClient {
     return this.axios.get(`${this.endpoint}/apiInternal/worker`).then(response => response.data)
   }
 
+  public async getWorkerModules(): Promise<string[]> {
+    return this.axios.get(`${this.endpoint}/apiInternal/worker/modules`).then(response => response.data)
+  }
+
   public async addWorker(moduleName: string, args: object, intervalSeconds: number) {
     return this.axios.post(`${this.endpoint}/apiInternal/worker`, {
       module_name: moduleName, args, interval_seconds: intervalSeconds,

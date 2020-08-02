@@ -7,7 +7,7 @@ import base64
 import threading
 import sentry_sdk
 from typing import Callable, Dict, Optional
-from broccoli_server.utils import validate_schema_or_not, getenv_or_raise, DatabaseMigration
+from broccoli_server.utils import getenv_or_raise, DatabaseMigration
 from broccoli_server.content import ContentStore
 from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, WorkerMetadata, WorkerCache, \
     MetadataStoreFactory, WorkContextFactory, WorkFactory
@@ -190,6 +190,10 @@ class Application(object):
                 self.content_store
             )
             return jsonify(result), 200
+
+        @flask_app.route('/apiInternal/worker/modules', methods=['GET'])
+        def _get_worker_modules():
+            return jsonify(self.worker_cache.get_modules_names()), 200
 
         @flask_app.route('/apiInternal/worker', methods=['POST'])
         def _add_worker():
