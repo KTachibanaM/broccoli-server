@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Route, Switch, Redirect } from "react-router-dom"
-import { MuiThemeProvider, Container, createStyles, withStyles, createMuiTheme } from "@material-ui/core";
+import { MuiThemeProvider, Container, createStyles, withStyles, createMuiTheme, CssBaseline } from "@material-ui/core";
 import {AppNav} from "@k-t-corp/frontend-lib"
 
 import WorkersPage from "./pages/workers/WorkersPage"
@@ -67,6 +67,7 @@ class App extends Component {
 
     return (
       <MuiThemeProvider theme={theme}>
+        <CssBaseline/>
         <AppNav
           title='Broccoli'
           items={[
