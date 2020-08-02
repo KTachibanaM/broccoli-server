@@ -6,63 +6,84 @@ A web content crawling and sorting library
 
 ## Problem Statement
 * I want to
-    * Crawl content, such as images and texts, from "feeds" on the Internet, such as RSS, Twitter, some random webpage
-    * Archive those content into a centralized repository
-    * Process the content and attach extra attributes, such as extracting hash, width, height of an image, or translating a piece of text
-    * Manage the content repository using a dashboard, such as viewing images and duplicates, or viewing texts and changing their translation
-    * Expose the content repository to the world with certain attributes, such as "moderation is true"
-* While I do not want to
-    * Re-implement crawling resiliency and failure observability for different use cases
-    * Specify different programming language object models for content in different use cases
-    * Re-implement common elements in a management dashboard for different use cases
+    * Crawl content (images, texts, etc) from feeds on the Internet (RSS, Twitter, or webpages that you define crawling methods with)
+    * Process the contents and attach extra attributes, such as image hash, image width/height, or text translation
+    * Manipulate the contents with dashboards, such as managing duplicate images, or adding texts translation
+    * Expose the contents to the world with a certain attribute, such as only moderated images
+* However, I don't want to, for different use cases
+    * Re-implement resiliency and observability for content crawling and processing
+    * Re-implement common frontend and backend elements in content manipulation dashboards
 
 ## Solution
-This is a Python library that generalizes the crawling, processing, sorting and publishing of Internet content, while offer a public Python API so that you plugin implementation details to fulfill individual use cases
+This is a Python library that generalizes the crawling, processing, sorting and publishing of Internet content
 
-## Architecture
-* There is a server application that does the heavy-lifting of crawling and processing of Internet content. Those activities can also be queried and changed via HTTP endpoints.
-* The server application also stores metadata about the user interfaces it should be exposing for the purpose of human moderation.
-* The server application also exposes HTTP endpoints to publish the repository of Internet content.
-* The server application stores its state (for example, the repository of Internet content) to a database.
-* There is a web application that uses the server HTTP endpoints and allows end users to query and control crawling and processing activities.
-* The web application also displays user interfaces for human moderation, according to the metadata stored by the server.
-* The architecture is currently not multi-tenant, meaning there is only one single-purposed repository of Internet content that a pair of server application + web application + database instance can serve.
+It offers Python interfaces that you will plug in and register implementation that fulfills your individual use cases
+
+The library exposes a web server and this server will be started within your own implementation, e.g. a different repo than this one that imports this library
 
 ## Concepts and Pluggability
-* A worker is a "cron" job object that runs within the server application and reads/writes to the repository of Internet content.
-* Worker classes ("class" as in OOP) are registered to the server application at runtime and thus pluggable.
-* Worker objects are instantiated and run within the server application at runtime according to worker metadata, which can also be queried and changed at runtime.
-* An API handler is an object that handles public query traffic to the repository of Internet content in HTTP.
-* API handler classes ("class" as in OOP) are registered to the server application at runtime and thus pluggable.
-* API handler objects are registered within the server application at runtime according to static configuration.
-* A mod view is an user interface that allows end users to view and manipulate the repository of Internet content.
-* A mod view shows rows, each row corresponds to an entry in the repository of Internet content.
-* What rows to show, how many rows to show, in what order the rows are shown, are controlled by the metadata of each mod view.
-* A row have columns. What to show for each column is controlled by pluggable ModViewColumn classes ("class as in OOP") which are registered to the server application at runtime.
-* ModViewColumn objects are instantiated when a request to render a mod view comes in, and the objects all render to standardized JSON representing frontend components, like a text and a button, that the frontend should implement actually rendering.
+* Content repository is a centralized place to store all of the contents in database rows
+* Worker
+    * A worker is a "cron" job object that runs periodically and probably reads/writes to content repository.
+    * Worker modules are registered to your implementation at runtime.
+    * Workers are instantiated using worker modules and run according to worker metadata which can changed at runtime through UI and API.
+* Mod view
+    * A mod view is an UI that allows end users to view and manipulate the content repository.
+    * A mod view shows rows, each row corresponds to an entry in the content repository.
+    * What rows to show, how many rows to show, in what order the rows are shown, are controlled by the metadata of each mod view which your implementation specifies.
+    * A row have columns. What to show for each column is controlled by ModViewColumn classes ("class" as in OOP) which are registered to your implementation at runtime.
+* API handler
+    * An API handler is an object that handles public query traffic to the content repository in HTTP.
+    * The API handler is registered to your implementation at runtime.
+* One off job
+    * A one off job is the same as a worker except that it only runs once at user's discretion at runtime through UI and API
 
 ## Usage
+In your implementation, do
+
 ```bash
 pip install broccoli-server
 ```
+
+## Prepare
+
+### MongoDB
 You need a MongoDB database with two users, one for regular data operations (e.g. reading/writing the content repository), another for database schema migrations
+
 We will call the former `rw`, and the later `ddl`
 
-### Convenient dev scripts for local development
-If you have an "OS-default" version of MongoDB installed, you likely will have an unauthenticated MongoDB running locally on `localhost:27017`
-If that's the case, you can use a convenient dev script `./dev/create_mongodb.sh` to create both the MongoDB database and users
-In order to use the script, you need to give your application a name. We will call it `instance_0`
-Run `./dev/create_mongodb.sh instance_0` to create the appropriate MongoDB database and users for local development
+You need to create a collection named `schema_version` in the database. The collection should have one document
 
-### Environment variables required
+```
+{
+    "v": <schema_version>
+}
+```
+
+`<schema_version>` is the current database schema version for the version of this library you are using. It can be found using the following steps
+1. Go to `./broccoli_server/utils/database_migration.py`
+2. Find `self.upgrade_map`
+3. Find the key with max value
+4. Increment that max value by one, and the incremented value is `<schema_version>`
+
+#### MongoDB for local development
+You need to give your implementation a name. We will call it `foo_bar`
+
+If you have an "OS-default" version of MongoDB installed, you likely will have an unauthenticated MongoDB running locally on `localhost:27017`
+
+If that's the case, you can use a convenient dev script to create both the MongoDB database and users
+
+Run `./scripts/bootstrap_mongodb.sh <foo_bar> <schema_version>` to create the appropriate MongoDB database and users for local development
+
+### Environment variables
 The following environment variables are expected to be found for the application to run
 * `ADMIN_USERNAME` is the username for the web application
 * `ADMIN_PASSWORD` is the password for the web application
 * `JWT_SECRET_KEY`
 * `MONGODB_CONNECTION_STRING` is the connection string for MongoDB user `rw`
-    * If you used `./dev/create_mongodb.sh instance_0`, the connection string will simply be `mongodb://instance_0:instance_0@localhost:27017/instance_0`
+    * If you used `bootstrap_mongodb.sh`, the connection string will simply be `mongodb://foo_bar:foo_bar@localhost:27017/foo_bar`
 * `MONGODB_ADMIN_CONNECTION_STRING` is the connection string for MongoDB user `ddl`
-    * If you used `./dev/create_mongodb.sh instance_0`, the connection string will simply be `mongodb://instance_0:instance_0@localhost:27017/instance_0`
+    * If you used `bootstrap_mongodb.sh`, the connection string will simply be `mongodb://foo_bar:foo_bar@localhost:27017/foo_bar`
 * `MONGODB_DB` is the actual name of the MongoDB database (even if the connection string already contains the database, this variable is still expected)
 
 ## API

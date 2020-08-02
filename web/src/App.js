@@ -1,17 +1,25 @@
 import React, { Component } from 'react';
-import { Route, Link, Switch, Redirect } from "react-router-dom"
-import Icon from "./icon.png"
+import { Route, Switch, Redirect, withRouter } from "react-router-dom"
+import { MuiThemeProvider, Container, createStyles, withStyles, createMuiTheme, CssBaseline } from "@material-ui/core";
+import {AppNav} from "@k-t-corp/frontend-lib"
 
-import ViewWorkersPage from "./pages/workers/ViewWorkersPage"
+import WorkersPage from "./pages/workers/WorkersPage"
 import CreateWorkerPage from "./pages/workers/CreateWorkerPage"
-import ViewBoardsPage from "./pages/boards/ViewBoardsPage"
-import Board from "./pages/boards/Board"
-import Worker from "./pages/workers/Worker"
+import ModViewsPage from "./pages/modView/ModViewsPage"
+import Board from "./pages/modView/ModViewPage"
+import Worker from "./pages/workers/WorkerPage"
 import ApiClient from "./api/ApiClient";
 
 import withMessage from "./hoc/withMessage"
 import withRouting from "./hoc/withRouting"
 import withAuth from "./hoc/withAuth"
+import JobsPage from "./pages/jobs/JobsPage";
+import DebugPage from "./pages/DebugPage";
+
+import DashboardIcon from '@material-ui/icons/Dashboard';
+import AlarmIcon from '@material-ui/icons/Alarm';
+import SettingsIcon from '@material-ui/icons/Settings';
+import BugReportIcon from '@material-ui/icons/BugReport';
 
 function applyHoc(Component, ...hocList) {
   for (let hoc of hocList) {
@@ -20,7 +28,31 @@ function applyHoc(Component, ...hocList) {
   return Component
 }
 
-export default class App extends Component {
+const styles = (theme) => createStyles({
+  main: {
+    // top and bottom padding's
+    padding: theme.spacing(4, 0, 3),
+  }
+});
+
+const theme = createMuiTheme({
+  palette: {
+    primary: {
+      light: '#439889',
+      main: '#00695c',
+      dark: '#003d33',
+      contrastText: '#ffffff'
+    },
+    secondary: {
+      light: '#df78ef',
+      main: '#ab47bc',
+      dark: '#790e8b',
+      contrastText: '#ffffff'
+    }
+  }
+});
+
+class App extends Component {
   constructor(props) {
     super(props);
     this.apiClient = new ApiClient()
@@ -37,73 +69,120 @@ export default class App extends Component {
   }
 
   render() {
+    const {classes} = this.props;
+
     return (
-      <div>
-        <div>
-          <img src={Icon} alt="Broccoli logo" height="16" width="16"/>
-          { ' Broccoli' }
-          { ' | ' }
-          <Link to="/boards/view">View mod views</Link>
-          { ' | ' }
-          <Link to="/workers/view">View workers</Link>
-          { ' | ' }
-          <Link to="/workers/create">Create new worker</Link>
-          { ' | ' }
-          { `Thread count: ${this.state.threadCount}` }
-          { ' | ' }
-          <button onClick={e => {
-            e.preventDefault()
-            this.apiClient.unsetAuth();
-          }}>Logout</button>
-        </div>
-        <Switch>
-          <Redirect
-            exact
-            from="/"
-            to="/boards/view"
-          />
-          <Route
-            exact
-            path="/boards/view"
-            component={() => {
-              const EnhancedPage = applyHoc(ViewBoardsPage, withMessage, withRouting, withAuth);
-              return (<EnhancedPage />)
-            }}
-          />
-          <Route
-            exact
-            path="/board/:name"
-            component={() => {
-              const EnhancedPage = applyHoc(Board, withMessage, withAuth);
-              return (<EnhancedPage />)
-            }}
-          />
-          <Route
-            exact
-            path="/workers/view"
-            component={() => {
-              const EnhancedPage = applyHoc(ViewWorkersPage, withMessage, withRouting, withAuth);
-              return (<EnhancedPage />)
-            }}
-          />
-          <Route
-            exact
-            path="/workers/create"
-            component={() => {
-              const EnhancedPage = applyHoc(CreateWorkerPage, withMessage, withRouting, withAuth);
-              return (<EnhancedPage />)
-            }}
-          />
-          <Route
-            exact
-            path="/worker/:workerId"
-            component={() => {
-              const EnhancedPage = applyHoc(Worker, withMessage, withAuth);
-              return (<EnhancedPage />)
-            }}
-          />
-        </Switch>
-      </div>
+      <MuiThemeProvider theme={theme}>
+        <CssBaseline/>
+        <AppNav
+          title='Broccoli'
+          items={[
+            {
+              text: 'Mod Views',
+              icon: <DashboardIcon />,
+              action: () => {
+                this.props.history.push("/modViews/view")
+              }
+            },
+            {
+              text: 'Workers',
+              icon: <AlarmIcon />,
+              action: () => {
+                this.props.history.push("/workers/view")
+              }
+            },
+            {
+              text: 'Jobs',
+              icon: <SettingsIcon />,
+              action: () => {
+                this.props.history.push("/jobs/view")
+              }
+            },
+            {
+              text: `Debug`,
+              icon: <BugReportIcon />,
+              action: () => {
+                this.props.history.push("/debug")
+              }
+            },
+          ]}
+          rightMostItem={{
+            text: "Logout",
+            action: () => {
+              this.apiClient.unsetAuth();
+            }
+          }}
+        />
+        <Container>
+          <main className={classes.main}>
+            <Switch>
+              <Redirect
+                exact
+                from="/"
+                to="/modViews/view"
+              />
+              <Route
+                exact
+                path="/modViews/view"
+                component={() => {
+                  const EnhancedPage = applyHoc(ModViewsPage, withMessage, withRouting, withAuth);
+                  return (<EnhancedPage />)
+                }}
+              />
+              <Route
+                exact
+                path="/modView/:name"
+                component={() => {
+                  const EnhancedPage = applyHoc(Board, withMessage, withAuth);
+                  return (<EnhancedPage />)
+                }}
+              />
+              <Route
+                exact
+                path="/workers/view"
+                component={() => {
+                  const EnhancedPage = applyHoc(WorkersPage, withMessage, withRouting, withAuth);
+                  return (<EnhancedPage />)
+                }}
+              />
+              <Route
+                exact
+                path="/workers/create"
+                component={() => {
+                  const EnhancedPage = applyHoc(CreateWorkerPage, withMessage, withRouting, withAuth);
+                  return (<EnhancedPage />)
+                }}
+              />
+              <Route
+                exact
+                path="/worker/:workerId"
+                component={() => {
+                  const EnhancedPage = applyHoc(Worker, withMessage, withAuth);
+                  return (<EnhancedPage />)
+                }}
+              />
+              <Route
+                exact
+                path="/jobs/view"
+                component={() => {
+                  const EnhancedPage = applyHoc(JobsPage, withAuth);
+                  return (<EnhancedPage />)
+                }}
+              />
+              <Route
+                exact
+                path="/debug"
+                component={() => {
+                  const EnhancedPage = applyHoc(DebugPage, withAuth);
+                  return (<EnhancedPage />)
+                }}
+              />
+            </Switch>
+          </main>
+        </Container>
+      </MuiThemeProvider>
     );
   }
 }
+
+export default withRouter(withStyles(styles)(App));

@@ -1,15 +1,20 @@
 import axios, { AxiosInstance } from "axios";
 import Board from "./Board";
 import BoardRender from "./BoardRender";
+import JobRun from "./JobRun";
 
 export default class ApiClient {
   private TokenLocalStorageKey = "accessToken";
-  private endpoint: string;
+  private readonly endpoint: string;
   private axios: AxiosInstance;
   private isAuth: boolean;
 
   constructor() {
-    this.endpoint = "";
+    if (process.env.REACT_APP_ENDPOINT) {
+      this.endpoint = process.env.REACT_APP_ENDPOINT;
+    } else {
+      this.endpoint = "";
+    }
     this.axios = axios.create();
     this.isAuth = false;
     const token = localStorage.getItem(this.TokenLocalStorageKey);
@@ -54,10 +59,6 @@ export default class ApiClient {
     return this.axios.get(`${this.endpoint}/apiInternal/boards`).then((response) => response.data);
   }
 
-  public async getBoard(boardId: string): Promise<Board> {
-    return this.axios.get(`${this.endpoint}/apiInternal/board/${boardId}`).then((response) => response.data);
-  }
-
   public async renderBoard(boardId: string): Promise<BoardRender> {
     return this.axios.get(`${this.endpoint}/apiInternal/renderBoard/${boardId}`).then((response) => response.data);
   }
@@ -70,12 +71,13 @@ export default class ApiClient {
     return this.axios.get(`${this.endpoint}/apiInternal/worker`).then(response => response.data)
   }
 
-  public async addWorker(module, className, args, intervalSeconds) {
+  public async getWorkerModules(): Promise<string[]> {
+    return this.axios.get(`${this.endpoint}/apiInternal/worker/modules`).then(response => response.data)
+  }
+
+  public async addWorker(moduleName: string, args: object, intervalSeconds: number) {
     return this.axios.post(`${this.endpoint}/apiInternal/worker`, {
-      module,
-      class_name: className,
-      args,
-      interval_seconds: intervalSeconds,
+      module_name: moduleName, args, interval_seconds: intervalSeconds,
     });
   }
 
@@ -105,6 +107,21 @@ export default class ApiClient {
 
   public async setWorkerMetadata(workerId, metadata) {
     return this.axios.post(`${this.endpoint}/apiInternal/worker/${workerId}/metadata`, metadata);
+  }
+
+  public async getOneOffJobModules(): Promise<string[]>{
+    return this.axios.get(`${this.endpoint}/apiInternal/oneOffJob/modules`).then(response => response.data)
+  }
+
+  public async runOneOffJob(moduleName: string, args: object): Promise<{status: string}> {
+    return this.axios.post(`${this.endpoint}/apiInternal/oneOffJob/run`, {
+      'module_name': moduleName,
+      args
+    }).then(response => response.data)
+  }
+
+  public async getOneOffJobRuns(): Promise<JobRun[]> {
+    return this.axios.get(`${this.endpoint}/apiInternal/oneOffJob/run`).then(response => response.data)
   }
 
   public async getThreadCount(): Promise<number> {

@@ -26,13 +26,12 @@ class WorkFactory(object):
         self.pause_workers = pause_workers
 
     def get_work_func(self, worker_metadata: WorkerMetadata) -> Optional[Tuple[Callable, str]]:
-        module, class_name, args, error_resiliency = \
-            worker_metadata.module, worker_metadata.class_name, worker_metadata.args, worker_metadata.error_resiliency
-        status, worker_or_message = self.worker_cache.load(module, class_name, args)
+        module_name, args, error_resiliency = \
+            worker_metadata.module_name, worker_metadata.args, worker_metadata.error_resiliency
+        status, worker_or_message = self.worker_cache.load(module_name, args)
         if not status:
             logger.error("Fails to load worker", extra={
-                'module': module,
-                'class_name': class_name,
+                'module_name': module_name,
                 'args': args,
                 'message': worker_or_message
             })

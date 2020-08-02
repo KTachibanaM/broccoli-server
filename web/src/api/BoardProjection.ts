@@ -1,6 +1,5 @@
 export default interface BoardProjection {
   name: string;
-  module: string;
-  class_name: string;
+  moduleName: string;
   args: object;
 }

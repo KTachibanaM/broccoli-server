@@ -16,6 +16,7 @@ class DatabaseMigration(object):
             4: self._version_4_to_5,
             5: self._version_5_to_6,
             6: self._version_6_to_7,
+            7: self._version_7_to_8,
         }
         self.latest_schema_version = max(self.upgrade_map.keys()) + 1
 
@@ -108,6 +109,23 @@ class DatabaseMigration(object):
             self.db['boards'].drop()
         except Exception as e:
             print("fail to drop boards collection")
+            raise e
+
+    def _version_7_to_8(self):
+        try:
+            workers_collection = self.db['workers']
+            for d in workers_collection.find():
+                module = d['module']
+                class_name = d['class_name']
+                workers_collection.update_one(
+                    filter={"_id": d['_id']},
+                    update={
+                        "$unset": {"module": "", "class_name": ""},
+                        "$set": {"module_name": f"{module}.{class_name}"}
+                    }
+                )
+        except Exception as e:
+            print('fail to merge module and class name into module name for workers')
             raise e
 
     def _get_schema_version(self):

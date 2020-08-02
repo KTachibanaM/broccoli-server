@@ -15,13 +15,13 @@ install_requires = [
     'jsonschema==3.0.1',
     'apscheduler==3.6.0',
     'sentry-sdk==0.14.3',
-    # userspace
+    # contrib
     'oauthlib==3.1.0',
     'requests==2.22.0',
     'python-twitter==3.5'
 ]
 
-VERSION = "4.1.0"
+VERSION = "5.0.0rc1"
 
 tests_require = [
     'mongomock==3.17.0',

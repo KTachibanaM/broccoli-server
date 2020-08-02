@@ -7,8 +7,7 @@ import base64
 import threading
 import sentry_sdk
 from typing import Callable, Dict, Optional
-from broccoli_server.utils import validate_schema_or_not, getenv_or_raise, DatabaseMigration
-from broccoli_server.utils.request_schemas import ADD_WORKER_BODY_SCHEMA
+from broccoli_server.utils import getenv_or_raise, DatabaseMigration
 from broccoli_server.content import ContentStore
 from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, WorkerMetadata, WorkerCache, \
     MetadataStoreFactory, WorkContextFactory, WorkFactory
@@ -16,6 +15,7 @@ from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
 from broccoli_server.executor import ApsNativeExecutor, ApsReducedExecutor
 from broccoli_server.interface.api import ApiHandler
+from broccoli_server.one_off_job import OneOffJobExecutor
 from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
@@ -76,13 +76,13 @@ class Application(object):
         self.default_api_handler = None  # type: Optional[ApiHandler]
         self.mod_view_store = ModViewStore()
         self.boards_renderer = ModViewRenderer(self.content_store)
+        self.one_off_job_executor = OneOffJobExecutor(self.content_store)
 
-    def add_worker(self, module: str, class_name: str, constructor: Callable):
-        self.worker_cache.add(
-            module=module,
-            class_name=class_name,
-            constructor=constructor
-        )
+    def register_worker_module(self, module_name: str, constructor: Callable):
+        self.worker_cache.register_module(module_name, constructor)
+
+    def register_one_off_job_module(self, module_name: str, constructor: Callable):
+        self.one_off_job_executor.register_job_module(module_name, constructor)
 
     def set_default_api_handler(self, constructor: Callable):
         self.default_api_handler = constructor()
@@ -191,21 +191,18 @@ class Application(object):
             )
             return jsonify(result), 200
 
+        @flask_app.route('/apiInternal/worker/modules', methods=['GET'])
+        def _get_worker_modules():
+            return jsonify(self.worker_cache.get_modules_names()), 200
+
         @flask_app.route('/apiInternal/worker', methods=['POST'])
         def _add_worker():
-            body = request.json
-            success, message = validate_schema_or_not(instance=body, schema=ADD_WORKER_BODY_SCHEMA)
-            if not success:
-                return jsonify({
-                    "status": "error",
-                    "message": message
-                })
+            payload = request.json
             status, message_or_worker_id = self.worker_config_store.add(
                 WorkerMetadata(
-                    module=body["module"],
-                    class_name=body["class_name"],
-                    args=body["args"],
-                    interval_seconds=body["interval_seconds"],
+                    module_name=payload["module_name"],
+                    args=payload["args"],
+                    interval_seconds=payload["interval_seconds"],
                     error_resiliency=-1,
                     executor_slug="aps_native"
                 )
@@ -227,8 +224,7 @@ class Application(object):
             for worker_id, worker in self.worker_config_store.get_all().items():
                 workers.append({
                     "worker_id": worker_id,
-                    "module": worker.module,
-                    "class_name": worker.class_name,
+                    "module_name": worker.module_name,
                     "args": worker.args,
                     "interval_seconds": worker.interval_seconds,
                     "error_resiliency": worker.error_resiliency,
@@ -314,6 +310,25 @@ class Application(object):
                 "status": "ok"
             }), 200
 
+        @flask_app.route('/apiInternal/oneOffJob/modules', methods=['GET'])
+        def _get_one_off_job_modules():
+            return jsonify(self.one_off_job_executor.get_job_modules()), 200
+
+        @flask_app.route('/apiInternal/oneOffJob/run', methods=['POST'])
+        def _run_one_off_job():
+            r = request.json
+            self.one_off_job_executor.run_job(
+                module_name=r['module_name'],
+                args=r['args']
+            )
+            return jsonify({
+                'status': 'ok'
+            }), 200
+
+        @flask_app.route('/apiInternal/oneOffJob/run', methods=['GET'])
+        def _get_one_off_job_runs():
+            return jsonify(list(map(lambda r: r.to_json(), self.one_off_job_executor.get_job_runs()))), 200
+
         @flask_app.route('/apiInternal/boards', methods=['GET'])
         def _get_boards():
             boards = []
@@ -379,8 +394,7 @@ class Application(object):
         args = json.loads(args)
 
         worker_metadata = WorkerMetadata(
-            module=getenv_or_raise('WORKER_MODULE'),
-            class_name=getenv_or_raise('WORKER_CLASS_NAME'),
+            module_name=getenv_or_raise('WORKER_MODULE_NAME'),
             args=args,
             interval_seconds=int(getenv_or_raise('WORKER_INTERVAL_SECONDS')),
             error_resiliency=int(getenv_or_raise('WORKER_ERROR_RESILIENCY')),
