@@ -1,7 +1,7 @@
 import React, { Component } from "react"
 import { withRouter } from "react-router-dom";
 
-class ViewWorker extends Component {
+class WorkerPage extends Component {
   constructor(props) {
     super(props);
     this.workerId = this.props.match.params.workerId;
@@ -55,4 +55,4 @@ class ViewWorker extends Component {
   }
 }
 
-export default withRouter(ViewWorker)
+export default withRouter(WorkerPage)

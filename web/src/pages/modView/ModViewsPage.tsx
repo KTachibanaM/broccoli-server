@@ -24,7 +24,7 @@ interface State {
   error?: Error
 }
 
-export default class ViewBoardsPage extends React.Component<Props, State> {
+export default class ModViewsPage extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -92,7 +92,7 @@ export default class ViewBoardsPage extends React.Component<Props, State> {
             return (
               <TableRow key={index}>
                 <TableCell>
-                  <Link to={`/board/${encodeURIComponent(boardId)}`}>{boardId}</Link>
+                  <Link to={`/modView/${encodeURIComponent(boardId)}`}>{boardId}</Link>
                 </TableCell>
                 <TableCell>
                   <p style={{fontFamily: 'monospace'}}>

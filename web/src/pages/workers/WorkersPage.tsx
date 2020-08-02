@@ -28,7 +28,7 @@ interface State {
   error?: Error
 }
 
-export default class ViewWorkersPage extends React.Component<Props, State> {
+export default class WorkersPage extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {

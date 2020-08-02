@@ -3,16 +3,17 @@ import { Route, Switch, Redirect } from "react-router-dom"
 import { MuiThemeProvider, Container, createStyles, withStyles, createMuiTheme } from "@material-ui/core";
 import {AppNav} from "@k-t-corp/frontend-lib"
 
-import ViewWorkersPage from "./pages/workers/ViewWorkersPage"
+import WorkersPage from "./pages/workers/WorkersPage"
 import CreateWorkerPage from "./pages/workers/CreateWorkerPage"
-import ViewBoardsPage from "./pages/modView/ViewBoardsPage"
-import Board from "./pages/modView/ViewBoard"
-import Worker from "./pages/workers/ViewWorker"
+import ModViewsPage from "./pages/modView/ModViewsPage"
+import Board from "./pages/modView/ModViewPage"
+import Worker from "./pages/workers/WorkerPage"
 import ApiClient from "./api/ApiClient";
 
 import withMessage from "./hoc/withMessage"
 import withRouting from "./hoc/withRouting"
 import withAuth from "./hoc/withAuth"
+import JobsPage from "./pages/jobs/JobsPage";
 
 function applyHoc(Component, ...hocList) {
   for (let hoc of hocList) {
@@ -72,7 +73,7 @@ class App extends Component {
             {
               text: 'Mod Views',
               action: () => {
-                window.location.replace("/boards/view")
+                window.location.replace("/modViews/view")
               }
             },
             {
@@ -84,7 +85,7 @@ class App extends Component {
             {
               text: 'Jobs',
               action: () => {
-                window.location.replace("/oneOffJobs/view")
+                window.location.replace("/jobs/view")
               }
             },
             {
@@ -105,19 +106,19 @@ class App extends Component {
               <Redirect
                 exact
                 from="/"
-                to="/boards/view"
+                to="/modViews/view"
               />
               <Route
                 exact
-                path="/boards/view"
+                path="/modViews/view"
                 component={() => {
-                  const EnhancedPage = applyHoc(ViewBoardsPage, withMessage, withRouting, withAuth);
+                  const EnhancedPage = applyHoc(ModViewsPage, withMessage, withRouting, withAuth);
                   return (<EnhancedPage />)
                 }}
               />
               <Route
                 exact
-                path="/board/:name"
+                path="/modView/:name"
                 component={() => {
                   const EnhancedPage = applyHoc(Board, withMessage, withAuth);
                   return (<EnhancedPage />)
@@ -127,7 +128,7 @@ class App extends Component {
                 exact
                 path="/workers/view"
                 component={() => {
-                  const EnhancedPage = applyHoc(ViewWorkersPage, withMessage, withRouting, withAuth);
+                  const EnhancedPage = applyHoc(WorkersPage, withMessage, withRouting, withAuth);
                   return (<EnhancedPage />)
                 }}
               />
@@ -144,6 +145,14 @@ class App extends Component {
                 path="/worker/:workerId"
                 component={() => {
                   const EnhancedPage = applyHoc(Worker, withMessage, withAuth);
+                  return (<EnhancedPage />)
+                }}
+              />
+              <Route
+                exact
+                path="/jobs/view"
+                component={() => {
+                  const EnhancedPage = applyHoc(JobsPage, withAuth);
                   return (<EnhancedPage />)
                 }}
               />

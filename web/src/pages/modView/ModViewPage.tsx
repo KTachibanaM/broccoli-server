@@ -26,7 +26,7 @@ interface State {
   holdingShift: boolean;
 }
 
-class ViewBoard extends React.Component<Props, State> {
+class ModViewPage extends React.Component<Props, State> {
   private static InitialState = {
     loading: true,
     boardRender: {},
@@ -40,11 +40,11 @@ class ViewBoard extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.boardId = decodeURIComponent(this.props.match.params.name);
-    this.state = ViewBoard.InitialState;
+    this.state = ModViewPage.InitialState;
   }
 
   loadQuery = () => {
-    this.setState(ViewBoard.InitialState);
+    this.setState(ModViewPage.InitialState);
     this.props.apiClient.renderBoard(this.boardId)
       .then(boardRender => this.setState({ boardRender }))
       .catch((error) => {
@@ -327,4 +327,4 @@ class ViewBoard extends React.Component<Props, State> {
   }
 }
 
-export default withRouter(ViewBoard);
+export default withRouter(ModViewPage);
