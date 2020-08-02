@@ -14,6 +14,12 @@ import withMessage from "./hoc/withMessage"
 import withRouting from "./hoc/withRouting"
 import withAuth from "./hoc/withAuth"
 import JobsPage from "./pages/jobs/JobsPage";
+import DebugPage from "./pages/DebugPage";
+
+import DashboardIcon from '@material-ui/icons/Dashboard';
+import AlarmIcon from '@material-ui/icons/Alarm';
+import SettingsIcon from '@material-ui/icons/Settings';
+import BugReportIcon from '@material-ui/icons/BugReport';
 
 function applyHoc(Component, ...hocList) {
   for (let hoc of hocList) {
@@ -73,25 +79,31 @@ class App extends Component {
           items={[
             {
               text: 'Mod Views',
+              icon: <DashboardIcon />,
               action: () => {
                 window.location.replace("/modViews/view")
               }
             },
             {
               text: 'Workers',
+              icon: <AlarmIcon />,
               action: () => {
                 window.location.replace("/workers/view")
               }
             },
             {
               text: 'Jobs',
+              icon: <SettingsIcon />,
               action: () => {
                 window.location.replace("/jobs/view")
               }
             },
             {
-              text: `Thread count: ${this.state.threadCount}`,
-              action: () => {}
+              text: `Debug`,
+              icon: <BugReportIcon />,
+              action: () => {
+                window.location.replace("/debug")
+              }
             },
           ]}
           rightMostItem={{
@@ -154,6 +166,14 @@ class App extends Component {
                 path="/jobs/view"
                 component={() => {
                   const EnhancedPage = applyHoc(JobsPage, withAuth);
+                  return (<EnhancedPage />)
+                }}
+              />
+              <Route
+                exact
+                path="/debug"
+                component={() => {
+                  const EnhancedPage = applyHoc(DebugPage, withAuth);
                   return (<EnhancedPage />)
                 }}
               />
