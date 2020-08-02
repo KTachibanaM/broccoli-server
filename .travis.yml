@@ -8,7 +8,7 @@ notifications:
   slack:
     secure: Vc8moGw9f4b1spaTapjVagABVIeC4RHoCgPJRn35dJzhmSmEbZmjZgZvk3LdQm/BZDWGh2mn9HaH98z/Blykqe7mIMLm8B031mNv8F2vv9wy7memiKTGBEiFG1w/648dhGTloLrnUD8ipxFAj9HvKDJLiceC7a2SMdr2PkQZsJSUWBwsCUuG9RyYNCk62du4q5lr549Z+0tyJBFqSkZs3S+eOo40VPm1RupzFilYjRVbSqBt6u1TBy+n3Aak7j2zr+/BdVxgi87fEIorwuo7bhQW28nEDxiQMOsHizV2arKaGHn3wCXChIW2yhzWXOJD2pEts/s2rpfIywydnmpxUiBj0xS2TWwH4m5MUPYq90CVqPuU1OdbSxikz4peGDT018SnMO2zMeOpO39lApPEC6yI/GcpIE1R64unQmt8BtCKxQGj+j38MaVuXTyY/NmXwHGnKJI+kxkz6z9QKpPzUekGZnlSwttVkBZo74JhTcOQ9DAeybFIxjbTX3ld/Kh3Vj6UPrYWzFfCac/3r2PRw8CnbFxDdrEUiP15jbNiRivgU9iyKijKg8Iq8NvMUUCq5k5zZavOGyGvIrRweFSv/DVKaPr1x3qpe5PwghjMHhouJ9G3gnOP7Ji0iULf5TiOFa/yFdleDRynjxIA18YYOKetBOatQs4K84MZLYsmAAY=
 before_deploy:
-  - nvm use 14.5.0
+  - nvm use 11.10.1
 deploy:
   provider: pypi
   user: "__token__"
