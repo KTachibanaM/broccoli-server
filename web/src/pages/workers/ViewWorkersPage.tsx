@@ -4,7 +4,7 @@ import ApiClient from "../../api/ApiClient";
 import {
   Button,
   CircularProgress,
-  Grid, IconButton, Input, MenuItem,
+  Grid, Input, MenuItem,
   Paper, Select,
   Table, TableBody,
   TableCell,
@@ -118,7 +118,15 @@ export default class ViewWorkersPage extends React.Component<Props, State> {
     const nowSeconds = Math.floor(Date.now() / 1000)
     return (
       <div>
-        <Button variant="contained" color="primary">
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={e => {
+            e.preventDefault()
+            window.location.replace("/workers/create")
+          }}
+          style={{marginBottom: 12}}
+        >
           Create new worker
         </Button>
         <TableContainer component={Paper}>
@@ -165,12 +173,14 @@ export default class ViewWorkersPage extends React.Component<Props, State> {
                             })
                           })
                         }}/>
-                        <IconButton onClick={e => {
-                          e.preventDefault()
-                          this.onUpdateIntervalSeconds(workerId, intervalSeconds)}
-                        }>
-                          <CheckCircleIcon />
-                        </IconButton>
+                        <Button
+                          onClick={e => {
+                            e.preventDefault()
+                            this.onUpdateIntervalSeconds(workerId, intervalSeconds)}
+                          }
+                          startIcon={<CheckCircleIcon />}
+                          color="secondary"
+                        >Apply</Button>
                       </TableCell>
                       <TableCell>
                         <Input type="number" value={errorResiliency} onChange={e => {
@@ -187,12 +197,14 @@ export default class ViewWorkersPage extends React.Component<Props, State> {
                             })
                           })
                         }}/>
-                        <IconButton onClick={e => {
-                          e.preventDefault()
-                          this.onUpdateErrorResiliency(workerId, errorResiliency)}
-                        }>
-                          <CheckCircleIcon />
-                        </IconButton>
+                        <Button
+                          onClick={e => {
+                            e.preventDefault()
+                            this.onUpdateErrorResiliency(workerId, errorResiliency)}
+                          }
+                          startIcon={<CheckCircleIcon />}
+                          color="secondary"
+                        >Apply</Button>
                       </TableCell>
                       <TableCell>
                         <Select value={executor} onChange={e => {
@@ -213,27 +225,33 @@ export default class ViewWorkersPage extends React.Component<Props, State> {
                             <MenuItem key={i} value={executor}>{executor}</MenuItem>
                           )}
                         </Select>
-                        <IconButton onClick={e => {
-                          e.preventDefault()
-                          this.onUpdateExecutor(workerId, executor)}
-                        }>
-                          <CheckCircleIcon />
-                        </IconButton>
+                        <Button
+                          onClick={e => {
+                            e.preventDefault()
+                            this.onUpdateExecutor(workerId, executor)}
+                          }
+                          startIcon={<CheckCircleIcon />}
+                          color="secondary"
+                        >Apply</Button>
                       </TableCell>
                       <TableCell>{lastExecutedSeconds !== -1 ? Math.floor((nowSeconds - lastExecutedSeconds) / 60) : 'N/A'}</TableCell>
                       <TableCell>
-                        <IconButton onClick={e => {
-                          e.preventDefault();
-                          this.onReplicate(moduleName, args, intervalSeconds)
-                        }}>
-                          <FileCopyIcon />
-                        </IconButton>
-                        <IconButton onClick={e => {
-                          e.preventDefault();
-                          this.onRemove(workerId)
-                        }}>
-                          <DeleteIcon />
-                        </IconButton>
+                        <Button
+                          onClick={e => {
+                            e.preventDefault();
+                            this.onReplicate(moduleName, args, intervalSeconds)
+                          }}
+                          startIcon={<FileCopyIcon />}
+                          color="secondary"
+                        >Duplicate</Button>
+                        <Button
+                          onClick={e => {
+                            e.preventDefault();
+                            this.onRemove(workerId)
+                          }}
+                          startIcon={<DeleteIcon />}
+                          color="secondary"
+                        >Delete</Button>
                       </TableCell>
                     </TableRow>
                   )
