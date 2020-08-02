@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import Board from "./Board";
 import BoardRender from "./BoardRender";
-import OneOffJobRun from "./OneOffJobRun";
+import JobRun from "./JobRun";
 
 export default class ApiClient {
   private TokenLocalStorageKey = "accessToken";
@@ -120,7 +120,7 @@ export default class ApiClient {
     }).then(response => response.data)
   }
 
-  public async getOneOffJobRuns(): Promise<OneOffJobRun[]> {
+  public async getOneOffJobRuns(): Promise<JobRun[]> {
     return this.axios.get(`${this.endpoint}/apiInternal/oneOffJob/run`).then(response => response.data)
   }
 

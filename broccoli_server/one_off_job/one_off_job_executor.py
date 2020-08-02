@@ -34,11 +34,11 @@ class OneOffJobExecutor(object):
         return list(sorted(self.job_modules.keys()))
 
     def run_job(self, module_name: str, args: Dict):
-        job = self.job_modules[module_name](args)  # type: OneOffJob
+        job = self.job_modules[module_name](**args)  # type: OneOffJob
         job_id = f"{module_name}.{str(uuid.uuid4())}"
         context = OneOffJobContextImpl(job_id, self.content_store)
         job_run_index = len(self.job_runs)
-        self.job_runs.append(JobRun(job_id, "added", []))
+        self.job_runs.append(JobRun(job_id, "scheduled", []))
 
         def _run_job():
             self.job_runs[job_run_index].state = "started"
