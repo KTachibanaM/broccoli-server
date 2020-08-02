@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Route, Switch, Redirect } from "react-router-dom"
+import { Route, Switch, Redirect, withRouter } from "react-router-dom"
 import { MuiThemeProvider, Container, createStyles, withStyles, createMuiTheme, CssBaseline } from "@material-ui/core";
 import {AppNav} from "@k-t-corp/frontend-lib"
 
@@ -81,28 +81,28 @@ class App extends Component {
               text: 'Mod Views',
               icon: <DashboardIcon />,
               action: () => {
-                window.location.replace("/modViews/view")
+                this.props.history.push("/modViews/view")
               }
             },
             {
               text: 'Workers',
               icon: <AlarmIcon />,
               action: () => {
-                window.location.replace("/workers/view")
+                this.props.history.push("/workers/view")
               }
             },
             {
               text: 'Jobs',
               icon: <SettingsIcon />,
               action: () => {
-                window.location.replace("/jobs/view")
+                this.props.history.push("/jobs/view")
               }
             },
             {
               text: `Debug`,
               icon: <BugReportIcon />,
               action: () => {
-                window.location.replace("/debug")
+                this.props.history.push("/debug")
               }
             },
           ]}
@@ -185,4 +185,4 @@ class App extends Component {
   }
 }
 
-export default withStyles(styles)(App);
+export default withRouter(withStyles(styles)(App));

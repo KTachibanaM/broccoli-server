@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from "react-router-dom"
+import { Link, withRouter, RouteComponentProps } from "react-router-dom"
 import ApiClient from "../../api/ApiClient";
 import {
   Button,
@@ -17,9 +17,9 @@ import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import DeleteIcon from '@material-ui/icons/Delete';
 
-interface Props {
+type Props = {
   apiClient: ApiClient
-}
+} & RouteComponentProps
 
 interface State {
   loading: boolean,
@@ -28,7 +28,7 @@ interface State {
   error?: Error
 }
 
-export default class WorkersPage extends React.Component<Props, State> {
+class WorkersPage extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -48,7 +48,7 @@ export default class WorkersPage extends React.Component<Props, State> {
   }
 
   onReplicate = (moduleName, args, intervalSeconds) => {
-    window.location.replace(
+    this.props.history.push(
       `/workers/create?module_name=${moduleName}&args=${encodeURIComponent(JSON.stringify(args))}&interval_seconds=${intervalSeconds}`
     )
   }
@@ -123,7 +123,7 @@ export default class WorkersPage extends React.Component<Props, State> {
           color="primary"
           onClick={e => {
             e.preventDefault()
-            window.location.replace("/workers/create")
+            this.props.history.push("/workers/create")
           }}
           style={{marginBottom: 12}}
         >
@@ -264,3 +264,5 @@ export default class WorkersPage extends React.Component<Props, State> {
     )
   }
 }
+
+export default withRouter(WorkersPage)

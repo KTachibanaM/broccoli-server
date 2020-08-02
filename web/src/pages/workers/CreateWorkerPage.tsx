@@ -57,7 +57,7 @@ class CreateWorkerPage extends React.Component<Props, State> {
     const args = JSON.parse(argsString)
     this.props.apiClient.addWorker(moduleName, args, intervalSeconds)
       .then(() => {
-        window.location.replace("/workers/view");
+        this.props.history.push("/workers/view");
       })
       .catch(error => {
         this.setState({ error })
