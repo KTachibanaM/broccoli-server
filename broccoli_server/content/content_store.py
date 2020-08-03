@@ -156,6 +156,14 @@ class ContentStore(object):
         # todo: update_many fails
         self.collection.update_many(filter_q, update_doc, upsert=False)
 
+    def random_one(self, q: Dict, projection: List[str]) -> Dict:
+        documents = self.query(q, projection=projection)
+        random_index = random.randint(0, len(documents) - 1)
+        return documents[random_index]
+
+    def count(self, q: Dict) -> int:
+        return self.collection.count_documents(q)
+
     def update_one_binary_string(self, filter_q: Dict, key: str, binary_string: str):
         if not ContentStore._check_if_string_is_binary(binary_string):
             logger.error(f"binary_string is not a 01 string", extra={
@@ -232,16 +240,3 @@ class ContentStore(object):
                 distance += 1
         return distance
 
-    def random_one(self, q: Dict, projection: List[str]) -> Dict:
-        documents = self.query(q, projection=projection)
-        random_index = random.randint(0, len(documents) - 1)
-        return documents[random_index]
-
-    def count(self, q: Dict) -> int:
-        return self.collection.count_documents(q)
-
-    def delete_all(self, actual_run: bool = False):
-        if not actual_run:
-            logger.info(f"Going to remove {self.collection.count_documents({})} documents")
-        else:
-            self.collection.delete_many({})
