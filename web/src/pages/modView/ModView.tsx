@@ -1,9 +1,6 @@
 import React from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import BoardRender, {ActionableRenderTypes, RenderDataTypes, RenderTypes, Row} from "../../api/BoardRender";
-import { InjectedAuthProps } from "../../hoc/withAuth";
-import { InjectedMessageProps } from "../../hoc/withMessage";
-import { InjectedRoutingProps } from "../../hoc/withRouting";
 import Button from "./columnRenders/Button";
 import Image from "./columnRenders/Image";
 import ImageList from "./columnRenders/ImageList";
@@ -15,7 +12,7 @@ interface Params {
   name: string;
 }
 
-type Props = InjectedAuthProps & InjectedMessageProps & InjectedRoutingProps & RouteComponentProps<Params>;
+type Props = RouteComponentProps<Params>;
 
 interface State {
   loading: boolean;
@@ -26,7 +23,7 @@ interface State {
   holdingShift: boolean;
 }
 
-class ModViewPage extends React.Component<Props, State> {
+class ModView extends React.Component<Props, State> {
   private static InitialState = {
     loading: true,
     boardRender: {},
@@ -40,11 +37,11 @@ class ModViewPage extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.boardId = decodeURIComponent(this.props.match.params.name);
-    this.state = ModViewPage.InitialState;
+    this.state = ModView.InitialState;
   }
 
   loadQuery = () => {
-    this.setState(ModViewPage.InitialState);
+    this.setState(ModView.InitialState);
     this.props.apiClient.renderBoard(this.boardId)
       .then(boardRender => this.setState({ boardRender }))
       .catch((error) => {
@@ -327,4 +324,4 @@ class ModViewPage extends React.Component<Props, State> {
   }
 }
 
-export default withRouter(ModViewPage);
+export default withRouter(ModView);

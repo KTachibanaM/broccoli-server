@@ -23,7 +23,7 @@ export default class ApiClient {
     }
   }
 
-  public async auth(username: string, password: string) {
+  public async auth(username: string, password: string): Promise<boolean> {
     return this.axios.post(`${this.endpoint}/auth`, {
       username, password,
     }).then((response) => {
@@ -32,6 +32,7 @@ export default class ApiClient {
         throw new Error(`No access_token in ${response.data}`);
       }
       this.setAuth(token);
+      return true
     });
   }
 

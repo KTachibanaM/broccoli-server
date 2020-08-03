@@ -24,7 +24,7 @@ interface State {
   error?: Error
 }
 
-export default class ModViewsPage extends React.Component<Props, State> {
+export default class ModViews extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {

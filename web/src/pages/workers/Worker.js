@@ -1,7 +1,7 @@
 import React, { Component } from "react"
 import { withRouter } from "react-router-dom";
 
-class WorkerPage extends Component {
+class Worker extends Component {
   constructor(props) {
     super(props);
     this.workerId = this.props.match.params.workerId;
@@ -43,9 +43,6 @@ class WorkerPage extends Component {
             this.workerId,
             JSON.parse(this.state.metadataStr)
           )
-            .then(() => {
-              this.props.showOkMessage(`Metadata for ${this.workerId} set`)
-            })
             .catch(error => {
               this.props.showErrorMessage(error.toString())
             })
@@ -55,4 +52,4 @@ class WorkerPage extends Component {
   }
 }
 
-export default withRouter(WorkerPage)
+export default withRouter(Worker)

@@ -33,7 +33,7 @@ interface State {
   argsString: string,
 }
 
-class JobsPage extends React.Component<Props, State> {
+class Jobs extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -167,4 +167,4 @@ class JobsPage extends React.Component<Props, State> {
   }
 }
 
-export default JobsPage
+export default Jobs
