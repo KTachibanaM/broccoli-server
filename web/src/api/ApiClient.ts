@@ -102,8 +102,8 @@ export default class ApiClient {
     return this.axios.get(`${this.endpoint}/apiInternal/executor`).then(response => response.data)
   }
 
-  public async getWorkerMetadata(workerId) {
-    return this.axios.get(`${this.endpoint}/apiInternal/worker/${workerId}/metadata`);
+  public async getWorkerMetadata(workerId): Promise<object> {
+    return this.axios.get(`${this.endpoint}/apiInternal/worker/${workerId}/metadata`).then(response => response.data)
   }
 
   public async setWorkerMetadata(workerId, metadata) {
