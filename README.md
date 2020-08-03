@@ -85,6 +85,7 @@ The following environment variables are expected to be found for the application
 * `MONGODB_ADMIN_CONNECTION_STRING` is the connection string for MongoDB user `ddl`
     * If you used `bootstrap_mongodb.sh`, the connection string will simply be `mongodb://foo_bar:foo_bar@localhost:27017/foo_bar`
 * `MONGODB_DB` is the actual name of the MongoDB database (even if the connection string already contains the database, this variable is still expected)
+* `INSTANCE_TITLE` is an optional string that indicates the identifier of the implementation. It cannot contain spaces. It will be displayed in the web UI.
 
 ## API
 TODO

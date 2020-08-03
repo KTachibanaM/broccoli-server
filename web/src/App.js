@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Route, Switch, Redirect, withRouter } from "react-router-dom"
+import { Helmet } from "react-helmet";
 import { MuiThemeProvider, Container, createStyles, withStyles, createMuiTheme, CssBaseline } from "@material-ui/core";
 import {AppNav} from "@k-t-corp/frontend-lib"
 
@@ -57,14 +58,14 @@ class App extends Component {
     super(props);
     this.apiClient = new ApiClient()
     this.state = {
-      threadCount: -1
+      instanceTitle: 'Untitled'
     }
   }
 
   componentDidMount() {
-    this.apiClient.getThreadCount()
-      .then(threadCount => {
-        this.setState({ threadCount })
+    this.apiClient.getInstanceTitle()
+      .then(instanceTitle => {
+        this.setState({ instanceTitle })
       })
   }
 
@@ -74,8 +75,11 @@ class App extends Component {
     return (
       <MuiThemeProvider theme={theme}>
         <CssBaseline/>
+        <Helmet>
+          <title>{this.state.instanceTitle}</title>
+        </Helmet>
         <AppNav
-          title='Broccoli'
+          title={this.state.instanceTitle}
           items={[
             {
               text: 'Mod Views',
