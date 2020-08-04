@@ -2,7 +2,7 @@ import React from "react"
 import ApiClient from "../../api/ApiClient";
 import {
   Button,
-  CircularProgress,
+  CircularProgress, Dialog,
   FormControl,
   FormGroup,
   Grid,
@@ -31,6 +31,7 @@ interface State {
   error?: Error
   module: string,
   argsString: string,
+  showingLogsIndex: number
 }
 
 class Jobs extends React.Component<Props, State> {
@@ -41,7 +42,8 @@ class Jobs extends React.Component<Props, State> {
       modules: [],
       jobRuns: [],
       module: "",
-      argsString: "{}"
+      argsString: "{}",
+      showingLogsIndex: -1
     }
   }
 
@@ -147,14 +149,14 @@ class Jobs extends React.Component<Props, State> {
                     <TableCell>{jobRun.job_id}</TableCell>
                     <TableCell>{jobRun.state}</TableCell>
                     <TableCell>
-                      <Input
-                        multiline={true}
-                        rows={3}
-                        rowsMax={3}
-                        disabled={true}
-                        value={jobRun.drained_log_lines.map(l => `> ${l}`).join("\n")}
-                        style={{fontFamily: "monospace"}}
-                      />
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={e => {
+                          e.preventDefault()
+                          this.setState({ showingLogsIndex: i })
+                        }}
+                      >Show logs</Button>
                     </TableCell>
                   </TableRow>
                 )
@@ -162,6 +164,18 @@ class Jobs extends React.Component<Props, State> {
             </TableBody>
           </Table>
         </TableContainer>
+        {
+          this.state.showingLogsIndex !== -1 ?
+            <Dialog
+              open={this.state.showingLogsIndex !== -1}
+              onClose={() => {this.setState({ showingLogsIndex: -1 })}}
+            >
+              {this.state.jobRuns[this.state.showingLogsIndex].drained_log_lines.map((l, i) => {
+                return <Typography key={i} style={{fontFamily: "monospace"}}>{`> ${l}`}</Typography>
+              })}
+            </Dialog> :
+            null
+        }
       </React.Fragment>
     )
   }
