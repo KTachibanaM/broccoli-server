@@ -255,9 +255,9 @@ class ModView extends React.Component<Props, State> {
       const render = firstRowRenders[name];
       let cell;
       if (!render) {
-        cell = (<TableCell>N/A</TableCell>);
+        cell = (<Typography>N/A</Typography>);
       } else if (!ActionableRenderTypes.has(render.type)) {
-        cell = (<TableCell>Not action-able</TableCell>);
+        cell = (<Typography>Not action-able</Typography>);
       } else {
         cell = this.renderCell(
           render.type,
@@ -272,7 +272,7 @@ class ModView extends React.Component<Props, State> {
         );
       }
       return (
-        <td key={name}>{cell}</td>
+        <TableCell key={name}>{cell}</TableCell>
       );
     });
     return (
