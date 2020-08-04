@@ -2,7 +2,7 @@ import React from "react"
 import ApiClient from "../../api/ApiClient";
 import {
   Button,
-  CircularProgress, Dialog,
+  CircularProgress, Dialog, DialogTitle,
   FormControl,
   FormGroup,
   Grid,
@@ -170,9 +170,17 @@ class Jobs extends React.Component<Props, State> {
               open={this.state.showingLogsIndex !== -1}
               onClose={() => {this.setState({ showingLogsIndex: -1 })}}
             >
-              {this.state.jobRuns[this.state.showingLogsIndex].drained_log_lines.map((l, i) => {
-                return <Typography key={i} style={{fontFamily: "monospace"}}>{`> ${l}`}</Typography>
-              })}
+              <DialogTitle>Logs from {this.state.jobRuns[this.state.showingLogsIndex].job_id}</DialogTitle>
+              <textarea
+                cols={160}
+                rows={48}
+                disabled
+                style={{
+                  fontFamily: "monospace",
+                  color: "black"
+                }}
+                value={this.state.jobRuns[this.state.showingLogsIndex].drained_log_lines.join("\n")}
+              />
             </Dialog> :
             null
         }
