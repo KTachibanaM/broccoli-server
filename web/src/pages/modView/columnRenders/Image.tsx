@@ -14,9 +14,9 @@ const Image: React.FunctionComponent<Props> = (props: Props) => {
 
   return (
     <img src={url} alt={url} style={{
-      objectFit: "scale-down",
-      width: "100%",
-      height: "100%",
+      objectFit: "contain",
+      width: 360,
+      height: 480,
     }}/>
   );
 };

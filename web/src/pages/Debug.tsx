@@ -9,7 +9,7 @@ interface State {
   threadCount: number
 }
 
-class DebugPage extends React.Component<Props, State> {
+class Debug extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -33,4 +33,4 @@ class DebugPage extends React.Component<Props, State> {
   }
 }
 
-export default DebugPage
+export default Debug

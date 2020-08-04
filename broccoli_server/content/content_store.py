@@ -46,7 +46,6 @@ class ContentStore(object):
             logger.info(f"Document with {idempotency_key}={idempotency_value} is already present")
             return
 
-        # todo: insert fails?
         doc["created_at"] = datetime.datetime.utcnow()
         self.collection.insert_one(doc)
 
@@ -86,7 +85,6 @@ class ContentStore(object):
         for doc in idempotent_docs:
             doc["created_at"] = now
 
-        # todo: insert fails?
         self.collection.insert_many(idempotent_docs)
 
     def query(self, q: Dict, limit: Optional[int] = None, projection: Optional[List[str]] = None,
@@ -101,7 +99,6 @@ class ContentStore(object):
         # Append default projections
         if projection:
             projection += ["_id", "created_at"]
-        # todo: find fails?
         cursor = self.collection.find(q, projection=projection)
 
         # Append limit
@@ -136,7 +133,6 @@ class ContentStore(object):
             return
 
         if not more_than_one:
-            # todo: update_one fails
             self.collection.update_one(filter_q, update_doc, upsert=False)
             return
 
@@ -153,8 +149,18 @@ class ContentStore(object):
             })
             return
 
-        # todo: update_many fails
         self.collection.update_many(filter_q, update_doc, upsert=False)
+
+    def random_one(self, q: Dict, projection: List[str]) -> Dict:
+        documents = self.query(q, projection=projection)
+        random_index = random.randint(0, len(documents) - 1)
+        return documents[random_index]
+
+    def count(self, q: Dict) -> int:
+        return self.collection.count_documents(q)
+
+    def delete_many(self, q: Dict) -> int:
+        return self.collection.delete_many(q).deleted_count
 
     def update_one_binary_string(self, filter_q: Dict, key: str, binary_string: str):
         if not ContentStore._check_if_string_is_binary(binary_string):
@@ -162,6 +168,7 @@ class ContentStore(object):
                 "value": binary_string
             })
             return
+        # todo: should not update an existing field
         self.update_one(filter_q, {
             "$set": {
                 key: binary_string
@@ -171,7 +178,6 @@ class ContentStore(object):
     def query_nearest_hamming_neighbors(self, q: Dict, binary_string_key: str, from_binary_string: str,
                                         max_distance: int) -> List[Dict]:
         # todo: use a metric tree
-        # todo: various failure case here
         if not ContentStore._check_if_string_is_binary(from_binary_string):
             return []
         results = []
@@ -232,16 +238,3 @@ class ContentStore(object):
                 distance += 1
         return distance
 
-    def random_one(self, q: Dict, projection: List[str]) -> Dict:
-        documents = self.query(q, projection=projection)
-        random_index = random.randint(0, len(documents) - 1)
-        return documents[random_index]
-
-    def count(self, q: Dict) -> int:
-        return self.collection.count_documents(q)
-
-    def delete_all(self, actual_run: bool = False):
-        if not actual_run:
-            logger.info(f"Going to remove {self.collection.count_documents({})} documents")
-        else:
-            self.collection.delete_many({})

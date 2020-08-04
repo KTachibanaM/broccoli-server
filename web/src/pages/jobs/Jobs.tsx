@@ -2,7 +2,7 @@ import React from "react"
 import ApiClient from "../../api/ApiClient";
 import {
   Button,
-  CircularProgress,
+  CircularProgress, Dialog, DialogTitle,
   FormControl,
   FormGroup,
   Grid,
@@ -31,9 +31,10 @@ interface State {
   error?: Error
   module: string,
   argsString: string,
+  showingLogsIndex: number
 }
 
-class JobsPage extends React.Component<Props, State> {
+class Jobs extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -41,7 +42,8 @@ class JobsPage extends React.Component<Props, State> {
       modules: [],
       jobRuns: [],
       module: "",
-      argsString: "{}"
+      argsString: "{}",
+      showingLogsIndex: -1
     }
   }
 
@@ -147,14 +149,14 @@ class JobsPage extends React.Component<Props, State> {
                     <TableCell>{jobRun.job_id}</TableCell>
                     <TableCell>{jobRun.state}</TableCell>
                     <TableCell>
-                      <Input
-                        multiline={true}
-                        rows={3}
-                        rowsMax={3}
-                        disabled={true}
-                        value={jobRun.drained_log_lines.map(l => `> ${l}`).join("\n")}
-                        style={{fontFamily: "monospace"}}
-                      />
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={e => {
+                          e.preventDefault()
+                          this.setState({ showingLogsIndex: i })
+                        }}
+                      >Show logs</Button>
                     </TableCell>
                   </TableRow>
                 )
@@ -162,9 +164,29 @@ class JobsPage extends React.Component<Props, State> {
             </TableBody>
           </Table>
         </TableContainer>
+        {
+          this.state.showingLogsIndex !== -1 ?
+            <Dialog
+              open={this.state.showingLogsIndex !== -1}
+              onClose={() => {this.setState({ showingLogsIndex: -1 })}}
+            >
+              <DialogTitle>Logs from {this.state.jobRuns[this.state.showingLogsIndex].job_id}</DialogTitle>
+              <textarea
+                cols={160}
+                rows={48}
+                disabled
+                style={{
+                  fontFamily: "monospace",
+                  color: "black"
+                }}
+                value={this.state.jobRuns[this.state.showingLogsIndex].drained_log_lines.join("\n")}
+              />
+            </Dialog> :
+            null
+        }
       </React.Fragment>
     )
   }
 }
 
-export default JobsPage
+export default Jobs

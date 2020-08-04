@@ -43,6 +43,8 @@ class Application(object):
         else:
             self.aps_reduced_max_jobs = -1
 
+        self.instance_title = os.environ.get('INSTANCE_TITLE', 'Untitled')
+
         # Database migration
         DatabaseMigration(
             admin_connection_string=getenv_or_raise("MONGODB_ADMIN_CONNECTION_STRING"),
@@ -371,6 +373,10 @@ class Application(object):
             return jsonify({
                 'thread_count': threading.active_count()
             }), 200
+
+        @flask_app.route('/apiInternal/instanceTitle', methods=['GET'])
+        def _instance_title():
+            return self.instance_title, 200
 
         # detect flask debug mode
         # https://stackoverflow.com/questions/14874782/apscheduler-in-flask-executes-twice

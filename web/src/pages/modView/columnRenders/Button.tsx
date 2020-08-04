@@ -1,5 +1,6 @@
 import React from "react";
 import ApiClient from "../../../api/ApiClient";
+import { Button as MuiButton } from "@material-ui/core"
 
 export interface ButtonData {
   text: string;
@@ -22,7 +23,9 @@ const Button: React.FunctionComponent<Props> = (props: Props) => {
   }
   const { text, reload_after_callback: reloadAfterCallback } = data;
   return (
-    <button
+    <MuiButton
+      variant="contained"
+      color="secondary"
       onClick={() => {
         let rawDocuments: object[];
         if (getRawDocument !== undefined) {
@@ -43,7 +46,7 @@ const Button: React.FunctionComponent<Props> = (props: Props) => {
           });
 
       }}
-    >{text}</button>
+    >{text}</MuiButton>
   );
 };
 

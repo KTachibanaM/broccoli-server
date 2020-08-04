@@ -26,7 +26,7 @@ interface State {
   intervalSeconds: number,
 }
 
-class CreateWorkerPage extends React.Component<Props, State> {
+class CreateWorker extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     const query = qs.parse(this.props.location.search);
@@ -146,4 +146,4 @@ class CreateWorkerPage extends React.Component<Props, State> {
   }
 }
 
-export default withRouter(CreateWorkerPage)
+export default withRouter(CreateWorker)

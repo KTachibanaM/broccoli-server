@@ -23,7 +23,7 @@ export default class ApiClient {
     }
   }
 
-  public async auth(username: string, password: string) {
+  public async auth(username: string, password: string): Promise<boolean> {
     return this.axios.post(`${this.endpoint}/auth`, {
       username, password,
     }).then((response) => {
@@ -32,6 +32,7 @@ export default class ApiClient {
         throw new Error(`No access_token in ${response.data}`);
       }
       this.setAuth(token);
+      return true
     });
   }
 
@@ -101,8 +102,8 @@ export default class ApiClient {
     return this.axios.get(`${this.endpoint}/apiInternal/executor`).then(response => response.data)
   }
 
-  public async getWorkerMetadata(workerId) {
-    return this.axios.get(`${this.endpoint}/apiInternal/worker/${workerId}/metadata`);
+  public async getWorkerMetadata(workerId): Promise<object> {
+    return this.axios.get(`${this.endpoint}/apiInternal/worker/${workerId}/metadata`).then(response => response.data)
   }
 
   public async setWorkerMetadata(workerId, metadata) {
@@ -126,5 +127,9 @@ export default class ApiClient {
 
   public async getThreadCount(): Promise<number> {
     return this.axios.get(`${this.endpoint}/debug/threadCount`).then(response => response.data['thread_count'])
+  }
+
+  public async getInstanceTitle(): Promise<string> {
+    return this.axios.get(`${this.endpoint}/apiInternal/instanceTitle`).then(response => response.data)
   }
 }

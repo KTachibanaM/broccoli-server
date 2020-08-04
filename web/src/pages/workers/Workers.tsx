@@ -28,7 +28,7 @@ interface State {
   error?: Error
 }
 
-class WorkersPage extends React.Component<Props, State> {
+class Workers extends React.Component<Props, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -265,4 +265,4 @@ class WorkersPage extends React.Component<Props, State> {
   }
 }
 
-export default withRouter(WorkersPage)
+export default withRouter(Workers)

@@ -1,24 +1,31 @@
 import React from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import BoardRender, {ActionableRenderTypes, RenderDataTypes, RenderTypes, Row} from "../../api/BoardRender";
-import { InjectedAuthProps } from "../../hoc/withAuth";
-import { InjectedMessageProps } from "../../hoc/withMessage";
-import { InjectedRoutingProps } from "../../hoc/withRouting";
 import Button from "./columnRenders/Button";
 import Image from "./columnRenders/Image";
 import ImageList from "./columnRenders/ImageList";
 import Text from "./columnRenders/Text";
 import Video from "./columnRenders/Video";
-import {DivTable, DivTableCell, DivTableHeaderCell, DivTableRow} from "./DivTable";
+import {
+  CircularProgress, FormControlLabel,
+  Grid,
+  Paper,
+  Table,
+  TableBody, TableCell,
+  TableContainer,
+  TableHead, TableRow,
+  Typography,
+  Switch,
+  Checkbox
+} from "@material-ui/core";
 
-interface Params {
+type Props = RouteComponentProps<{
   name: string;
-}
-
-type Props = InjectedAuthProps & InjectedMessageProps & InjectedRoutingProps & RouteComponentProps<Params>;
+}>;
 
 interface State {
   loading: boolean;
+  error?: Error
   boardRender: BoardRender | {};
   multiActionOn: boolean;
   multiActionSelectedIndexes: Set<number>;
@@ -26,7 +33,7 @@ interface State {
   holdingShift: boolean;
 }
 
-class ModViewPage extends React.Component<Props, State> {
+class ModView extends React.Component<Props, State> {
   private static InitialState = {
     loading: true,
     boardRender: {},
@@ -40,22 +47,18 @@ class ModViewPage extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.boardId = decodeURIComponent(this.props.match.params.name);
-    this.state = ModViewPage.InitialState;
+    this.state = ModView.InitialState;
   }
 
   loadQuery = () => {
-    this.setState(ModViewPage.InitialState);
+    this.setState(ModView.InitialState);
     this.props.apiClient.renderBoard(this.boardId)
       .then(boardRender => this.setState({ boardRender }))
-      .catch((error) => {
-        this.props.showErrorMessage(
-          new Error(`Fail to load mod view, error ${error.toString()}`),
-        );
+      .catch(error => {
+        this.setState({ error })
       })
       .finally(() => {
-        this.setState({
-          loading: false,
-        });
+        this.setState({ loading: false });
       });
   }
 
@@ -70,7 +73,7 @@ class ModViewPage extends React.Component<Props, State> {
     document.removeEventListener("keyup", this.keyUp, false);
   }
 
-  public renderColumn = (
+  public renderCell = (
     type: RenderTypes,
     data: RenderDataTypes,
     rawDocument?: object,
@@ -90,31 +93,18 @@ class ModViewPage extends React.Component<Props, State> {
       ColumnComponent = Video;
     }
     if (!ColumnComponent) {
-      return <div>`Unknown column type ${type}`</div>;
+      return <Typography>{`Unknown column type ${type}`}</Typography>;
     }
-    return <ColumnComponent
-      data={data}
-      callbackId={callbackId}
-      rawDocument={rawDocument}
-      getRawDocument={getRawDocument}
-      apiClient={this.props.apiClient}
-      reload={this.loadQuery}
-    />;
-  }
-
-  public getColumnWidthPx = (type: RenderTypes) => {
-    if (type === "text") {
-      return 400;
-    } else if (type === "image") {
-      return 400;
-    } else if (type === "image_list") {
-      return 400;
-    } else if (type === "button") {
-      return 100;
-    } else if (type === "video") {
-      return 400;
-    }
-    return 100;
+    return (
+      <ColumnComponent
+        data={data}
+        callbackId={callbackId}
+        rawDocument={rawDocument}
+        getRawDocument={getRawDocument}
+        apiClient={this.props.apiClient}
+        reload={this.loadQuery}
+      />
+    )
   }
 
   public onToggleRowMultiAction = (index: number) => {
@@ -144,27 +134,28 @@ class ModViewPage extends React.Component<Props, State> {
   public renderRow = (projectionNames: string[], row: Row, rowIndex: number) => {
     const rowRenders = row.renders;
     return (
-      <DivTableRow key={rowIndex}>
-        <DivTableCell
-          hidden={!this.state.multiActionOn}
-          key="multi-action-selected"
-          widthPx={50}
-        >
-          <input
-            type="checkbox"
-            checked={this.state.multiActionSelectedIndexes.has(rowIndex)}
-            onChange={() => {
-              this.onToggleRowMultiAction(rowIndex);
-            }}
-          />
-        </DivTableCell>
+      <TableRow key={rowIndex}>
+        {this.state.multiActionOn ?
+          <TableCell
+            hidden={!this.state.multiActionOn}
+            key="multi-action-selected"
+          >
+            <Checkbox
+              checked={this.state.multiActionSelectedIndexes.has(rowIndex)}
+              onChange={() => {
+                this.onToggleRowMultiAction(rowIndex);
+              }}
+            />
+          </TableCell> :
+          null
+        }
         {projectionNames.map((name) => {
           const rowRender = rowRenders[name];
           let cell;
           if (!rowRender) {
-            cell = (<div>N/A</div>);
+            cell = (<Typography>N/A</Typography>);
           } else {
-            cell = this.renderColumn(
+            cell = this.renderCell(
               rowRender.type,
               rowRender.data,
               row.raw_document,
@@ -172,13 +163,12 @@ class ModViewPage extends React.Component<Props, State> {
             );
           }
           return (
-            <DivTableCell
+            <TableCell
               key={name}
-              widthPx={this.getColumnWidthPx(rowRender.type)}
-            >{cell}</DivTableCell>
+            >{cell}</TableCell>
           );
         })}
-      </DivTableRow>
+      </TableRow>
     );
   }
 
@@ -187,82 +177,89 @@ class ModViewPage extends React.Component<Props, State> {
     const {payload} = boardRender;
     if (!payload || payload.length === 0) {
       return (
-        <div>Query is empty</div>
+        <Typography>Query is empty</Typography>
       );
     }
     const projectionNames = (this.state.boardRender as BoardRender).board_query.projections.map((p) => p.name);
     return (
-      <div>
-        <div>Query count: {boardRender.count_without_limit}</div>
-        <div>
-          <input type="checkbox" id="toggleMultiAction" onClick={this.onToggleMultiAction}/>
-          <label htmlFor="toggleMultiAction">Toggle multi-action</label>
-        </div>
-        <div hidden={!this.state.multiActionOn}>
-          Multi-action: selected {this.state.multiActionSelectedIndexes.size} items
-          {this.renderRangeSelectPrompt()}
+      <React.Fragment>
+        <FormControlLabel
+          label="Toggle multi-action"
+          control={
+            <Switch
+              checked={this.state.multiActionOn}
+              onChange={() => {
+                this.setState({
+                  multiActionOn: !this.state.multiActionOn,
+                })
+              }}
+            />
+          }
+        />
+        <div
+          hidden={!this.state.multiActionOn}
+          style={{marginBottom: 12}}
+        >
+          <Typography>
+            Selected {this.state.multiActionSelectedIndexes.size} items.&nbsp;
+            {
+              this.state.holdingShift ?
+                `Range selecting`:
+                `Hold "shift" to range select`
+            }.
+          </Typography>
           {this.renderMultiActions()}
         </div>
-        <DivTable>
-          <DivTableRow>
-            <DivTableHeaderCell
-              key="multi-action-selected"
-              text="Multi-action selected"
-              hidden={!this.state.multiActionOn}
-              widthPx={50}
-            />
-            {projectionNames.map((name) =>
-              <DivTableHeaderCell
-                key={name}
-                text={name}
-                widthPx={this.getColumnWidthPx(payload[0].renders[name].type)}
-              />,
-            )}
-          </DivTableRow>
-          {payload.map((row, index) => {
-            return this.renderRow(projectionNames, row, index);
-          })}
-        </DivTable>
-      </div>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                {this.state.multiActionOn ?
+                  <TableCell
+                    key="multi-action-selected"
+                  >Multi-action selected</TableCell> :
+                  null
+                }
+                {projectionNames.map(name =>
+                  <TableCell
+                    key={name}
+                  >{name}</TableCell>
+                )}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {payload.map((row, index) => {
+                return this.renderRow(projectionNames, row, index);
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </React.Fragment>
     );
-  }
-
-  public onToggleMultiAction = () => {
-    this.setState({
-      multiActionOn: !this.state.multiActionOn,
-    });
-  }
-
-  public renderRangeSelectPrompt = () => {
-    if (this.state.holdingShift) {
-      return (<div>Range selecting</div>);
-    } else {
-      return (<div>Hold "shift" to range select</div>);
-    }
   }
 
   public renderMultiActions = () => {
     const boardRender = (this.state.boardRender as BoardRender);
     const payload = boardRender.payload;
     if (payload.length === 0) {
-      return <div>No multi-action to render</div>;
+      return <Typography>No multi-action to render</Typography>;
     }
     const firstRowRenders = payload[0].renders;
     const projectionNames = boardRender.board_query.projections.map((p) => p.name);
 
     const headings = projectionNames.map((name) =>
-      <th key={name}>{name}</th>,
+      <TableCell key={name}>{name}</TableCell>,
     );
 
     const columns = projectionNames.map((name) => {
       const render = firstRowRenders[name];
       let cell;
       if (!render) {
-        cell = (<div>N/A</div>);
+        cell = (<Typography>N/A</Typography>);
       } else if (!ActionableRenderTypes.has(render.type)) {
-        cell = (<div>Not action-able</div>);
+        cell = (<Typography>Not action-able</Typography>);
       } else {
-        cell = this.renderColumn(
+        cell = this.renderCell(
           render.type,
           render.data,
           undefined,
@@ -275,22 +272,24 @@ class ModViewPage extends React.Component<Props, State> {
         );
       }
       return (
-        <td key={name}>{cell}</td>
+        <TableCell key={name}>{cell}</TableCell>
       );
     });
     return (
-      <table>
-        <thead>
-          <tr>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+          <TableRow>
             {headings}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
+          </TableRow>
+          </TableHead>
+          <TableBody>
+          <TableRow>
             {columns}
-          </tr>
-        </tbody>
-      </table>
+          </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
     );
   }
 
@@ -312,19 +311,30 @@ class ModViewPage extends React.Component<Props, State> {
 
   public render() {
     if (this.state.loading) {
-      return (<div>Loading mod view...</div>);
+      return (
+        <Grid container justify="center">
+          <CircularProgress />
+        </Grid>
+      )
     }
+    if (this.state.error) {
+      return (
+        <Grid container justify="center">
+          <Typography variant='body1'>
+            Failed to load. Reason: {this.state.error.toString()}
+          </Typography>
+        </Grid>
+      )
+    }
+
     const boardRender: BoardRender = this.state.boardRender as BoardRender;
     return (
-      <div>
-        <b>Mod view "{this.boardId}"</b>
-        <div>Query: {JSON.stringify(boardRender.board_query.q)}</div>
-        <div>Limit: {boardRender.board_query.limit ? boardRender.board_query.limit : "N/A"}</div>
-        <div>Sort: {boardRender.board_query.sort ? JSON.stringify(boardRender.board_query.sort) : "N/A"}</div>
+      <React.Fragment>
+        <Typography>Mod view "{this.boardId}" ({boardRender.count_without_limit})</Typography>
         {this.renderPayload()}
-      </div>
+      </React.Fragment>
     );
   }
 }
 
-export default withRouter(ModViewPage);
+export default withRouter(ModView);
