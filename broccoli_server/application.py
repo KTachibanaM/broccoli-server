@@ -11,7 +11,6 @@ from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, Worke
     MetadataStoreFactory, WorkContextFactory, WorkFactory
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
-from broccoli_server.executor import ApsNativeExecutor, ApsReducedExecutor
 from broccoli_server.interface.api import ApiHandler
 from broccoli_server.one_off_job import OneOffJobExecutor, JobRunsStore
 from werkzeug.routing import IntegerConverter
@@ -101,14 +100,6 @@ class Application(object):
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
-
-        executors = [ApsNativeExecutor(self.work_factory, self.worker_context_factory)]
-        if self.aps_reduced_max_jobs != -1:
-            executors.append(ApsReducedExecutor(
-                self.work_factory,
-                self.worker_context_factory,
-                self.aps_reduced_max_jobs
-            ))
 
         # Figure out path for static web artifact
         my_path = os.path.abspath(__file__)
@@ -208,8 +199,7 @@ class Application(object):
                     module_name=payload["module_name"],
                     args=payload["args"],
                     interval_seconds=payload["interval_seconds"],
-                    error_resiliency=-1,
-                    executor_slug="aps_native"
+                    error_resiliency=-1
                 )
             )
             if not status:
@@ -233,7 +223,6 @@ class Application(object):
                     "args": worker.args,
                     "interval_seconds": worker.interval_seconds,
                     "error_resiliency": worker.error_resiliency,
-                    "executor_slug": worker.executor_slug,
                     "last_executed_seconds": self.worker_config_store.get_last_executed_seconds(worker_id)
                 })
             return jsonify(workers), 200
@@ -273,26 +262,6 @@ class Application(object):
         )
         def _update_worker_error_resiliency(worker_id: str, error_resiliency: int):
             status, message = self.worker_config_store.update_error_resiliency(worker_id, error_resiliency)
-            if not status:
-                return jsonify({
-                    "status": "error",
-                    "message": message
-                }), 400
-            else:
-                return jsonify({
-                    "status": "ok"
-                }), 200
-
-        @flask_app.route('/apiInternal/executor', methods=['GET'])
-        def _get_executors():
-            return jsonify(list(map(lambda e: e.get_slug(), executors)))
-
-        @flask_app.route(
-            '/apiInternal/worker/<string:worker_id>/executor/<string:executor_slug>',
-            methods=['PUT']
-        )
-        def _update_worker_executor_slug(worker_id: str, executor_slug: str):
-            status, message = self.worker_config_store.update_executor_slug(worker_id, executor_slug)
             if not status:
                 return jsonify({
                     "status": "error",
@@ -391,14 +360,7 @@ class Application(object):
         )
 
     def start_clock(self):
-        executors = [ApsNativeExecutor(self.work_factory, self.worker_context_factory)]
-        if self.aps_reduced_max_jobs != -1:
-            executors.append(ApsReducedExecutor(
-                self.work_factory,
-                self.worker_context_factory,
-                self.aps_reduced_max_jobs
-            ))
-        reconciler = Reconciler(self.worker_config_store, executors)
+        reconciler = Reconciler(self.worker_config_store)
 
         try:
             reconciler.start()

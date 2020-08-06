@@ -4,8 +4,8 @@ import ApiClient from "../../api/ApiClient";
 import {
   Button,
   CircularProgress,
-  Grid, Input, MenuItem,
-  Paper, Select,
+  Grid, Input,
+  Paper,
   Table, TableBody,
   TableCell,
   TableContainer,
@@ -24,7 +24,6 @@ type Props = {
 interface State {
   loading: boolean,
   workers: any[],
-  executors: string[],
   error?: Error
 }
 
@@ -34,16 +33,12 @@ class Workers extends React.Component<Props, State> {
     this.state = {
       "loading": true,
       "workers": [],
-      "executors": []
     };
   }
 
   componentDidMount() {
-    Promise.all([
-      this.props.apiClient.getWorkers(),
-      this.props.apiClient.getExecutors()
-    ])
-      .then(([workers, executors]) => this.setState({workers, executors}))
+    this.props.apiClient.getWorkers()
+      .then(workers => this.setState({ workers }))
       .finally(() => this.setState({loading: false}))
   }
 
@@ -77,13 +72,6 @@ class Workers extends React.Component<Props, State> {
 
   onUpdateErrorResiliency = (workerId, errorResiliency) => {
     this.props.apiClient.updateWorkerErrorResiliency(workerId, errorResiliency)
-      .catch(error => {
-        this.setState({ error })
-      });
-  }
-
-  onUpdateExecutor = (workerId, executor) => {
-    this.props.apiClient.updateWorkerExecutor(workerId, executor)
       .catch(error => {
         this.setState({ error })
       });
@@ -136,7 +124,6 @@ class Workers extends React.Component<Props, State> {
                 <TableCell>ID</TableCell>
                 <TableCell>Interval (seconds)</TableCell>
                 <TableCell>Error Resiliency (non-positive is none)</TableCell>
-                <TableCell>Executor</TableCell>
                 <TableCell>Executed minutes ago</TableCell>
                 <TableCell>Operations</TableCell>
               </TableRow>
@@ -150,7 +137,6 @@ class Workers extends React.Component<Props, State> {
                     args,
                     "interval_seconds": intervalSeconds,
                     "error_resiliency": errorResiliency,
-                    "executor_slug": executor,
                     "last_executed_seconds": lastExecutedSeconds
                   } = worker;
                   return (
@@ -201,34 +187,6 @@ class Workers extends React.Component<Props, State> {
                           onClick={e => {
                             e.preventDefault()
                             this.onUpdateErrorResiliency(workerId, errorResiliency)}
-                          }
-                          startIcon={<CheckCircleIcon />}
-                          color="secondary"
-                        >Apply</Button>
-                      </TableCell>
-                      <TableCell>
-                        <Select value={executor} onChange={e => {
-                          e.preventDefault();
-                          this.setState({
-                            "workers": this.state.workers.map(worker => {
-                              if (worker["worker_id"] !== workerId) {
-                                return worker
-                              }
-                              return {
-                                ...worker,
-                                "executor_slug": e.target.value
-                              }
-                            })
-                          })
-                        }}>
-                          {this.state.executors.map((executor, i) =>
-                            <MenuItem key={i} value={executor}>{executor}</MenuItem>
-                          )}
-                        </Select>
-                        <Button
-                          onClick={e => {
-                            e.preventDefault()
-                            this.onUpdateExecutor(workerId, executor)}
                           }
                           startIcon={<CheckCircleIcon />}
                           color="secondary"

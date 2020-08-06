@@ -36,7 +36,6 @@ class WorkerConfigStore(object):
             "args": args,
             "interval_seconds": worker_metadata.interval_seconds,
             'error_resiliency': worker_metadata.error_resiliency,
-            'executor_slug': worker_metadata.executor_slug,
             # those two fields are for runtime
             'error_count': 0,
             "state": {}
@@ -52,15 +51,7 @@ class WorkerConfigStore(object):
                 args=document["args"],
                 interval_seconds=document["interval_seconds"],
                 error_resiliency=document.get('error_resiliency', -1),
-                executor_slug=document.get("executor_slug", "aps_native")
             )
-        return res
-
-    def get_all_by_executor_slug(self, executor_slug: str) -> Dict[str, WorkerMetadata]:
-        res = {}
-        for worker_id, worker_metadata in self.get_all().items():
-            if worker_metadata.executor_slug == executor_slug:
-                res[worker_id] = worker_metadata
         return res
 
     def _if_worker_exists(self, worker_id: str) -> bool:
@@ -100,22 +91,6 @@ class WorkerConfigStore(object):
             update={
                 "$set": {
                     "error_resiliency": error_resiliency
-                }
-            }
-        )
-        return True, ""
-
-    def update_executor_slug(self, worker_id: str, executor_slug: str) -> Tuple[bool, str]:
-        if not self._if_worker_exists(worker_id):
-            return False, f"Worker with id {worker_id} does not exist"
-        # todo: update_one fails
-        self.collection.update_one(
-            filter={
-                "worker_id": worker_id
-            },
-            update={
-                "$set": {
-                    "executor_slug": executor_slug
                 }
             }
         )
