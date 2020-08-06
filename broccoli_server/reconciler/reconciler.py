@@ -10,8 +10,9 @@ logger = logging.getLogger(__name__)
 class Reconciler(object):
     RECONCILE_JOB_ID = "broccoli.worker_reconcile"
 
-    def __init__(self, worker_config_store: WorkerConfigStore):
+    def __init__(self, worker_config_store: WorkerConfigStore, pause_workers: bool):
         self.worker_config_store = worker_config_store
+        self.pause_workers = pause_workers
         self.reconcile_scheduler = BlockingScheduler()
         self.reconcile_scheduler.add_job(
             self.reconcile,
@@ -27,11 +28,10 @@ class Reconciler(object):
         self.trigger_scheduler.start()
         self.reconcile_scheduler.start()
 
-    def stop(self):
-        self.trigger_scheduler.shutdown(wait=False)
-        self.reconcile_scheduler.shutdown(wait=False)
-
     def reconcile(self):
+        if self.pause_workers:
+            logger.info("Workers have been globally paused")
+            return
         actual_worker_ids = set(map(lambda j: j.id, self.trigger_scheduler.get_jobs()))  # type: Set[str]
         desired_workers = self.worker_config_store.get_all()
         desired_worker_ids = set(desired_workers.keys())  # type: Set[str]

@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 import datetime
 import threading
 import sentry_sdk
@@ -31,14 +30,9 @@ class Application(object):
             sentry_enabled = False
 
         if os.environ.get('PAUSE_WORKERS', 'false') == 'true':
-            pause_workers = True
+            self.pause_workers = True
         else:
-            pause_workers = False
-
-        if 'APS_REDUCED_MAX_JOBS' in os.environ:
-            self.aps_reduced_max_jobs = int(os.environ['APS_REDUCED_MAX_JOBS'])
-        else:
-            self.aps_reduced_max_jobs = -1
+            self.pause_workers = False
 
         self.instance_title = os.environ.get('INSTANCE_TITLE', 'Untitled')
 
@@ -69,7 +63,6 @@ class Application(object):
             worker_cache=self.worker_cache,
             worker_config_store=self.worker_config_store,
             sentry_enabled=sentry_enabled,
-            pause_workers=pause_workers
         )
 
         self.default_api_handler = None  # type: Optional[ApiHandler]
@@ -360,14 +353,7 @@ class Application(object):
         )
 
     def start_clock(self):
-        reconciler = Reconciler(self.worker_config_store)
-
-        try:
-            reconciler.start()
-        except (KeyboardInterrupt, SystemExit):
-            print('Reconciler stopping...')
-            reconciler.stop()
-            sys.exit(0)
+        Reconciler(self.worker_config_store, self.pause_workers).start()
 
     def start_worker(self):
         # TODO

@@ -17,13 +17,11 @@ class WorkFactory(object):
                  worker_cache: WorkerCache,
                  worker_config_store: WorkerConfigStore,
                  sentry_enabled: bool,
-                 pause_workers: bool
                  ):
         self.work_context_factory = work_context_factory
         self.worker_cache = worker_cache
         self.worker_config_store = worker_config_store
         self.sentry_enabled = sentry_enabled
-        self.pause_workers = pause_workers
 
     def get_work_func(self, worker_metadata: WorkerMetadata) -> Optional[Tuple[Callable, str]]:
         module_name, args, error_resiliency = \
@@ -42,10 +40,6 @@ class WorkFactory(object):
         worker.pre_work(work_context)
 
         def work_func():
-            if self.pause_workers:
-                logger.info("Workers have been globally paused")
-                return
-
             try:
                 worker.work(work_context)
                 # always reset error count
