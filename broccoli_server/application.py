@@ -2,8 +2,6 @@ import logging
 import os
 import sys
 import datetime
-import json
-import base64
 import threading
 import sentry_sdk
 from typing import Callable, Dict, Optional
@@ -379,6 +377,13 @@ class Application(object):
             return self.instance_title, 200
 
         return flask_app
+
+    def start_web_debug(self):
+        self.get_flask_app().run(
+            host='0.0.0.0',
+            port=int(os.getenv("PORT", 5000)),
+            debug=True
+        )
 
     def start_clock(self):
         executors = [ApsNativeExecutor(self.work_factory, self.worker_context_factory)]
