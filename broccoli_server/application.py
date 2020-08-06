@@ -92,7 +92,7 @@ class Application(object):
     def add_mod_view(self, name: str, mod_view: ModViewQuery):
         self.mod_view_store.add_mod_view(name, mod_view)
 
-    def start(self):
+    def get_flask_app(self) -> Flask:
         # Other objects
         global_metadata_store = GlobalMetadataStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
@@ -106,7 +106,6 @@ class Application(object):
                 self.worker_context_factory,
                 self.aps_reduced_max_jobs
             ))
-        reconciler = Reconciler(self.worker_config_store, executors)
 
         # Figure out path for static web artifact
         my_path = os.path.abspath(__file__)
@@ -124,6 +123,7 @@ class Application(object):
         # copy-pasta from https://github.com/pallets/flask/issues/2643
         class SignedIntConverter(IntegerConverter):
             regex = r'-?\d+'
+
         flask_app.url_map.converters['signed_int'] = SignedIntConverter
 
         # Less verbose logging from Flask
@@ -378,39 +378,25 @@ class Application(object):
         def _instance_title():
             return self.instance_title, 200
 
-        # detect flask debug mode
-        # https://stackoverflow.com/questions/14874782/apscheduler-in-flask-executes-twice
-        if not flask_app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-            print("Not in debug mode, starting reconciler")
-            print(f"Press Ctrl+{'Break' if os.name == 'nt' else 'C'} to exit")
-            try:
-                reconciler.start()
-            except (KeyboardInterrupt, SystemExit):
-                print('Reconciler stopping...')
-                reconciler.stop()
-                sys.exit(0)
-        else:
-            print("In debug mode, not starting reconciler")
+        return flask_app
 
-        flask_app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5000)))
+    def start_clock(self):
+        executors = [ApsNativeExecutor(self.work_factory, self.worker_context_factory)]
+        if self.aps_reduced_max_jobs != -1:
+            executors.append(ApsReducedExecutor(
+                self.work_factory,
+                self.worker_context_factory,
+                self.aps_reduced_max_jobs
+            ))
+        reconciler = Reconciler(self.worker_config_store, executors)
 
-    def run_worker(self):
-        args = getenv_or_raise('WORKER_ARGS_BASE64')
-        args = base64.b64decode(args)
-        args = json.loads(args)
+        try:
+            reconciler.start()
+        except (KeyboardInterrupt, SystemExit):
+            print('Reconciler stopping...')
+            reconciler.stop()
+            sys.exit(0)
 
-        worker_metadata = WorkerMetadata(
-            module_name=getenv_or_raise('WORKER_MODULE_NAME'),
-            args=args,
-            interval_seconds=int(getenv_or_raise('WORKER_INTERVAL_SECONDS')),
-            error_resiliency=int(getenv_or_raise('WORKER_ERROR_RESILIENCY')),
-            # TODO: doesn't really matter lol
-            executor_slug="aps_native"
-        )
-        work_func_and_id = self.work_factory.get_work_func(worker_metadata)
-        if not work_func_and_id:
-            # todo: log
-            return
-        work_func, worker_id = work_func_and_id
-        work_func()
-        print(f"Executed worker {worker_id}")
+    def start_worker(self):
+        # TODO
+        pass
