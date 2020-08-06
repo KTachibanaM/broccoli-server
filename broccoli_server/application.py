@@ -353,7 +353,12 @@ class Application(object):
         )
 
     def start_clock(self):
-        Reconciler(self.worker_config_store, self.pause_workers).start()
+        reconciler = Reconciler(self.worker_config_store, self.pause_workers)
+        try:
+            reconciler.start()
+        except (KeyboardInterrupt, SystemExit):
+            print('Reconciler stopping...')
+            reconciler.stop()
 
     def start_worker(self):
         # TODO

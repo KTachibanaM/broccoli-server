@@ -25,8 +25,13 @@ class Reconciler(object):
     def start(self):
         # Less verbose logging from apscheduler
         logging.getLogger("apscheduler").setLevel(logging.ERROR)
+        # start trigger scheduler before reconcile scheduler otherwise triggers might not be actually added
         self.trigger_scheduler.start()
         self.reconcile_scheduler.start()
+
+    def stop(self):
+        self.trigger_scheduler.shutdown(wait=False)
+        self.reconcile_scheduler.shutdown(wait=False)
 
     def reconcile(self):
         if self.pause_workers:
@@ -65,7 +70,7 @@ class Reconciler(object):
         worker_metadata = desired_workers[added_worker_id]
 
         def _trigger():
-            print(f"{added_worker_id} triggered!")
+            logger.info(f"{added_worker_id} triggered!")
 
         self.trigger_scheduler.add_job(
             _trigger,
