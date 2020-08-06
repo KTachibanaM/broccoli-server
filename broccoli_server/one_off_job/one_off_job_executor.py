@@ -1,31 +1,18 @@
 import uuid
 import threading
 from typing import Callable, Dict, List
-from dataclasses import dataclass
 from broccoli_server.content import ContentStore
 from broccoli_server.interface.one_off_job import OneOffJob
 from .one_off_job_context import OneOffJobContextImpl
-
-
-@dataclass
-class JobRun:
-    job_id: str
-    state: str
-    drained_log_lines: List[str]
-
-    def to_json(self):
-        return {
-            "job_id": self.job_id,
-            "state": self.state,
-            "drained_log_lines": self.drained_log_lines
-        }
+from .job_run import JobRun
+from .job_runs_store import JobRunsStore
 
 
 class OneOffJobExecutor(object):
-    def __init__(self, content_store: ContentStore):
+    def __init__(self, content_store: ContentStore, job_runs_store: JobRunsStore):
         self.content_store = content_store
         self.job_modules = {}  # type: Dict[str, Callable]
-        self.job_runs = []  # type: List[JobRun]
+        self.job_runs_store = job_runs_store
 
     def register_job_module(self, module_name: str, constructor: Callable):
         self.job_modules[module_name] = constructor
@@ -37,16 +24,17 @@ class OneOffJobExecutor(object):
         job = self.job_modules[module_name](**args)  # type: OneOffJob
         job_id = f"{module_name}.{str(uuid.uuid4())}"
         context = OneOffJobContextImpl(job_id, self.content_store)
-        job_run_index = len(self.job_runs)
-        self.job_runs.append(JobRun(job_id, "scheduled", []))
+        job_run = JobRun(job_id, "scheduled", [])
+        self.job_runs_store.add_job_run(job_run)
 
         def _run_job():
-            self.job_runs[job_run_index].state = "started"
+            job_run.state = "started"
+            self.job_runs_store.update_job_run(job_id, job_run)
+
             job.work(context)
-            self.job_runs[job_run_index].state = "completed"
-            self.job_runs[job_run_index].drained_log_lines = context.drain_log_lines()
+
+            job_run.state = "completed"
+            job_run.drained_log_lines = context.drain_log_lines()
+            self.job_runs_store.update_job_run(job_id, job_run)
 
         threading.Thread(target=_run_job).start()
-
-    def get_job_runs(self) -> List[JobRun]:
-        return list(reversed(self.job_runs))

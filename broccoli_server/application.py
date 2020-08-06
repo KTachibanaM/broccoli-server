@@ -13,7 +13,7 @@ from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
 from broccoli_server.executor import ApsNativeExecutor, ApsReducedExecutor
 from broccoli_server.interface.api import ApiHandler
-from broccoli_server.one_off_job import OneOffJobExecutor
+from broccoli_server.one_off_job import OneOffJobExecutor, JobRunsStore
 from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
@@ -76,7 +76,12 @@ class Application(object):
         self.default_api_handler = None  # type: Optional[ApiHandler]
         self.mod_view_store = ModViewStore()
         self.boards_renderer = ModViewRenderer(self.content_store)
-        self.one_off_job_executor = OneOffJobExecutor(self.content_store)
+
+        self.job_runs_store = JobRunsStore(
+            connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
+            db=getenv_or_raise("MONGODB_DB")
+        )
+        self.one_off_job_executor = OneOffJobExecutor(self.content_store, self.job_runs_store)
 
     def register_worker_module(self, module_name: str, constructor: Callable):
         self.worker_cache.register_module(module_name, constructor)
@@ -327,7 +332,7 @@ class Application(object):
 
         @flask_app.route('/apiInternal/oneOffJob/run', methods=['GET'])
         def _get_one_off_job_runs():
-            return jsonify(list(map(lambda r: r.to_json(), self.one_off_job_executor.get_job_runs()))), 200
+            return jsonify(list(map(lambda r: r.to_json(), self.job_runs_store.get_job_runs_desc()))), 200
 
         @flask_app.route('/apiInternal/boards', methods=['GET'])
         def _get_boards():
