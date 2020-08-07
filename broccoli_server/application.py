@@ -345,7 +345,7 @@ class Application(object):
 
         return flask_app
 
-    def start_web_debug(self):
+    def start_web_dev(self):
         self.get_flask_app().run(
             host='0.0.0.0',
             port=int(os.getenv("PORT", 5000)),
