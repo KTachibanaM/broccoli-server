@@ -11,7 +11,7 @@ from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, Worke
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
 from broccoli_server.interface.api import ApiHandler
-from broccoli_server.job import JobScheduler, JobRunsStore
+from broccoli_server.job import JobScheduler, JobRunsStore, JobFactory
 from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
@@ -73,17 +73,18 @@ class Application(object):
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
-        self.job_executor = JobScheduler(self.content_store, self.job_runs_store)
         self.worker_queue = WorkerQueue(
             redis_url=getenv_or_raise("REDIS_URL"),
             key=getenv_or_raise("REDIS_WORKER_Q_KEY")
         )
+        self.job_scheduler = JobScheduler(self.worker_queue)
+        self.job_factory = JobFactory(self.job_scheduler, self.content_store, self.job_runs_store)
 
     def register_worker_module(self, module_name: str, constructor: Callable):
         self.worker_cache.register_module(module_name, constructor)
 
     def register_job_module(self, module_name: str, constructor: Callable):
-        self.job_executor.register_job_module(module_name, constructor)
+        self.job_scheduler.register_job_module(module_name, constructor)
 
     def set_default_api_handler(self, constructor: Callable):
         self.default_api_handler = constructor()
@@ -283,12 +284,12 @@ class Application(object):
 
         @flask_app.route('/apiInternal/oneOffJob/modules', methods=['GET'])
         def _get_one_off_job_modules():
-            return jsonify(self.job_executor.get_job_modules()), 200
+            return jsonify(self.job_scheduler.get_job_modules()), 200
 
         @flask_app.route('/apiInternal/oneOffJob/run', methods=['POST'])
         def _run_one_off_job():
             r = request.json
-            self.job_executor.run_job(
+            self.job_scheduler.schedule_job(
                 module_name=r['module_name'],
                 args=r['args']
             )
@@ -368,9 +369,11 @@ class Application(object):
         try:
             while True:
                 payload = self.worker_queue.blocking_dequeue()
-                print(f"Received a worker payload {payload.to_json()}")
                 if payload.type == "worker":
                     self._run_worker(payload)
+                elif payload.type == "job":
+                    self._run_job(payload)
+
         except (KeyboardInterrupt, SystemExit):
             print('Worker stopping...')
 
@@ -378,8 +381,14 @@ class Application(object):
         module_name, args = payload.module_name, payload.args
         work_func_and_id = self.work_factory.get_work_func(module_name, args)
         if not work_func_and_id:
-            print(f"Worker with module {module_name} and args {str(args)} not found")
             return
         work_func, worker_id = work_func_and_id
-        print(f"Executing worker with id {worker_id}")
         work_func()
+
+    def _run_job(self, payload: WorkerPayload):
+        module_name, args = payload.module_name, payload.args
+        job_func_and_id = self.job_factory.get_job_func(module_name, args)
+        if not job_func_and_id:
+            return
+        job_func, job_id = job_func_and_id
+        job_func()

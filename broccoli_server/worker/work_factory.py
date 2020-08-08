@@ -23,7 +23,7 @@ class WorkFactory(object):
         self.sentry_enabled = sentry_enabled
 
     def get_work_func(self, module_name: str, args: Dict) -> Optional[Tuple[Callable, str]]:
-        status, worker_or_message = self.worker_cache.load(module_name, args)
+        status, worker_or_message = self.worker_cache.load_module(module_name, args)
         if not status:
             logger.error("Fails to load worker", extra={
                 'module_name': module_name,

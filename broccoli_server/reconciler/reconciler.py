@@ -72,7 +72,7 @@ class Reconciler(object):
         worker_metadata = desired_workers[added_worker_id]
 
         def _trigger():
-            logger.info(f"Enqueuing {added_worker_id}")
+            logger.info(f"Enqueuing worker {added_worker_id}")
             self.worker_queue.enqueue(WorkerPayload(
                 type="worker",
                 module_name=worker_metadata.module_name,

@@ -17,7 +17,7 @@ class WorkerConfigStore(object):
 
     def add(self, worker_metadata: WorkerMetadata) -> Tuple[bool, str]:
         module_name, args = worker_metadata.module_name, worker_metadata.args
-        status, worker_or_message = self.worker_cache.load(module_name, args)
+        status, worker_or_message = self.worker_cache.load_module(module_name, args)
         if not status:
             logger.error("Fails to load worker", extra={
                 'module_name': module_name,
