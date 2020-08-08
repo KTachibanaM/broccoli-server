@@ -159,3 +159,13 @@ class WorkerConfigStore(object):
         if not document:
             return 0
         return document.get("last_executed_seconds", 0)
+
+    def get_error_resiliency(self, worker_id: str) -> int:
+        document = self.collection.find_one(
+            filter={
+                "worker_id": worker_id
+            }
+        )
+        if not document:
+            return -1
+        return document.get("error_resiliency", -1)

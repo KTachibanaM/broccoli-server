@@ -1,8 +1,7 @@
 import logging
 import time
-from typing import Optional, Callable, Tuple
+from typing import Optional, Callable, Tuple, Dict
 from .work_context import WorkContextFactory
-from .worker_metadata import WorkerMetadata
 from .worker_cache import WorkerCache
 from .worker_config_store import WorkerConfigStore
 from sentry_sdk import capture_exception
@@ -23,9 +22,7 @@ class WorkFactory(object):
         self.worker_config_store = worker_config_store
         self.sentry_enabled = sentry_enabled
 
-    def get_work_func(self, worker_metadata: WorkerMetadata) -> Optional[Tuple[Callable, str]]:
-        module_name, args, error_resiliency = \
-            worker_metadata.module_name, worker_metadata.args, worker_metadata.error_resiliency
+    def get_work_func(self, module_name: str, args: Dict) -> Optional[Tuple[Callable, str]]:
         status, worker_or_message = self.worker_cache.load(module_name, args)
         if not status:
             logger.error("Fails to load worker", extra={
@@ -36,6 +33,7 @@ class WorkFactory(object):
             return None
         worker = worker_or_message  # type: Worker
         worker_id = worker.get_id()
+        error_resiliency = self.worker_config_store.get_error_resiliency(worker_id)
         work_context = self.work_context_factory.build(worker_id)
         worker.pre_work(work_context)
 

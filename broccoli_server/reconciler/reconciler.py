@@ -3,6 +3,7 @@ from typing import Set, Dict
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.schedulers.background import BackgroundScheduler
 from broccoli_server.worker import WorkerMetadata, WorkerConfigStore
+from broccoli_server.utils import WorkerQueue, WorkerPayload
 
 logger = logging.getLogger(__name__)
 
@@ -10,8 +11,9 @@ logger = logging.getLogger(__name__)
 class Reconciler(object):
     RECONCILE_JOB_ID = "broccoli.worker_reconcile"
 
-    def __init__(self, worker_config_store: WorkerConfigStore, pause_workers: bool):
+    def __init__(self, worker_config_store: WorkerConfigStore, worker_queue: WorkerQueue, pause_workers: bool):
         self.worker_config_store = worker_config_store
+        self.worker_queue = worker_queue
         self.pause_workers = pause_workers
         self.reconcile_scheduler = BlockingScheduler()
         self.reconcile_scheduler.add_job(
@@ -70,7 +72,12 @@ class Reconciler(object):
         worker_metadata = desired_workers[added_worker_id]
 
         def _trigger():
-            logger.info(f"{added_worker_id} triggered!")
+            logger.info(f"Enqueuing {added_worker_id}")
+            self.worker_queue.enqueue(WorkerPayload(
+                type="worker",
+                module_name=worker_metadata.module_name,
+                args=worker_metadata.args
+            ))
 
         self.trigger_scheduler.add_job(
             _trigger,

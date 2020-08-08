@@ -4,7 +4,7 @@ import datetime
 import threading
 import sentry_sdk
 from typing import Callable, Dict, Optional
-from broccoli_server.utils import getenv_or_raise, DatabaseMigration
+from broccoli_server.utils import getenv_or_raise, DatabaseMigration, WorkerQueue, WorkerPayload
 from broccoli_server.content import ContentStore
 from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, WorkerMetadata, WorkerCache, \
     MetadataStoreFactory, WorkContextFactory, WorkFactory
@@ -20,7 +20,7 @@ from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_re
 
 class Application(object):
     def __init__(self):
-        # Environment
+        # Environment variables
         if 'SENTRY_DSN' in os.environ:
             print("SENTRY_DSN environ found, settings up sentry")
             sentry_sdk.init(os.environ['SENTRY_DSN'])
@@ -65,15 +65,19 @@ class Application(object):
             sentry_enabled=sentry_enabled,
         )
 
+        # Objects
         self.default_api_handler = None  # type: Optional[ApiHandler]
         self.mod_view_store = ModViewStore()
         self.boards_renderer = ModViewRenderer(self.content_store)
-
         self.job_runs_store = JobRunsStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
         self.one_off_job_executor = OneOffJobExecutor(self.content_store, self.job_runs_store)
+        self.worker_queue = WorkerQueue(
+            redis_url=getenv_or_raise("REDIS_URL"),
+            key=getenv_or_raise("REDIS_WORKER_Q_KEY")
+        )
 
     def register_worker_module(self, module_name: str, constructor: Callable):
         self.worker_cache.register_module(module_name, constructor)
@@ -353,7 +357,7 @@ class Application(object):
         )
 
     def start_clock(self):
-        reconciler = Reconciler(self.worker_config_store, self.pause_workers)
+        reconciler = Reconciler(self.worker_config_store, self.worker_queue, self.pause_workers)
         try:
             reconciler.start()
         except (KeyboardInterrupt, SystemExit):
@@ -361,5 +365,18 @@ class Application(object):
             reconciler.stop()
 
     def start_worker(self):
-        # TODO
-        pass
+        while True:
+            payload = self.worker_queue.blocking_dequeue()
+            print(f"Received a worker payload {payload.to_json()}")
+            if payload.type == "worker":
+                self._run_worker(payload)
+
+    def _run_worker(self, payload: WorkerPayload):
+        module_name, args = payload.module_name, payload.args
+        work_func_and_id = self.work_factory.get_work_func(module_name, args)
+        if not work_func_and_id:
+            print(f"Worker with module {module_name} and args {str(args)} not found")
+            return
+        work_func, worker_id = work_func_and_id
+        print(f"Executing worker with id {worker_id}")
+        work_func()
