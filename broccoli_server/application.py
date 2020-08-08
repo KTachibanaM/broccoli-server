@@ -11,7 +11,7 @@ from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, Worke
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
 from broccoli_server.interface.api import ApiHandler
-from broccoli_server.one_off_job import OneOffJobExecutor, JobRunsStore
+from broccoli_server.job import JobScheduler, JobRunsStore
 from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
@@ -73,7 +73,7 @@ class Application(object):
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
-        self.one_off_job_executor = OneOffJobExecutor(self.content_store, self.job_runs_store)
+        self.job_executor = JobScheduler(self.content_store, self.job_runs_store)
         self.worker_queue = WorkerQueue(
             redis_url=getenv_or_raise("REDIS_URL"),
             key=getenv_or_raise("REDIS_WORKER_Q_KEY")
@@ -82,8 +82,8 @@ class Application(object):
     def register_worker_module(self, module_name: str, constructor: Callable):
         self.worker_cache.register_module(module_name, constructor)
 
-    def register_one_off_job_module(self, module_name: str, constructor: Callable):
-        self.one_off_job_executor.register_job_module(module_name, constructor)
+    def register_job_module(self, module_name: str, constructor: Callable):
+        self.job_executor.register_job_module(module_name, constructor)
 
     def set_default_api_handler(self, constructor: Callable):
         self.default_api_handler = constructor()
@@ -283,12 +283,12 @@ class Application(object):
 
         @flask_app.route('/apiInternal/oneOffJob/modules', methods=['GET'])
         def _get_one_off_job_modules():
-            return jsonify(self.one_off_job_executor.get_job_modules()), 200
+            return jsonify(self.job_executor.get_job_modules()), 200
 
         @flask_app.route('/apiInternal/oneOffJob/run', methods=['POST'])
         def _run_one_off_job():
             r = request.json
-            self.one_off_job_executor.run_job(
+            self.job_executor.run_job(
                 module_name=r['module_name'],
                 args=r['args']
             )

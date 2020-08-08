@@ -10,14 +10,14 @@ root_logger.addHandler(stream_handler)
 worker_logger = logging.getLogger("broccoli.worker")
 worker_logger.addHandler(stream_handler)
 
-one_off_job_logger = logging.getLogger("broccoli.one_off_job")
-one_off_job_logger.addHandler(stream_handler)
+job_logger = logging.getLogger("broccoli.job")
+job_logger.addHandler(stream_handler)
 
 if os.environ.get("LOGGING_DEBUG", "false") == "true":
     root_logger.setLevel(logging.DEBUG)
     worker_logger.setLevel(logging.DEBUG)
-    one_off_job_logger.setLevel(logging.DEBUG)
+    job_logger.setLevel(logging.DEBUG)
 else:
     root_logger.setLevel(logging.INFO)
     worker_logger.setLevel(logging.INFO)
-    one_off_job_logger.setLevel(logging.INFO)
+    job_logger.setLevel(logging.INFO)

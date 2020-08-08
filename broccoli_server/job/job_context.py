@@ -2,13 +2,13 @@ import queue
 import logging.handlers
 from typing import List
 from broccoli_server.content import ContentStore
-from broccoli_server.interface.one_off_job import OneOffJobContext
+from broccoli_server.interface.job import JobContext
 
 
-class OneOffJobContextImpl(OneOffJobContext):
-    def __init__(self, one_off_job_id: str, content_store: ContentStore):
+class JobContextImpl(JobContext):
+    def __init__(self, job_id: str, content_store: ContentStore):
         # still need the prefix to globally configure logging for all broccoli workers
-        self._logger = logging.getLogger(f"broccoli.one_off_job.{one_off_job_id}")
+        self._logger = logging.getLogger(f"broccoli.job.{job_id}")
         self.q = queue.SimpleQueue()
         mem_handler = logging.handlers.QueueHandler(self.q)
         self._logger.addHandler(mem_handler)

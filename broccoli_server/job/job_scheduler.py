@@ -2,13 +2,13 @@ import uuid
 import threading
 from typing import Callable, Dict, List
 from broccoli_server.content import ContentStore
-from broccoli_server.interface.one_off_job import OneOffJob
-from .one_off_job_context import OneOffJobContextImpl
+from broccoli_server.interface.job import Job
+from .job_context import JobContextImpl
 from .job_run import JobRun
 from .job_runs_store import JobRunsStore
 
 
-class OneOffJobExecutor(object):
+class JobScheduler(object):
     def __init__(self, content_store: ContentStore, job_runs_store: JobRunsStore):
         self.content_store = content_store
         self.job_modules = {}  # type: Dict[str, Callable]
@@ -21,9 +21,9 @@ class OneOffJobExecutor(object):
         return list(sorted(self.job_modules.keys()))
 
     def run_job(self, module_name: str, args: Dict):
-        job = self.job_modules[module_name](**args)  # type: OneOffJob
+        job = self.job_modules[module_name](**args)  # type: Job
         job_id = f"{module_name}.{str(uuid.uuid4())}"
-        context = OneOffJobContextImpl(job_id, self.content_store)
+        context = JobContextImpl(job_id, self.content_store)
         job_run = JobRun(job_id, "scheduled", [])
         self.job_runs_store.add_job_run(job_run)
 
