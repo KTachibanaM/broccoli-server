@@ -27,9 +27,9 @@ class WorkerPayload:
 
 
 class WorkerQueue(object):
-    def __init__(self, redis_url: str, key: str):
+    def __init__(self, redis_url: str, key_prefix: str):
         self.db = redis.from_url(redis_url)
-        self.key = key
+        self.key = f"{key_prefix}.worker_q"
 
     def enqueue(self, payload: WorkerPayload):
         self.db.rpush(self.key, json.dumps(payload.to_json()))

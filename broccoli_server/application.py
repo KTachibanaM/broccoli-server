@@ -75,7 +75,7 @@ class Application(object):
         )
         self.worker_queue = WorkerQueue(
             redis_url=getenv_or_raise("REDIS_URL"),
-            key=getenv_or_raise("REDIS_WORKER_Q_KEY")
+            key_prefix=getenv_or_raise("REDIS_KEY_PREFIX")
         )
         self.job_scheduler = JobScheduler(self.worker_queue)
         self.job_factory = JobFactory(self.job_scheduler, self.content_store, self.job_runs_store)
