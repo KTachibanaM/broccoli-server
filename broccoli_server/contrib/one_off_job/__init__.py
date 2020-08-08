@@ -1,1 +1,1 @@
-from .example import ExampleOneOffJob
+from .example import ExampleJob

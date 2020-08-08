@@ -12,7 +12,7 @@ class WorkerCache(object):
     def get_modules_names(self) -> List[str]:
         return list(sorted(self._cache.keys()))
 
-    def load(self, module_name: str, args: Dict) -> Tuple[bool, Union[str, Worker]]:
+    def load_module(self, module_name: str, args: Dict) -> Tuple[bool, Union[str, Worker]]:
         if module_name not in self._cache:
             return False, f"Module {module_name} not found"
 

@@ -14,11 +14,10 @@ class WorkerConfigStore(object):
         self.db = self.client[db]
         self.collection = self.db['workers']
         self.worker_cache = worker_cache
-        self.worker_last_executed_seconds = {}
 
     def add(self, worker_metadata: WorkerMetadata) -> Tuple[bool, str]:
         module_name, args = worker_metadata.module_name, worker_metadata.args
-        status, worker_or_message = self.worker_cache.load(module_name, args)
+        status, worker_or_message = self.worker_cache.load_module(module_name, args)
         if not status:
             logger.error("Fails to load worker", extra={
                 'module_name': module_name,
@@ -37,7 +36,6 @@ class WorkerConfigStore(object):
             "args": args,
             "interval_seconds": worker_metadata.interval_seconds,
             'error_resiliency': worker_metadata.error_resiliency,
-            'executor_slug': worker_metadata.executor_slug,
             # those two fields are for runtime
             'error_count': 0,
             "state": {}
@@ -53,15 +51,7 @@ class WorkerConfigStore(object):
                 args=document["args"],
                 interval_seconds=document["interval_seconds"],
                 error_resiliency=document.get('error_resiliency', -1),
-                executor_slug=document.get("executor_slug", "aps_native")
             )
-        return res
-
-    def get_all_by_executor_slug(self, executor_slug: str) -> Dict[str, WorkerMetadata]:
-        res = {}
-        for worker_id, worker_metadata in self.get_all().items():
-            if worker_metadata.executor_slug == executor_slug:
-                res[worker_id] = worker_metadata
         return res
 
     def _if_worker_exists(self, worker_id: str) -> bool:
@@ -101,22 +91,6 @@ class WorkerConfigStore(object):
             update={
                 "$set": {
                     "error_resiliency": error_resiliency
-                }
-            }
-        )
-        return True, ""
-
-    def update_executor_slug(self, worker_id: str, executor_slug: str) -> Tuple[bool, str]:
-        if not self._if_worker_exists(worker_id):
-            return False, f"Worker with id {worker_id} does not exist"
-        # todo: update_one fails
-        self.collection.update_one(
-            filter={
-                "worker_id": worker_id
-            },
-            update={
-                "$set": {
-                    "executor_slug": executor_slug
                 }
             }
         )
@@ -162,8 +136,36 @@ class WorkerConfigStore(object):
             return False, -1, f"Worker with id {worker_id} does not exist"
         return True, document.get("error_count", 0), ""
 
-    def get_last_executed_seconds(self, worker_id: str) -> int:
-        return self.worker_last_executed_seconds.get(worker_id, -1)
-
     def set_last_executed_seconds(self, worker_id: str, last_executed_seconds: int):
-        self.worker_last_executed_seconds[worker_id] = last_executed_seconds
+        if not self._if_worker_exists(worker_id):
+            return False, f"Worker with id {worker_id} does not exist"
+        self.collection.update_one(
+            filter={
+                "worker_id": worker_id
+            },
+            update={
+                "$set": {
+                    "last_executed_seconds": last_executed_seconds
+                }
+            }
+        )
+
+    def get_last_executed_seconds(self, worker_id: str) -> int:
+        document = self.collection.find_one(
+            filter={
+                "worker_id": worker_id
+            }
+        )
+        if not document:
+            return 0
+        return document.get("last_executed_seconds", 0)
+
+    def get_error_resiliency(self, worker_id: str) -> int:
+        document = self.collection.find_one(
+            filter={
+                "worker_id": worker_id
+            }
+        )
+        if not document:
+            return -1
+        return document.get("error_resiliency", -1)

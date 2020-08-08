@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from broccoli_server.content import ContentStore
 
 
-class OneOffJobContext(metaclass=ABCMeta):
+class JobContext(metaclass=ABCMeta):
     @abstractmethod
     def logger(self) -> logging.Logger:
         pass

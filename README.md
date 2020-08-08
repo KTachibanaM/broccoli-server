@@ -19,7 +19,13 @@ This is a Python library that generalizes the crawling, processing, sorting and 
 
 It offers Python interfaces that you will plug in and register implementation that fulfills your individual use cases
 
-The library exposes a web server and this server will be started within your own implementation, e.g. a different repo than this one that imports this library
+An implementation should instantiate an `Application` object, plug in modules for the use cases, and run 3 processes
+
+* The web server is responsible for serving a web UI, exposing contents, and manipulating the metadata for this implementation
+* The clock process is responsible for triggering background work
+* The worker process is responsible for executing background work
+
+A demo implementation of the process architecture running on Heroku is WIP
 
 ## Concepts and Pluggability
 * Content repository is a centralized place to store all of the contents in database rows
@@ -35,8 +41,8 @@ The library exposes a web server and this server will be started within your own
 * API handler
     * An API handler is an object that handles public query traffic to the content repository in HTTP.
     * The API handler is registered to your implementation at runtime.
-* One off job
-    * A one off job is the same as a worker except that it only runs once at user's discretion at runtime through UI and API
+* Job
+    * A job is the same as a worker except that it only runs once at user's discretion at runtime through UI and API
 
 ## Usage
 In your implementation, do
@@ -75,6 +81,9 @@ If that's the case, you can use a convenient dev script to create both the Mongo
 
 Run `./scripts/bootstrap_mongodb.sh <foo_bar> <schema_version>` to create the appropriate MongoDB database and users for local development
 
+### Redis
+You need a Redis instance. For local development, if you have an "OS-default" version of Redis running on `localhost:6379` installed, it will suffice.
+
 ### Environment variables
 The following environment variables are expected to be found for the application to run
 * `ADMIN_USERNAME` is the username for the web application
@@ -85,6 +94,8 @@ The following environment variables are expected to be found for the application
 * `MONGODB_ADMIN_CONNECTION_STRING` is the connection string for MongoDB user `ddl`
     * If you used `bootstrap_mongodb.sh`, the connection string will simply be `mongodb://foo_bar:foo_bar@localhost:27017/foo_bar`
 * `MONGODB_DB` is the actual name of the MongoDB database (even if the connection string already contains the database, this variable is still expected)
+* `REDIS_URL` is the URL to the Redis instance
+* `REDIS_KEY_PREFIX` is a prefix for all Redis keys the library will need to use
 * `INSTANCE_TITLE` is an optional string that indicates the identifier of the implementation. It cannot contain spaces. It will be displayed in the web UI.
 
 ## API

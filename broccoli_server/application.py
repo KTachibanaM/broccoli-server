@@ -1,21 +1,17 @@
 import logging
 import os
-import sys
 import datetime
-import json
-import base64
 import threading
 import sentry_sdk
 from typing import Callable, Dict, Optional
-from broccoli_server.utils import getenv_or_raise, DatabaseMigration
+from broccoli_server.utils import getenv_or_raise, DatabaseMigration, WorkerQueue, WorkerPayload
 from broccoli_server.content import ContentStore
 from broccoli_server.worker import WorkerConfigStore, GlobalMetadataStore, WorkerMetadata, WorkerCache, \
     MetadataStoreFactory, WorkContextFactory, WorkFactory
 from broccoli_server.reconciler import Reconciler
 from broccoli_server.mod_view import ModViewStore, ModViewRenderer, ModViewQuery
-from broccoli_server.executor import ApsNativeExecutor, ApsReducedExecutor
 from broccoli_server.interface.api import ApiHandler
-from broccoli_server.one_off_job import OneOffJobExecutor
+from broccoli_server.job import JobScheduler, JobRunsStore, JobFactory
 from werkzeug.routing import IntegerConverter
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
@@ -24,7 +20,7 @@ from flask_jwt_extended import JWTManager, create_access_token, verify_jwt_in_re
 
 class Application(object):
     def __init__(self):
-        # Environment
+        # Environment variables
         if 'SENTRY_DSN' in os.environ:
             print("SENTRY_DSN environ found, settings up sentry")
             sentry_sdk.init(os.environ['SENTRY_DSN'])
@@ -34,14 +30,9 @@ class Application(object):
             sentry_enabled = False
 
         if os.environ.get('PAUSE_WORKERS', 'false') == 'true':
-            pause_workers = True
+            self.pause_workers = True
         else:
-            pause_workers = False
-
-        if 'APS_REDUCED_MAX_JOBS' in os.environ:
-            self.aps_reduced_max_jobs = int(os.environ['APS_REDUCED_MAX_JOBS'])
-        else:
-            self.aps_reduced_max_jobs = -1
+            self.pause_workers = False
 
         self.instance_title = os.environ.get('INSTANCE_TITLE', 'Untitled')
 
@@ -72,19 +63,28 @@ class Application(object):
             worker_cache=self.worker_cache,
             worker_config_store=self.worker_config_store,
             sentry_enabled=sentry_enabled,
-            pause_workers=pause_workers
         )
 
+        # Objects
         self.default_api_handler = None  # type: Optional[ApiHandler]
         self.mod_view_store = ModViewStore()
         self.boards_renderer = ModViewRenderer(self.content_store)
-        self.one_off_job_executor = OneOffJobExecutor(self.content_store)
+        self.job_runs_store = JobRunsStore(
+            connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
+            db=getenv_or_raise("MONGODB_DB")
+        )
+        self.worker_queue = WorkerQueue(
+            redis_url=getenv_or_raise("REDIS_URL"),
+            key_prefix=getenv_or_raise("REDIS_KEY_PREFIX")
+        )
+        self.job_scheduler = JobScheduler(self.worker_queue)
+        self.job_factory = JobFactory(self.job_scheduler, self.content_store, self.job_runs_store)
 
     def register_worker_module(self, module_name: str, constructor: Callable):
         self.worker_cache.register_module(module_name, constructor)
 
-    def register_one_off_job_module(self, module_name: str, constructor: Callable):
-        self.one_off_job_executor.register_job_module(module_name, constructor)
+    def register_job_module(self, module_name: str, constructor: Callable):
+        self.job_scheduler.register_job_module(module_name, constructor)
 
     def set_default_api_handler(self, constructor: Callable):
         self.default_api_handler = constructor()
@@ -92,21 +92,12 @@ class Application(object):
     def add_mod_view(self, name: str, mod_view: ModViewQuery):
         self.mod_view_store.add_mod_view(name, mod_view)
 
-    def start(self):
+    def get_flask_app(self) -> Flask:
         # Other objects
         global_metadata_store = GlobalMetadataStore(
             connection_string=getenv_or_raise("MONGODB_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
         )
-
-        executors = [ApsNativeExecutor(self.work_factory, self.worker_context_factory)]
-        if self.aps_reduced_max_jobs != -1:
-            executors.append(ApsReducedExecutor(
-                self.work_factory,
-                self.worker_context_factory,
-                self.aps_reduced_max_jobs
-            ))
-        reconciler = Reconciler(self.worker_config_store, executors)
 
         # Figure out path for static web artifact
         my_path = os.path.abspath(__file__)
@@ -124,6 +115,7 @@ class Application(object):
         # copy-pasta from https://github.com/pallets/flask/issues/2643
         class SignedIntConverter(IntegerConverter):
             regex = r'-?\d+'
+
         flask_app.url_map.converters['signed_int'] = SignedIntConverter
 
         # Less verbose logging from Flask
@@ -205,8 +197,7 @@ class Application(object):
                     module_name=payload["module_name"],
                     args=payload["args"],
                     interval_seconds=payload["interval_seconds"],
-                    error_resiliency=-1,
-                    executor_slug="aps_native"
+                    error_resiliency=-1
                 )
             )
             if not status:
@@ -230,7 +221,6 @@ class Application(object):
                     "args": worker.args,
                     "interval_seconds": worker.interval_seconds,
                     "error_resiliency": worker.error_resiliency,
-                    "executor_slug": worker.executor_slug,
                     "last_executed_seconds": self.worker_config_store.get_last_executed_seconds(worker_id)
                 })
             return jsonify(workers), 200
@@ -280,26 +270,6 @@ class Application(object):
                     "status": "ok"
                 }), 200
 
-        @flask_app.route('/apiInternal/executor', methods=['GET'])
-        def _get_executors():
-            return jsonify(list(map(lambda e: e.get_slug(), executors)))
-
-        @flask_app.route(
-            '/apiInternal/worker/<string:worker_id>/executor/<string:executor_slug>',
-            methods=['PUT']
-        )
-        def _update_worker_executor_slug(worker_id: str, executor_slug: str):
-            status, message = self.worker_config_store.update_executor_slug(worker_id, executor_slug)
-            if not status:
-                return jsonify({
-                    "status": "error",
-                    "message": message
-                }), 400
-            else:
-                return jsonify({
-                    "status": "ok"
-                }), 200
-
         @flask_app.route('/apiInternal/worker/<string:worker_id>/metadata', methods=['GET'])
         def _get_worker_metadata(worker_id: str):
             return jsonify(global_metadata_store.get_all(worker_id)), 200
@@ -314,12 +284,12 @@ class Application(object):
 
         @flask_app.route('/apiInternal/oneOffJob/modules', methods=['GET'])
         def _get_one_off_job_modules():
-            return jsonify(self.one_off_job_executor.get_job_modules()), 200
+            return jsonify(self.job_scheduler.get_job_modules()), 200
 
         @flask_app.route('/apiInternal/oneOffJob/run', methods=['POST'])
         def _run_one_off_job():
             r = request.json
-            self.one_off_job_executor.run_job(
+            self.job_scheduler.schedule_job(
                 module_name=r['module_name'],
                 args=r['args']
             )
@@ -329,7 +299,7 @@ class Application(object):
 
         @flask_app.route('/apiInternal/oneOffJob/run', methods=['GET'])
         def _get_one_off_job_runs():
-            return jsonify(list(map(lambda r: r.to_json(), self.one_off_job_executor.get_job_runs()))), 200
+            return jsonify(list(map(lambda r: r.to_json(), self.job_runs_store.get_job_runs_desc()))), 200
 
         @flask_app.route('/apiInternal/boards', methods=['GET'])
         def _get_boards():
@@ -378,39 +348,47 @@ class Application(object):
         def _instance_title():
             return self.instance_title, 200
 
-        # detect flask debug mode
-        # https://stackoverflow.com/questions/14874782/apscheduler-in-flask-executes-twice
-        if not flask_app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-            print("Not in debug mode, starting reconciler")
-            print(f"Press Ctrl+{'Break' if os.name == 'nt' else 'C'} to exit")
-            try:
-                reconciler.start()
-            except (KeyboardInterrupt, SystemExit):
-                print('Reconciler stopping...')
-                reconciler.stop()
-                sys.exit(0)
-        else:
-            print("In debug mode, not starting reconciler")
+        return flask_app
 
-        flask_app.run(host='0.0.0.0', port=int(os.getenv("PORT", 5000)))
-
-    def run_worker(self):
-        args = getenv_or_raise('WORKER_ARGS_BASE64')
-        args = base64.b64decode(args)
-        args = json.loads(args)
-
-        worker_metadata = WorkerMetadata(
-            module_name=getenv_or_raise('WORKER_MODULE_NAME'),
-            args=args,
-            interval_seconds=int(getenv_or_raise('WORKER_INTERVAL_SECONDS')),
-            error_resiliency=int(getenv_or_raise('WORKER_ERROR_RESILIENCY')),
-            # TODO: doesn't really matter lol
-            executor_slug="aps_native"
+    def start_web_dev(self):
+        self.get_flask_app().run(
+            host='0.0.0.0',
+            port=int(os.getenv("PORT", 5000)),
+            debug=True
         )
-        work_func_and_id = self.work_factory.get_work_func(worker_metadata)
+
+    def start_clock(self):
+        reconciler = Reconciler(self.worker_config_store, self.worker_queue, self.pause_workers)
+        try:
+            reconciler.start()
+        except (KeyboardInterrupt, SystemExit):
+            print('Reconciler stopping...')
+            reconciler.stop()
+
+    def start_worker(self):
+        try:
+            while True:
+                payload = self.worker_queue.blocking_dequeue()
+                if payload.type == "worker":
+                    self._run_worker(payload)
+                elif payload.type == "job":
+                    self._run_job(payload)
+
+        except (KeyboardInterrupt, SystemExit):
+            print('Worker stopping...')
+
+    def _run_worker(self, payload: WorkerPayload):
+        module_name, args = payload.module_name, payload.args
+        work_func_and_id = self.work_factory.get_work_func(module_name, args)
         if not work_func_and_id:
-            # todo: log
             return
         work_func, worker_id = work_func_and_id
         work_func()
-        print(f"Executed worker {worker_id}")
+
+    def _run_job(self, payload: WorkerPayload):
+        module_name, args = payload.module_name, payload.args
+        job_func_and_id = self.job_factory.get_job_func(module_name, args)
+        if not job_func_and_id:
+            return
+        job_func, job_id = job_func_and_id
+        job_func()

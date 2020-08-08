@@ -1,4 +1,4 @@
-# Development
+# Trivia
 
 ## Publish a version of the library
 You need to create a new release on GitHub to trigger travis-ci
