@@ -365,11 +365,14 @@ class Application(object):
             reconciler.stop()
 
     def start_worker(self):
-        while True:
-            payload = self.worker_queue.blocking_dequeue()
-            print(f"Received a worker payload {payload.to_json()}")
-            if payload.type == "worker":
-                self._run_worker(payload)
+        try:
+            while True:
+                payload = self.worker_queue.blocking_dequeue()
+                print(f"Received a worker payload {payload.to_json()}")
+                if payload.type == "worker":
+                    self._run_worker(payload)
+        except (KeyboardInterrupt, SystemExit):
+            print('Worker stopping...')
 
     def _run_worker(self, payload: WorkerPayload):
         module_name, args = payload.module_name, payload.args
