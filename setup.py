@@ -22,7 +22,7 @@ install_requires = [
     'python-twitter==3.5'
 ]
 
-VERSION = "6.0.0rc2"
+VERSION = "6.0.0"
 
 tests_require = [
     'mongomock==3.17.0',
