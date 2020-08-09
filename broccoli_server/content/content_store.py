@@ -156,7 +156,13 @@ class ContentStore(object):
         random_index = random.randint(0, len(documents) - 1)
         return documents[random_index]
 
-    def count(self, q: Dict) -> int:
+    def count(self, q: Dict, datetime_q: Optional[List[Dict]] = None) -> int:
+        # Append datetime query
+        if datetime_q:
+            for qd in datetime_q:
+                q[qd["key"]] = {
+                    "$" + qd["op"]: milliseconds_to_datetime(qd["value"])
+                }
         return self.collection.count_documents(q)
 
     def delete_many(self, q: Dict) -> int:
