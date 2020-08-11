@@ -37,10 +37,10 @@ class Application(object):
         self.instance_title = os.environ.get('INSTANCE_TITLE', 'Untitled')
 
         # Database migration
-        DatabaseMigration(
+        self.database_migration = DatabaseMigration(
             admin_connection_string=getenv_or_raise("MONGODB_ADMIN_CONNECTION_STRING"),
             db=getenv_or_raise("MONGODB_DB")
-        ).migrate()
+        )
 
         # Work factory
         self.content_store = ContentStore(
@@ -351,6 +351,7 @@ class Application(object):
         return flask_app
 
     def start_web_dev(self):
+        self.database_migration.assert_latest()
         self.get_flask_app().run(
             host='0.0.0.0',
             port=int(os.getenv("PORT", 5000)),
@@ -358,6 +359,7 @@ class Application(object):
         )
 
     def start_clock(self):
+        self.database_migration.assert_latest()
         reconciler = Reconciler(self.worker_config_store, self.worker_queue, self.pause_workers)
         try:
             reconciler.start()
@@ -366,6 +368,7 @@ class Application(object):
             reconciler.stop()
 
     def start_worker(self):
+        self.database_migration.assert_latest()
         try:
             while True:
                 payload = self.worker_queue.blocking_dequeue()
@@ -376,6 +379,9 @@ class Application(object):
 
         except (KeyboardInterrupt, SystemExit):
             print('Worker stopping...')
+
+    def start_database_migration(self):
+        self.database_migration.migrate()
 
     def _run_worker(self, payload: WorkerPayload):
         module_name, args = payload.module_name, payload.args

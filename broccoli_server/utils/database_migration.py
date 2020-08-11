@@ -41,6 +41,14 @@ class DatabaseMigration(object):
             self._update_schema_version(next_schema_version)
             print(f"Performed schema migration {schema_version} to {next_schema_version}")
 
+    def assert_latest(self):
+        current_schema_version = self._get_schema_version()
+        if current_schema_version != self.latest_schema_version:
+            raise RuntimeError(f"Aborting unless schema version is on {self.latest_schema_version}. "
+                               f"Current schema version is {current_schema_version}")
+        else:
+            print(f"Already on latest schema version {self.latest_schema_version}")
+
     def _version_0_to_1(self):
         try:
             self.db["broccoli.server"].rename("repo.default")
