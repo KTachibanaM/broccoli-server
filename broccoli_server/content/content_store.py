@@ -1,11 +1,10 @@
 import pymongo
-import datetime
 import random
 import heapq
 import logging
 from functools import total_ordering
 from typing import Dict, List, Optional
-from broccoli_server.utils import datetime_to_milliseconds, milliseconds_to_datetime
+from broccoli_server.utils import milliseconds_to_datetime
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +45,6 @@ class ContentStore(object):
             logger.info(f"Document with {idempotency_key}={idempotency_value} is already present")
             return
 
-        doc["created_at"] = datetime.datetime.utcnow()
         self.collection.insert_one(doc)
 
     def append_multiple(self, docs: List[Dict], idempotency_key: str):
@@ -81,10 +79,6 @@ class ContentStore(object):
             logger.info("There is nothing to be appended")
             return
 
-        now = datetime.datetime.utcnow()
-        for doc in idempotent_docs:
-            doc["created_at"] = now
-
         self.collection.insert_many(idempotent_docs)
 
     def query(self, q: Dict, limit: Optional[int] = None, projection: Optional[List[str]] = None,
@@ -98,7 +92,7 @@ class ContentStore(object):
 
         # Append default projections
         if projection:
-            projection += ["_id", "created_at"]
+            projection += ["_id"]
         cursor = self.collection.find(q, projection=projection)
 
         # Append limit
@@ -113,7 +107,6 @@ class ContentStore(object):
         res = []
         for document in cursor:
             document["_id"] = str(document["_id"])
-            document["created_at"] = datetime_to_milliseconds(document["created_at"])
             res.append(document)
         return res
 

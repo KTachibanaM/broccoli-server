@@ -26,7 +26,6 @@ VERSION = "6.0.1"
 
 tests_require = [
     'mongomock==3.17.0',
-    'freezegun==0.3.12'
 ]
 
 

@@ -1,5 +1,13 @@
+import bson
 from typing import Dict, Optional, List
 from broccoli_server.content import ContentStore
+from broccoli_server.utils import datetime_to_milliseconds
+
+
+def add_created_at(d: Dict) -> Dict:
+    new_d = d.copy()
+    new_d["created_at"] = datetime_to_milliseconds(bson.ObjectId(d["_id"]).generation_time)
+    return new_d
 
 
 def query(
@@ -11,41 +19,33 @@ def query(
 ) -> Dict:
     if additional_q is None:
         additional_q = {}
-    from_timestamp = int(query_params["from"]) if "from" in query_params else None
-    to_timestamp = int(query_params["to"]) if "to" in query_params else None
 
     # get results
-    if from_timestamp:
+    if "from" in query_params:
+        from_id = query_params["from"]
+        q = additional_q.copy()
+        q["_id"] = {"$lt": from_id}
+
         results = content_store.query(
-            q=additional_q,
+            q=q,
             projection=projection,
             limit=limit,
             sort={
-                "created_at": -1
+                "_id": -1
             },
-            datetime_q=[
-                {
-                    "key": "created_at",
-                    "op": "lte",
-                    "value": from_timestamp
-                }
-            ],
         )
-    elif to_timestamp:
+    elif "to" in query_params:
+        to_id = query_params["to"]
+        q = additional_q.copy()
+        q["_id"] = {"$gt": to_id}
+
         results = content_store.query(
-            q=additional_q,
+            q=q,
             projection=projection,
             limit=limit,
             sort={
-                "created_at": 1
+                "_id": 1
             },
-            datetime_q=[
-                {
-                    "key": "created_at",
-                    "op": "gte",
-                    "value": to_timestamp
-                }
-            ]
         )
         results = list(reversed(results))
     else:
@@ -54,48 +54,33 @@ def query(
             projection=projection,
             limit=limit,
             sort={
-                "created_at": -1
-            },
-            datetime_q=None
+                "_id": -1
+            }
         )
 
     if not results:
         return {
             "has_prev": False,
             "has_next": False,
-            "results": results
+            "results": list(map(add_created_at, results))
         }
 
-    # get prev
-    prev_to = results[0]["created_at"] + 1
-    has_prev = content_store.count(
-        q=additional_q,
-        datetime_q=[
-            {
-                "key": "created_at",
-                "op": "gte",
-                "value": prev_to
-            }
-        ]
-    ) != 0
-
     # get next
-    next_from = results[-1]["created_at"] - 1
-    has_next = content_store.count(
-        q=additional_q,
-        datetime_q=[
-            {
-                "key": "created_at",
-                "op": "lte",
-                "value": next_from
-            }
-        ],
-    ) != 0
+    next_from_id = results[-1]["_id"]
+    q = additional_q.copy()
+    q["_id"] = {"$lt": next_from_id}
+    has_next = content_store.count(q) != 0
+
+    # get prev
+    prev_to_id = results[0]["_id"]
+    q = additional_q.copy()
+    q['_id'] = {"$gt": prev_to_id}
+    has_prev = content_store.count(q) != 0
 
     return {
         "has_prev": has_prev,
-        "prev_to": prev_to,
+        "prev_to": prev_to_id,
         "has_next": has_next,
-        "next_from": next_from,
-        "results": results
+        "next_from": next_from_id,
+        "results": list(map(add_created_at, results))
     }
