@@ -17,6 +17,7 @@ class DatabaseMigration(object):
             5: self._version_5_to_6,
             6: self._version_6_to_7,
             7: self._version_7_to_8,
+            8: self._version_8_to_9
         }
         self.latest_schema_version = max(self.upgrade_map.keys()) + 1
 
@@ -126,6 +127,18 @@ class DatabaseMigration(object):
                 )
         except Exception as e:
             print('fail to merge module and class name into module name for workers')
+            raise e
+
+    def _version_8_to_9(self):
+        try:
+            repo_collection = self.db['repo.default']
+            for d in repo_collection.find():
+                repo_collection.update_one(
+                    filter={"_id": d['_id']},
+                    update={"$unset": {"created_at": ''}}
+                )
+        except Exception as e:
+            print('fail to remove created_at field from repo')
             raise e
 
     def _get_schema_version(self):

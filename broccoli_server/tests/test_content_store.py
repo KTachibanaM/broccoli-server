@@ -1,7 +1,5 @@
 import unittest
 import mongomock
-import freezegun
-import datetime
 from typing import Dict, List
 from broccoli_server.content import ContentStore
 
@@ -34,24 +32,20 @@ class TestContentStoreAppend(TestContentStore):
         self.content_store.append({"idempotency_key": "some_value"}, "idempotency_key")
         assert self.content_store.collection.count_documents({"idempotency_key": "some_value"}) == 1
 
-    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
     def test_succeed(self):
         self.content_store.append({"key": "value_1"}, "key")
         self.content_store.append({"key": "value_2"}, "key")
         assert self.actual_documents_without_id() == [
             {
                 "key": "value_1",
-                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             },
             {
                 "key": "value_2",
-                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             }
         ]
 
 
 class TestContentStoreAppendMultiple(TestContentStore):
-    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
     def test_idempotency_key_absent(self):
         self.content_store.append_multiple([
             {"key": "value1"},
@@ -60,11 +54,9 @@ class TestContentStoreAppendMultiple(TestContentStore):
         assert self.actual_documents_without_id() == [
             {
                 "key2": "value2",
-                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             }
         ]
 
-    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
     def test_idempotency_value_exists_in_persistence(self):
         self.content_store.append({"key": "value"}, "key")
         self.content_store.append_multiple([
@@ -74,15 +66,12 @@ class TestContentStoreAppendMultiple(TestContentStore):
         assert self.actual_documents_without_id() == [
             {
                 "key": "value",
-                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             },
             {
                 "key": "value2",
-                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             }
         ]
 
-    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
     def test_idempotency_value_exists_in_persistence_and_nothing_to_append(self):
         self.content_store.append({"key": "value"}, "key")
         self.content_store.append_multiple([
@@ -91,11 +80,9 @@ class TestContentStoreAppendMultiple(TestContentStore):
         assert self.actual_documents_without_id() == [
             {
                 "key": "value",
-                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             }
         ]
 
-    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
     def test_idempotency_value_exists_in_batch(self):
         self.content_store.append_multiple([
             {"key": "value", "foo": "bar"},
@@ -106,15 +93,12 @@ class TestContentStoreAppendMultiple(TestContentStore):
             {
                 "key": "value",
                 "foo": "bar",
-                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             },
             {
                 "key": "value2",
-                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             }
         ]
 
-    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
     def test_succeed(self):
         self.content_store.append({"key": "value"}, "key")
         self.content_store.append_multiple([
@@ -124,15 +108,12 @@ class TestContentStoreAppendMultiple(TestContentStore):
         assert self.actual_documents_without_id() == [
             {
                 "key": "value",
-                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             },
             {
                 "key": "value2",
-                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             },
             {
                 "key": "value3",
-                "created_at": datetime.datetime(2019, 5, 14, 23, 15, 10)
             },
         ]
 
@@ -186,7 +167,6 @@ class TestContentStoreQueryNearestNeighbors(TestContentStore):
             max_distance=1
         ) == []
 
-    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
     def test_succeed(self):
         self.content_store.append({"key": "value_1", "attr": True, "bs": "0000"}, "key")
         self.content_store.append({"key": "value_2", "attr": True, "bs": "0001"}, "key")
@@ -205,13 +185,11 @@ class TestContentStoreQueryNearestNeighbors(TestContentStore):
                 "key": "value_1",
                 "attr": True,
                 "bs": "0000",
-                "created_at": 1557875710000
             },
             {
                 "key": "value_2",
                 "attr": True,
                 "bs": "0001",
-                "created_at": 1557875710000
             }
         ]
 
@@ -265,7 +243,6 @@ class TestContentStoreQueryNNearestNeighbors(TestContentStore):
             pick_n=1
         ) == []
 
-    @freezegun.freeze_time("2019-05-14 23:15:10", tz_offset=0)
     def test_succeed(self):
         self.content_store.append({"key": "value_1", "attr": True, "bs": "0001"}, "key")
         self.content_store.append({"key": "value_2", "attr": True, "bs": "0011"}, "key")
@@ -285,12 +262,10 @@ class TestContentStoreQueryNNearestNeighbors(TestContentStore):
                 "key": "value_3",
                 "attr": True,
                 "bs": "0011",
-                "created_at": 1557875710000
             },
             {
                 "key": "value_1",
                 "attr": True,
                 "bs": "0001",
-                "created_at": 1557875710000
             }
         ]
