@@ -128,8 +128,10 @@ class TestContentStoreQueryNearestNeighbors(TestContentStore):
         ) == []
 
     def test_query_do_not_match(self):
-        self.content_store.append({"key": "value_1", "bs": "0000"}, "key")
-        self.content_store.append({"key": "value_2", "bs": "0000"}, "key")
+        self.content_store.append({"key": "value_1"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs", "0000")
+        self.content_store.append({"key": "value_2"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_2"}, "bs", "0000")
         assert self.content_store.query_nearest_hamming_neighbors(
             q={"key": "value_3"},
             binary_string_key="bs",
@@ -138,8 +140,10 @@ class TestContentStoreQueryNearestNeighbors(TestContentStore):
         ) == []
 
     def test_query_results_do_not_have_field(self):
-        self.content_store.append({"key": "value_1", "bs_key_2": "0000"}, "key")
-        self.content_store.append({"key": "value_2", "bs_key_2": "0000"}, "key")
+        self.content_store.append({"key": "value_1"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs_key_2", "0000")
+        self.content_store.append({"key": "value_2"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_2"}, "bs_key_2", "0000")
         assert self.content_store.query_nearest_hamming_neighbors(
             q={},
             binary_string_key="bs",
@@ -148,8 +152,10 @@ class TestContentStoreQueryNearestNeighbors(TestContentStore):
         ) == []
 
     def test_query_results_do_not_have_same_length_string(self):
-        self.content_store.append({"key": "value_1", "bs": "0000"}, "key")
-        self.content_store.append({"key": "value_2", "bs": "0000"}, "key")
+        self.content_store.append({"key": "value_1"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs", "0000")
+        self.content_store.append({"key": "value_2"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_2"}, "bs", "0000")
         assert self.content_store.query_nearest_hamming_neighbors(
             q={},
             binary_string_key="bs",
@@ -158,8 +164,10 @@ class TestContentStoreQueryNearestNeighbors(TestContentStore):
         ) == []
 
     def test_query_results_do_not_have_valid_binary_string(self):
-        self.content_store.append({"key": "value_1", "bs": "abcd"}, "key")
-        self.content_store.append({"key": "value_2", "bs": "abcd"}, "key")
+        self.content_store.append({"key": "value_1"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs", "abcd")
+        self.content_store.append({"key": "value_2"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_2"}, "bs", "abcd")
         assert self.content_store.query_nearest_hamming_neighbors(
             q={},
             binary_string_key="bs",
@@ -168,10 +176,14 @@ class TestContentStoreQueryNearestNeighbors(TestContentStore):
         ) == []
 
     def test_succeed(self):
-        self.content_store.append({"key": "value_1", "attr": True, "bs": "0000"}, "key")
-        self.content_store.append({"key": "value_2", "attr": True, "bs": "0001"}, "key")
-        self.content_store.append({"key": "value_3", "attr": True, "bs": "1111"}, "key")
-        self.content_store.append({"key": "value_4", "attr": False, "bs": "0000"}, "key")
+        self.content_store.append({"key": "value_1", "attr": True}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs", "0000")
+        self.content_store.append({"key": "value_2", "attr": True}, "key")
+        self.content_store.update_one_binary_string({"key": "value_2"}, "bs", "0001")
+        self.content_store.append({"key": "value_3", "attr": True}, "key")
+        self.content_store.update_one_binary_string({"key": "value_3"}, "bs", "1111")
+        self.content_store.append({"key": "value_4", "attr": False}, "key")
+        self.content_store.update_one_binary_string({"key": "value_4"}, "bs", "0000")
         actual_documents = self.content_store.query_nearest_hamming_neighbors(
             q={"attr": True},
             binary_string_key="bs",
@@ -204,8 +216,10 @@ class TestContentStoreQueryNNearestNeighbors(TestContentStore):
         ) == []
 
     def test_query_do_not_match(self):
-        self.content_store.append({"key": "value_1", "bs": "0000"}, "key")
-        self.content_store.append({"key": "value_2", "bs": "0001"}, "key")
+        self.content_store.append({"key": "value_1"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs", "0000")
+        self.content_store.append({"key": "value_2"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_2"}, "bs", "0001")
         assert self.content_store.query_n_nearest_hamming_neighbors(
             q={"key": "value_3"},
             binary_string_key="bs",
@@ -214,8 +228,10 @@ class TestContentStoreQueryNNearestNeighbors(TestContentStore):
         ) == []
 
     def test_query_results_do_not_have_field(self):
-        self.content_store.append({"key": "value_1", "bs_key_2": "0000"}, "key")
-        self.content_store.append({"key": "value_2", "bs_key_2": "0001"}, "key")
+        self.content_store.append({"key": "value_1"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs_key_2", "0000")
+        self.content_store.append({"key": "value_2"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs_key_2", "0001")
         assert self.content_store.query_n_nearest_hamming_neighbors(
             q={},
             binary_string_key="bs",
@@ -224,8 +240,10 @@ class TestContentStoreQueryNNearestNeighbors(TestContentStore):
         ) == []
 
     def test_query_results_do_not_have_same_length_string(self):
-        self.content_store.append({"key": "value_1", "bs": "0000"}, "key")
-        self.content_store.append({"key": "value_2", "bs": "0001"}, "key")
+        self.content_store.append({"key": "value_1"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs", "0000")
+        self.content_store.append({"key": "value_2"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_2"}, "bs", "0001")
         assert self.content_store.query_n_nearest_hamming_neighbors(
             q={},
             binary_string_key="bs",
@@ -234,8 +252,10 @@ class TestContentStoreQueryNNearestNeighbors(TestContentStore):
         ) == []
 
     def test_query_results_do_not_have_valid_binary_string(self):
-        self.content_store.append({"key": "value_1", "bs": "abcd"}, "key")
-        self.content_store.append({"key": "value_2", "bs": "abcd"}, "key")
+        self.content_store.append({"key": "value_1"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs", "abcd")
+        self.content_store.append({"key": "value_2"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_2"}, "bs", "abcd")
         assert self.content_store.query_n_nearest_hamming_neighbors(
             q={},
             binary_string_key="bs",
@@ -244,11 +264,16 @@ class TestContentStoreQueryNNearestNeighbors(TestContentStore):
         ) == []
 
     def test_succeed(self):
-        self.content_store.append({"key": "value_1", "attr": True, "bs": "0001"}, "key")
-        self.content_store.append({"key": "value_2", "attr": True, "bs": "0011"}, "key")
-        self.content_store.append({"key": "value_3", "attr": True, "bs": "0011"}, "key")
-        self.content_store.append({"key": "value_4", "attr": True, "bs": "0111"}, "key")
-        self.content_store.append({"key": "value_5", "attr": False, "bs": "0000"}, "key")
+        self.content_store.append({"key": "value_1", "attr": True}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs", "0001")
+        self.content_store.append({"key": "value_2", "attr": True}, "key")
+        self.content_store.update_one_binary_string({"key": "value_2"}, "bs", "0011")
+        self.content_store.append({"key": "value_3", "attr": True}, "key")
+        self.content_store.update_one_binary_string({"key": "value_3"}, "bs", "0011")
+        self.content_store.append({"key": "value_4", "attr": True}, "key")
+        self.content_store.update_one_binary_string({"key": "value_4"}, "bs", "0111")
+        self.content_store.append({"key": "value_5", "attr": False}, "key")
+        self.content_store.update_one_binary_string({"key": "value_5"}, "bs", "0000")
         actual_documents = self.content_store.query_n_nearest_hamming_neighbors(
             q={"attr": True},
             binary_string_key="bs",
