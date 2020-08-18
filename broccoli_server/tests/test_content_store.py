@@ -130,6 +130,16 @@ class TestContentStoreUpdateOneBinaryString(TestContentStore):
             }
         ]
 
+    def test_succeed(self):
+        self.content_store.append({"key": "value_1"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs", "1010")
+        assert self.actual_documents_without_id() == [
+            {
+                "key": "value_1",
+                "bs": "1010"
+            }
+        ]
+
 
 class TestContentStoreQueryNearestNeighbors(TestContentStore):
     def test_invalid_from_binary_string(self):
