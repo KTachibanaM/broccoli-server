@@ -167,7 +167,17 @@ class ContentStore(object):
                 "value": binary_string
             })
             return
-        # todo: should not update an existing field
+
+        # whether the binary string field is set more than once
+        once_q = filter_q.copy()
+        once_q[key] = {"$exists": True}
+        if self.collection.find_one(once_q):
+            logger.error("Cannot set binary string field more than once", extra={
+                "filter_q": filter_q,
+                "key": key
+            })
+            return
+
         self.update_one(filter_q, {
             "$set": {
                 key: binary_string

@@ -118,6 +118,19 @@ class TestContentStoreAppendMultiple(TestContentStore):
         ]
 
 
+class TestContentStoreUpdateOneBinaryString(TestContentStore):
+    def test_same_field_updates(self):
+        self.content_store.append({"key": "value_1"}, "key")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs", "1000")
+        self.content_store.update_one_binary_string({"key": "value_1"}, "bs", "0001")
+        assert self.actual_documents_without_id() == [
+            {
+                "key": "value_1",
+                "bs": "1000"
+            }
+        ]
+
+
 class TestContentStoreQueryNearestNeighbors(TestContentStore):
     def test_invalid_from_binary_string(self):
         assert self.content_store.query_nearest_hamming_neighbors(
