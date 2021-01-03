@@ -311,8 +311,7 @@ class Application(object):
                 })
             return jsonify(boards), 200
 
-        @flask_app.route('/apiInternal/renderBoard/<string:board_id>', methods=['GET'])
-        def _render_board(board_id: str):
+        def __render_board(board_id: str):
             board_query = self.mod_view_store.get(board_id)
             return jsonify({
                 "board_query": board_query.to_dict(),
@@ -320,13 +319,15 @@ class Application(object):
                 "count_without_limit": self.content_store.count(board_query.query)
             }), 200
 
-        @flask_app.route('/apiInternal/callbackBoard/<string:callback_id>', methods=['POST'])
-        def _callback_board(callback_id: str):
+        @flask_app.route('/apiInternal/renderBoard/<string:board_id>', methods=['GET'])
+        def _render_board(board_id: str):
+            return __render_board(board_id)
+
+        @flask_app.route('/apiInternal/callbackBoard/<string:board_id>/<string:callback_id>', methods=['POST'])
+        def _callback_board(board_id: str, callback_id: str):
             document = request.json  # type: Dict
             self.boards_renderer.callback(callback_id, document)
-            return jsonify({
-                "status": "ok"
-            }), 200
+            return __render_board(board_id)
 
         @flask_app.route('/web', methods=['GET'])
         @flask_app.route('/web/<path:filename>', methods=['GET'])

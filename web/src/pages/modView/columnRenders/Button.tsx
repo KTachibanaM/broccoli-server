@@ -9,15 +9,16 @@ export interface ButtonData {
 
 interface Props {
   data: ButtonData;
+  boardId: string;
   callbackId: string;
   rawDocument?: object;
   getRawDocument?: () => object[];
   apiClient: ApiClient;
-  reload: () => void;
+  reload: (BoardRender) => void;
 }
 
 const Button: React.FunctionComponent<Props> = (props: Props) => {
-  const { data, callbackId, rawDocument, apiClient, reload, getRawDocument } = props;
+  const { data, boardId, callbackId, rawDocument, apiClient, reload, getRawDocument } = props;
   if (rawDocument === undefined && getRawDocument === undefined) {
     return <div>Neither rawDocument nor getRawDocument</div>;
   }
@@ -34,17 +35,16 @@ const Button: React.FunctionComponent<Props> = (props: Props) => {
           rawDocuments = [(rawDocument as object)];
         }
         Promise.all(rawDocuments.map((d) =>
-          apiClient.callbackBoard(callbackId, d),
+          apiClient.callbackBoard(boardId, callbackId, d),
         ))
+          .then(responses => {
+            if (reloadAfterCallback) {
+              reload(responses[responses.length - 1])
+            }
+          })
           .catch((e) => {
             // TODO
           })
-          .finally(() => {
-            if (reloadAfterCallback) {
-              reload();
-            }
-          });
-
       }}
     >{text}</MuiButton>
   );
