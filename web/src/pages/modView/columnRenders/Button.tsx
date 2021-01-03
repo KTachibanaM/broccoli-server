@@ -38,8 +38,10 @@ const Button: React.FunctionComponent<Props> = (props: Props) => {
           apiClient.callbackBoard(boardId, callbackId, d),
         ))
           .then(responses => {
+            // @ts-ignore
+            const boardRenders = responses.map(r => r.data)
             if (reloadAfterCallback) {
-              reload(responses[responses.length - 1])
+              reload(boardRenders[boardRenders.length - 1])
             }
           })
           .catch((e) => {
