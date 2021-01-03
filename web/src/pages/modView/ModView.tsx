@@ -98,11 +98,14 @@ class ModView extends React.Component<Props, State> {
     return (
       <ColumnComponent
         data={data}
+        boardId={this.boardId}
         callbackId={callbackId}
         rawDocument={rawDocument}
         getRawDocument={getRawDocument}
         apiClient={this.props.apiClient}
-        reload={this.loadQuery}
+        reload={(boardRender) => {
+          this.setState({ boardRender })
+        }}
       />
     )
   }

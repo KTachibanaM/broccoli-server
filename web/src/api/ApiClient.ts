@@ -64,8 +64,8 @@ export default class ApiClient {
     return this.axios.get(`${this.endpoint}/apiInternal/renderBoard/${boardId}`).then((response) => response.data);
   }
 
-  public async callbackBoard(callbackId: string, rawDocument: object): Promise<any> {
-    return this.axios.post(`${this.endpoint}/apiInternal/callbackBoard/${callbackId}`, rawDocument);
+  public async callbackBoard(boardId: string, callbackId: string, rawDocument: object): Promise<BoardRender> {
+    return this.axios.post(`${this.endpoint}/apiInternal/callbackBoard/${boardId}/${callbackId}`, rawDocument);
   }
 
   public async getWorkers() {
