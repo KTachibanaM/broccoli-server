@@ -10,7 +10,7 @@ install_requires = [
     'pika==1.0.1',
     'pymongo==3.8.0',
     'flask-cors==3.0.8',
-    'flask-jwt-extended==3.18.2',
+    'flask-jwt-extended==3.25.0',
     'dnspython==1.16.0',
     'jsonschema==3.0.1',
     'apscheduler==3.6.0',
