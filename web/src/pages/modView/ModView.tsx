@@ -103,8 +103,14 @@ class ModView extends React.Component<Props, State> {
         rawDocument={rawDocument}
         getRawDocument={getRawDocument}
         apiClient={this.props.apiClient}
+        reloading={() => {
+          this.setState({ loading: true })
+        }}
         reload={(boardRender) => {
           this.setState({ boardRender })
+        }}
+        reloadFinished={() => {
+          this.setState({ loading: false })
         }}
       />
     )
