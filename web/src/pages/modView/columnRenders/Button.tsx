@@ -14,11 +14,13 @@ interface Props {
   rawDocument?: object;
   getRawDocument?: () => object[];
   apiClient: ApiClient;
+  reloading: () => void;
   reload: (BoardRender) => void;
+  reloadFinished: () => void;
 }
 
 const Button: React.FunctionComponent<Props> = (props: Props) => {
-  const { data, boardId, callbackId, rawDocument, apiClient, reload, getRawDocument } = props;
+  const { data, boardId, callbackId, rawDocument, apiClient, reloading, reload, reloadFinished, getRawDocument } = props;
   if (rawDocument === undefined && getRawDocument === undefined) {
     return <div>Neither rawDocument nor getRawDocument</div>;
   }
@@ -34,6 +36,9 @@ const Button: React.FunctionComponent<Props> = (props: Props) => {
         } else {
           rawDocuments = [(rawDocument as object)];
         }
+        if (reloadAfterCallback) {
+          reloading()
+        }
         Promise.all(rawDocuments.map((d) =>
           apiClient.callbackBoard(boardId, callbackId, d),
         ))
@@ -46,6 +51,9 @@ const Button: React.FunctionComponent<Props> = (props: Props) => {
           })
           .catch((e) => {
             // TODO
+          })
+          .finally(() => {
+            reloadFinished()
           })
       }}
     >{text}</MuiButton>
