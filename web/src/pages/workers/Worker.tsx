@@ -50,7 +50,7 @@ class Worker extends React.Component<Props, State> {
       <div>
         <Typography>{`Worker ${this.workerId}`}</Typography>
         <FormGroup>
-          <FormControl>
+          <FormControl margin='dense'>
             <InputLabel>Metadata</InputLabel>
             <Input
               multiline
@@ -64,7 +64,7 @@ class Worker extends React.Component<Props, State> {
               error={!canParseMetadata}
             />
           </FormControl>
-          <FormControl>
+          <FormControl margin='dense'>
             <Button
               variant="contained"
               color="secondary"

@@ -88,60 +88,58 @@ class CreateWorker extends React.Component<Props, State> {
       canParseArgs = false
     }
     return (
-      <React.Fragment>
-        <FormGroup>
-          <FormControl>
-            <InputLabel>Module</InputLabel>
-            <Select
-              value={this.state.moduleName}
-              onChange={e => {
-                e.preventDefault()
-                this.setState({"moduleName": e.target.value as string})}
-              }
-            >
-              {this.state.modules.map((module, i) => {
-                return <MenuItem key={i} value={module}>{module}</MenuItem>
-              })}
-            </Select>
-          </FormControl>
-          <FormControl>
-            <InputLabel>Args</InputLabel>
-            <Input
-              value={this.state.argsString}
-              onChange={e => {
-                e.preventDefault()
-                this.setState({argsString: e.target.value as string})
-              }}
-              multiline={true}
-              rows={6}
-              rowsMax={6}
-              error={!canParseArgs}
-            />
-          </FormControl>
-          <FormControl>
-            <InputLabel>Interval seconds</InputLabel>
-            <Input
-              type="number"
-              value={this.state.intervalSeconds}
-              onChange={e => {
-                e.preventDefault()
-                this.setState({"intervalSeconds": parseInt(e.target.value)})
-              }}
-            />
-          </FormControl>
-          <FormControl>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={e => {
-                e.preventDefault();
-                this.onSubmit()
-              }}
-              disabled={!canParseArgs}
-            >Submit</Button>
-          </FormControl>
-        </FormGroup>
-      </React.Fragment>
+      <FormGroup>
+        <FormControl margin='dense'>
+          <InputLabel>Module</InputLabel>
+          <Select
+            value={this.state.moduleName}
+            onChange={e => {
+              e.preventDefault()
+              this.setState({"moduleName": e.target.value as string})}
+            }
+          >
+            {this.state.modules.map((module, i) => {
+              return <MenuItem key={i} value={module}>{module}</MenuItem>
+            })}
+          </Select>
+        </FormControl>
+        <FormControl margin='dense'>
+          <InputLabel>Args</InputLabel>
+          <Input
+            value={this.state.argsString}
+            onChange={e => {
+              e.preventDefault()
+              this.setState({argsString: e.target.value as string})
+            }}
+            multiline={true}
+            rows={6}
+            rowsMax={6}
+            error={!canParseArgs}
+          />
+        </FormControl>
+        <FormControl margin='dense'>
+          <InputLabel>Interval seconds</InputLabel>
+          <Input
+            type="number"
+            value={this.state.intervalSeconds}
+            onChange={e => {
+              e.preventDefault()
+              this.setState({"intervalSeconds": parseInt(e.target.value)})
+            }}
+          />
+        </FormControl>
+        <FormControl margin='dense'>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={e => {
+              e.preventDefault();
+              this.onSubmit()
+            }}
+            disabled={!canParseArgs}
+          >Submit</Button>
+        </FormControl>
+      </FormGroup>
     )
   }
 }
