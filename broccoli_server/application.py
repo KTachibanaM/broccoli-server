@@ -1,7 +1,6 @@
 import logging
 import os
 import datetime
-import threading
 import sentry_sdk
 from typing import Callable, Dict, Optional
 from broccoli_server.utils import getenv_or_raise, DatabaseMigration, WorkerQueue, WorkerPayload
