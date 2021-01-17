@@ -117,10 +117,6 @@ export default class ApiClient {
     return this.axios.get(`${this.endpoint}/apiInternal/oneOffJob/run`).then(response => response.data)
   }
 
-  public async getThreadCount(): Promise<number> {
-    return this.axios.get(`${this.endpoint}/debug/threadCount`).then(response => response.data['thread_count'])
-  }
-
   public async getInstanceTitle(): Promise<string> {
     return this.axios.get(`${this.endpoint}/apiInternal/instanceTitle`).then(response => response.data)
   }

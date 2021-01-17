@@ -1,7 +1,7 @@
-import {ButtonData} from "../pages/modView/columnRenders/Button";
-import {ImageListData} from "../pages/modView/columnRenders/ImageList";
-import {TextData} from "../pages/modView/columnRenders/Text";
-import {VideoData} from "../pages/modView/columnRenders/Video";
+import {ButtonData} from "../components/modView/Button";
+import {ImageListData} from "../components/modView/ImageList";
+import {TextData} from "../components/modView/Text";
+import {VideoData} from "../components/modView/Video";
 import BoardProjection from "./BoardProjection";
 
 export type RenderTypes = "button" | "image" | "image_list" | "text" | "video";
