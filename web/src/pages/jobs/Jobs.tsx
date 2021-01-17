@@ -92,8 +92,8 @@ class Jobs extends React.Component<Props, State> {
     }
     return (
       <React.Fragment>
-        <FormGroup style={{marginBottom: 12}}>
-          <FormControl>
+        <FormGroup>
+          <FormControl margin='dense'>
             <InputLabel>Module</InputLabel>
             <Select
               value={this.state.module}
@@ -107,7 +107,7 @@ class Jobs extends React.Component<Props, State> {
               })}
             </Select>
           </FormControl>
-          <FormControl>
+          <FormControl margin='dense'>
             <InputLabel>Args</InputLabel>
             <Input
               value={this.state.argsString}
@@ -121,7 +121,7 @@ class Jobs extends React.Component<Props, State> {
               error={!canParseArgs}
             />
           </FormControl>
-          <FormControl>
+          <FormControl margin='dense'>
             <Button
               variant="contained"
               color="secondary"
