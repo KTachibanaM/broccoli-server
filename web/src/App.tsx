@@ -12,13 +12,11 @@ import ModView from "./pages/modView/ModView"
 import Worker from "./pages/workers/Worker"
 import ApiClient from "./api/ApiClient";
 import Jobs from "./pages/jobs/Jobs";
-import Debug from "./pages/Debug";
 import Login from "./pages/Login";
 
 import DashboardIcon from '@material-ui/icons/Dashboard';
 import AlarmIcon from '@material-ui/icons/Alarm';
 import SettingsIcon from '@material-ui/icons/Settings';
-import BugReportIcon from '@material-ui/icons/BugReport';
 
 const styles = (theme) => createStyles({
   main: {
@@ -100,14 +98,7 @@ class App extends React.Component<Props, State> {
               action: () => {
                 this.props.history.push("/jobs/view")
               }
-            },
-            {
-              text: `Debug`,
-              icon: <BugReportIcon />,
-              action: () => {
-                this.props.history.push("/debug")
-              }
-            },
+            }
           ]}
           rightMostItem={{
             text: "Logout",
@@ -173,13 +164,6 @@ class App extends React.Component<Props, State> {
                   apiClient={this.apiClient}
                   component={() => {
                     return (<Jobs apiClient={this.apiClient}/>)
-                  }}
-                />
-                <Route
-                  path="/debug"
-                  apiClient={this.apiClient}
-                  component={() => {
-                    return (<Debug apiClient={this.apiClient}/>)
                   }}
                 />
               </Switch>

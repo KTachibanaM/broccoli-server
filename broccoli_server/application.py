@@ -339,12 +339,6 @@ class Application(object):
             else:
                 return send_from_directory(web_root, "index.html")
 
-        @flask_app.route('/debug/threadCount', methods=['GET'])
-        def _thread_count():
-            return jsonify({
-                'thread_count': threading.active_count()
-            }), 200
-
         @flask_app.route('/apiInternal/instanceTitle', methods=['GET'])
         def _instance_title():
             return self.instance_title, 200

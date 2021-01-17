@@ -1,11 +1,11 @@
 import React from "react";
 import {RouteComponentProps, withRouter} from "react-router-dom";
 import BoardRender, {ActionableRenderTypes, RenderDataTypes, RenderTypes, Row} from "../../api/BoardRender";
-import Button from "./columnRenders/Button";
-import Image from "./columnRenders/Image";
-import ImageList from "./columnRenders/ImageList";
-import Text from "./columnRenders/Text";
-import Video from "./columnRenders/Video";
+import Button from "../../components/modView/Button";
+import Image from "../../components/modView/Image";
+import ImageList from "../../components/modView/ImageList";
+import Text from "../../components/modView/Text";
+import Video from "../../components/modView/Video";
 import {
   CircularProgress, FormControlLabel,
   Grid,
